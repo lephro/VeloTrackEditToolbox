@@ -1,0 +1,8 @@
+#ifndef ERRORCODES_H
+#define ERRORCODES_H
+
+#endif // ERRORCODES_H
+
+#define ERROR_NO_CONNECTION 1
+#define ERROR_COULD_NOT_PARSE_TRACK 2
+

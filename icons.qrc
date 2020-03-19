@@ -1,0 +1,12 @@
+<RCC>
+    <qresource prefix="/icons">
+        <file alias="a_check_box">icons/iconfinder_a_check_box_2261329.png</file>
+        <file alias="gear">icons/iconfinder_gear_2261315.png</file>
+        <file alias="magnifying_glass">icons/iconfinder_magnifying_glass_2261331.png</file>
+        <file alias="pencil_and_ruler_and_gear">icons/iconfinder_pencil_and_ruler_and_gear_2261324.png</file>
+        <file alias="puzzle_pieces_2">icons/iconfinder_puzzle_pieces_2_2261325.png</file>
+        <file alias="puzzle_pieces_3">icons/iconfinder_puzzle_pieces_3_2261312.png</file>
+        <file alias="puzzle_pieces">icons/iconfinder_puzzle_pieces_2261316.png</file>
+        <file alias="solutions">icons/iconfinder_Solutions_2261314.png</file>
+    </qresource>
+</RCC>
