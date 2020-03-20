@@ -17,6 +17,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
     delegates.cpp \
+    exceptions.cpp \
     main.cpp \
     mainwindow.cpp \
     opentrackdialog.cpp \
@@ -26,6 +27,7 @@ SOURCES += \
 HEADERS += \
     delegates.h \
     errorcodes.h \
+    exceptions.h \
     mainwindow.h \
     opentrackdialog.h \
     sqlite3.h \

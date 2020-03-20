@@ -53,7 +53,8 @@ private:
 
   bool trackModified = false;
 
-  Database currentDbSelection = Database::Production;
+  Database databaseOptionsSelectedDb = Database::Production;
+
   QString productionUserDbFilename = "";
   QString betaUserDbFilename = "";
   QString productionSettingsDbFilename = "";
@@ -61,10 +62,11 @@ private:
   QString customUserDbFilename = "";
   QString customSettingsDbFilename = "";
 
-  Track currentTrack;
+  Track loadedTrack;
 
   Ui::MainWindow* ui;
   VeloDataParser* dataParser;
+  VeloDb* selectedDb;
   VeloDb* productionDb;
   VeloDb* betaDb;
   VeloDb* customDb;
@@ -75,20 +77,24 @@ private:
   void readSettings();
   void writeSettings();
 
-  void refreshDbInfo();
-  void refreshPrefabsInUse();
-
-  void switchCurrentDbSelection(const Database index);
-  void setUserDb(const QString value);
-  void setSettingsDb(const QString value);
-  void updateDatabaseStatus();
+  void updateReplacePrefabComboBox();
 
   QString browseDatabaseFile() const;
+  VeloDb *getDatabase();
+  VeloDb* getDatabase(Database database);
+  void setDatabaseOptionsDatabaseFilenames(const Database index);
+  void setDatabaseOptionsUserDb(const QString& value);
+  void setDatabaseOptionsSettingsDb(const QString& value);
+  void updateDatabaseOptionsDatabaseStatus();
+
+  void closeTrack();
+  void loadTrack(const Track& track);
   bool maybeSave();
+  void openTrack();
   bool saveTrackToDb();
   bool saveTrackToFile();
 
   void replacePrefab();
-  void openTrack();
+
 };
 #endif // MAINWINDOW_H

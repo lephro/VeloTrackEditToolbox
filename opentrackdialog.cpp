@@ -1,17 +1,13 @@
 #include "opentrackdialog.h"
 #include "ui_opentrackdialog.h"
 
-OpenTrackDialog::OpenTrackDialog(QWidget *parent, VeloDb* productionDb, VeloDb* betaDb, VeloDb* customDb) :
+OpenTrackDialog::OpenTrackDialog(QWidget *parent, VeloDb* productionDb, VeloDb* betaDb, VeloDb* customDb) noexcept(false) :
   QDialog(parent),
   ui(new Ui::OpenTrackDialog)
 {
   this->productionDb = productionDb;
   this->betaDb = betaDb;
   this->customDb = customDb;
-
-  if ((!productionDb->isValid()) && (!betaDb->isValid()) && (!customDb->isValid())) {
-    throw "ToDo: Invalid Confiugration Exception";
-  }
 
   ui->setupUi(this);
 
@@ -24,6 +20,9 @@ OpenTrackDialog::OpenTrackDialog(QWidget *parent, VeloDb* productionDb, VeloDb* 
   if (customDb->isValid())
     ui->databaseComboBox->insertItem(2, tr("Custom"));
 
+  if (ui->databaseComboBox->count() == 0)
+    throw NoValidDatabasesFoundException();
+
   ui->databaseComboBox->setVisible(ui->databaseComboBox->count() > 1); 
 }
 
@@ -32,23 +31,23 @@ OpenTrackDialog::~OpenTrackDialog()
   delete ui;
 }
 
-void OpenTrackDialog::on_databaseComboBox_currentIndexChanged(const QString &database)
+void OpenTrackDialog::on_databaseComboBox_currentIndexChanged(const QString &arg1)
 {
   ui->trackListWidget->clear();
 
   VeloDb* selectedDb = nullptr;
-  if (database == tr("Production")) {
+  if (arg1 == tr("Production")) {
     selectedDb = productionDb;
-  } else if (database == tr("Beta")) {
+  } else if (arg1 == tr("Beta")) {
     selectedDb = betaDb;
-  } else if (database == tr("Custom")) {
+  } else if (arg1 == tr("Custom")) {
     selectedDb = customDb;
   }
 
   if (selectedDb == nullptr)
     return;
 
-  selectedDb->queryTracks();
+  selectedDb->queryAll();
   foreach(Track track, *selectedDb->getTracks()) {
     QListWidgetItem* item = new QListWidgetItem();
     item->setText(track.name);
@@ -61,19 +60,20 @@ void OpenTrackDialog::on_databaseComboBox_currentIndexChanged(const QString &dat
   }
 }
 
+
 Track OpenTrackDialog::getSelectedTrack() const
 {
   Track track;
   QList<QListWidgetItem*> selectedItems = ui->trackListWidget->selectedItems();
   if (selectedItems.size() > 0)
-    track = selectedItems.value(0)->data(Qt::UserRole).value<Track>();
+    track = selectedItems.first()->data(Qt::UserRole).value<Track>();
 
   return track;
 }
 
 void OpenTrackDialog::loadDatabase(VeloDb* database)
 {
-  database->queryTracks();
+  database->queryAll();
   foreach(Track track, *database->getTracks()) {
     QListWidgetItem* item = new QListWidgetItem();
     item->setText(track.name);
@@ -85,3 +85,6 @@ void OpenTrackDialog::loadDatabase(VeloDb* database)
     ui->trackListWidget->addItem(item);
   }
 }
+
+
+

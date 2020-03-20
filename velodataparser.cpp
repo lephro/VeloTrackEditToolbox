@@ -11,7 +11,7 @@ void VeloDataParser::changeGateOrder(const uint oldGateNo, const uint newGateNo)
   bool shiftLeft = (int(oldGateNo) - int(newGateNo)) > 0;
   QList<QStandardItem*> gateKeys = model->findItems("gate", Qt::MatchRecursive, 0);
   for (int i = 0; i < gateKeys.size(); ++i) {
-    QModelIndex gateValueIndex = gateKeys.value(i)->index().siblingAtColumn(1);
+    QModelIndex gateValueIndex = gateKeys.value(i)->index().siblingAtColumn(NodeTreeColumns::ValueColumn);
     if (gateValueIndex.isValid()) {
       uint gateNo = gateValueIndex.data().toUInt();
       if (shiftLeft && (gateNo >= newGateNo) && (gateNo < oldGateNo))

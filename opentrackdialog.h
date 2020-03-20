@@ -4,6 +4,7 @@
 #include <QDialog>
 #include <QSettings>
 
+#include "exceptions.h"
 #include "velodb.h"
 
 QT_BEGIN_NAMESPACE
@@ -15,7 +16,7 @@ class OpenTrackDialog : public QDialog
   Q_OBJECT
 
 public:
-  explicit OpenTrackDialog(QWidget *parent = nullptr, VeloDb* productionDb = nullptr, VeloDb* betaDb = nullptr, VeloDb* customDb = nullptr);
+  explicit OpenTrackDialog(QWidget *parent = nullptr, VeloDb* productionDb = nullptr, VeloDb* betaDb = nullptr, VeloDb* customDb = nullptr) noexcept(false);
   ~OpenTrackDialog();
 
   Track getSelectedTrack() const;

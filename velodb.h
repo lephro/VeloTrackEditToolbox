@@ -8,7 +8,7 @@
 #include <QVariant>
 #include <QVector>
 
-#include "errorcodes.h"
+#include "exceptions.h"
 #include "sqlite3.h"
 
 enum Database {
@@ -28,6 +28,11 @@ struct Prefab
   {
     return name.compare(prefab.name, Qt::CaseInsensitive) < 0;
   }
+
+  operator QString()
+  {
+    return name;
+  }
 };
 
 Q_DECLARE_METATYPE(Prefab);
@@ -44,6 +49,11 @@ struct Scene
   {
     return name.compare(scene.name, Qt::CaseInsensitive) < 0;
   }
+
+  operator QString()
+  {
+    return title;
+  }
 };
 
 struct Track
@@ -59,6 +69,11 @@ struct Track
   {
     return name.compare(track.name, Qt::CaseInsensitive) < 0;
   }
+
+  operator QString()
+  {
+    return name;
+  }
 };
 
 Q_DECLARE_METATYPE(Track);
@@ -66,17 +81,19 @@ Q_DECLARE_METATYPE(Track);
 class VeloDb
 {
 public:
-  VeloDb(Database database, const QString* userDbFilename, const QString* settingsDbFilename);
+  VeloDb(Database database, const QString& userDbFilename = "", const QString& settingsDbFilename = "");
   ~VeloDb();
 
   bool isValid() const;
 
-  int queryAll();
-  int queryPrefabs();
-  int queryScenes();
-  int queryTracks();
+  void queryAll();
+  void queryPrefabs();
+  void queryScenes();
+  void queryTracks();
 
   int saveChanges();
+  void setSettingsDbFilename(const QString& filename);
+  void setUserDbFilename(const QString& filename);
 
   QVector<Prefab> *getPrefabs() const;
   QVector<Scene>* getScenes() const;
@@ -84,13 +101,16 @@ public:
 
 private:
   Database database;
-  QString userDbFilename;
   QString settingsDbFilename;
+  QString userDbFilename;
 
   sqlite3* db;
   QVector<Prefab>* prefabs;
   QVector<Scene>* scenes;
   QVector<Track>* tracks;
+
+  bool hasValidSettingsDb() const;
+  bool hasValidUserDb() const;
 
   static int queryPrefabsCallback(void* data, int argc, char** argv, char** azColName);
   static int queryScenesCallback(void* data, int argc, char** argv, char** azColName);

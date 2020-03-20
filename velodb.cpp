@@ -1,10 +1,10 @@
 #include "velodb.h"
 
-VeloDb::VeloDb(Database database, const QString* userDbFilename, const QString* settingsDbFilename)
+VeloDb::VeloDb(Database database, const QString& settingsDbFilename, const QString& userDbFilename)
 {
   this->database = database;
-  this->userDbFilename = *userDbFilename;
-  this->settingsDbFilename = *settingsDbFilename;
+  this->settingsDbFilename = settingsDbFilename;
+  this->userDbFilename = userDbFilename;
 
   prefabs = new QVector<Prefab>();
   scenes = new QVector<Scene>();
@@ -20,123 +20,113 @@ VeloDb::~VeloDb()
 
 bool VeloDb::isValid() const
 {
-  QFile userDbFile(userDbFilename);
-  QFile settingsDbFile(settingsDbFilename);
-  return userDbFile.exists() && settingsDbFile.exists();
+  return hasValidUserDb() && hasValidSettingsDb();
 }
 
-int VeloDb::queryAll()
+void VeloDb::queryAll()
 {
-  int resultCode = 0;
-  resultCode = queryPrefabs();
-  resultCode = queryScenes();
-  resultCode = queryTracks();
-
-  return resultCode;
+  queryPrefabs();
+  queryScenes();
+  queryTracks();
 }
 
-int VeloDb::queryPrefabs()
+void VeloDb::queryPrefabs()
 {
   int resultCode = 0;
+  char* zErrMsg = nullptr;
 
   prefabs->clear();
 
-  std::string test = settingsDbFilename.toStdString();
-  const char* test2 = test.c_str();
+  resultCode = sqlite3_open(settingsDbFilename.toStdString().c_str(), &db);
 
-  resultCode = sqlite3_open(test2, &db);
-
-  if(resultCode)
-    return resultCode;
-
-  if (db == nullptr)
-    return ERROR_NO_CONNECTION;
-
-  char* zErrMsg = nullptr;
+  if (resultCode != SQLITE_OK)
+    throw SQLErrorException(resultCode);
 
   resultCode = sqlite3_exec(db, "SELECT*  from trackprefabs", queryPrefabsCallback, prefabs, &zErrMsg);
 
   sqlite3_close(db);
 
-  if(resultCode != SQLITE_OK) {
-    db = nullptr;
-    return resultCode;
-  }
-  std::sort(prefabs->begin(), prefabs->end());
+  if (resultCode != SQLITE_OK)
+    throw SQLErrorException(resultCode);
 
-  return 0;
+  std::sort(prefabs->begin(), prefabs->end());
 }
 
-int VeloDb::queryScenes()
+void VeloDb::queryScenes()
 {
   int resultCode = 0;
+  char* zErrMsg = nullptr;
 
   scenes->clear();
 
-  std::string test = settingsDbFilename.toStdString();
-  const char* test2 = test.c_str();
+  resultCode = sqlite3_open(settingsDbFilename.toStdString().c_str(), &db);
 
-  resultCode = sqlite3_open(test2, &db);
-
-  if(resultCode)
-    return resultCode;
-
-  if (db == nullptr)
-    return ERROR_NO_CONNECTION;
-
-  char* zErrMsg = nullptr;
+  if (resultCode != SQLITE_OK)
+    throw SQLErrorException(resultCode);
 
   resultCode = sqlite3_exec(db, "SELECT*  from sceneries", queryScenesCallback, scenes, &zErrMsg);
 
   sqlite3_close(db);
 
-  if(resultCode != SQLITE_OK) {
-    db = nullptr;
-    return resultCode;
-  }
-  std::sort(scenes->begin(), scenes->end());
+  if (resultCode != SQLITE_OK)
+    throw SQLErrorException(resultCode);
 
-  return 0;
+  std::sort(scenes->begin(), scenes->end());
 }
 
-int VeloDb::queryTracks()
+void VeloDb::queryTracks()
 {
   int resultCode = 0;
+  char* zErrMsg = nullptr;
 
   tracks->clear();
 
   resultCode = sqlite3_open(userDbFilename.toStdString().c_str(), &db);
 
-  if(resultCode)
-    return resultCode;
-
-  if (db == nullptr)
-    return ERROR_NO_CONNECTION;
-
-  char* zErrMsg = nullptr;
+  if (resultCode != SQLITE_OK)
+    throw SQLErrorException(resultCode);
 
   resultCode = sqlite3_exec(db, "SELECT*  from tracks", queryTracksCallback, tracks, &zErrMsg);
 
   sqlite3_close(db);
 
-  if(resultCode != SQLITE_OK) {
-    db = nullptr;
-    //fprintf(stderr, "SQL error: %s\n", zErrMsg);
-    //sqlite3_free(zErrMsg);
-
-    return resultCode;
-  }
+  if (resultCode != SQLITE_OK)
+    throw SQLErrorException(resultCode);
 
   for(QVector<Track>::iterator i = tracks->begin(); i != tracks->end(); ++i)
     i->database = database;
 
   std::sort(tracks->begin(), tracks->end());
-
-  return 0;
 }
+
 int VeloDb::saveChanges()
 {
   return 0;
+}
+
+void VeloDb::setSettingsDbFilename(const QString &filename)
+{
+  if (settingsDbFilename != filename) {
+    this->settingsDbFilename = filename;
+    try {
+      if (hasValidSettingsDb()) {
+        queryPrefabs();
+        queryScenes();
+      }
+    } catch (VeloToolkitException& e) {
+      e.Message();
+    }
+  }
+}
+
+void VeloDb::setUserDbFilename(const QString &filename)
+{
+  if (userDbFilename != filename) {
+    this->userDbFilename = filename;
+    if (hasValidUserDb()) {
+      queryTracks();
+    }
+  }
 }
 
 QVector<Prefab>* VeloDb::getPrefabs() const
@@ -152,6 +142,20 @@ QVector<Scene>* VeloDb::getScenes() const
 QVector<Track>* VeloDb::getTracks() const
 {
   return tracks;
+}
+
+bool VeloDb::hasValidUserDb() const
+{
+  QFile userDbFile(userDbFilename);
+  // ToDo: Check if tables exists
+  return userDbFile.exists();
+}
+
+bool VeloDb::hasValidSettingsDb() const
+{
+  QFile settingsDbFile(settingsDbFilename);
+  // Todo: Check if tables exists
+  return settingsDbFile.exists();
 }
 
 int VeloDb::queryPrefabsCallback(void *data, int argc, char **argv, char **azColName)
