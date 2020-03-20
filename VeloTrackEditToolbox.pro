@@ -26,7 +26,6 @@ SOURCES += \
 
 HEADERS += \
     delegates.h \
-    errorcodes.h \
     exceptions.h \
     mainwindow.h \
     opentrackdialog.h \
