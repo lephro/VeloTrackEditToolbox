@@ -3,7 +3,7 @@
 QString SQLErrorException::getErrorCodeDescription(int errorCode)
 {
   QString errorDesc = "SQL-Error %1: ";
-  errorDesc = errorDesc.arg(0, 0, errorCode);
+  errorDesc = errorDesc.arg(errorCode, 0, 10);
   switch (errorCode) {
   case  1 :  /* Generic error */
     errorDesc += "Generic error";

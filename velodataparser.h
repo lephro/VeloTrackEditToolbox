@@ -14,7 +14,7 @@
 #include <QString>
 #include <QTreeWidgetItem>
 
-#include "errorcodes.h"
+#include "exceptions.h"
 #include "velodb.h"
 
 enum NodeTreeColumns {
@@ -29,13 +29,13 @@ class VeloDataParser : QObject
 
 public:  
   VeloDataParser();
+  ~VeloDataParser();
 
   QByteArray *exportTrackDataFromModel();
-  int importTrackDataToModel(const QByteArray *jsonData);
+  void importTrackDataToModel(const QByteArray *jsonData);
 
-  QJsonDocument*      getDoc() const;
   int                 getGateCount() const;
-  QStandardItemModel* getModel() const;
+  QStandardItemModel* getStandardItemModel() const;
   Prefab              getPrefab(const uint id) const;
   QString             getPrefabDesc(const uint id) const;
   QVector<Prefab>*    getPrefabs() const;

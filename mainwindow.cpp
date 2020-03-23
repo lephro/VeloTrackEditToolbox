@@ -7,13 +7,18 @@ MainWindow::MainWindow(QWidget *parent)
 {
   ui->setupUi(this);
 
+  defaultWindowTitle = QString(windowTitle());
+
   productionDb = new VeloDb(Database::Production);
   betaDb = new VeloDb(Database::Beta);
   customDb = new VeloDb(Database::Custom);
-
-  readSettings();
-
   dataParser = new VeloDataParser();
+
+  try {
+    readSettings();
+  } catch (VeloToolkitException& e) {
+    e.Message();
+  }
 
   ui->treeView->setItemDelegateForColumn(NodeTreeColumns::ValueColumn, new JsonTreeViewItemDelegate(nullptr, dataParser));
 
@@ -22,8 +27,9 @@ MainWindow::MainWindow(QWidget *parent)
 
 void MainWindow::closeTrack()
 {
+  setWindowTitle(defaultWindowTitle);
   loadedTrack = Track();
-  dataParser->getModel()->clear();
+  dataParser->getStandardItemModel()->clear();
 }
 
 void MainWindow::on_buildTypeComboBox_currentIndexChanged(int index)
@@ -77,7 +83,7 @@ void MainWindow::on_replacePushButton_released()
 
 void MainWindow::on_savePushButton_released()
 {
-  saveTrackToFile();
+  saveTrackToDb();
 }
 
 void MainWindow::on_settingsDbLineEdit_textChanged(const QString &arg1)
@@ -157,8 +163,8 @@ void MainWindow::replacePrefab()
 
   case 1: // Barriers
     searchIndex = dataParser->getRootIndex();
-    for (int i = 0; i < dataParser->getModel()->rowCount(searchIndex); ++i) {
-      QModelIndex childIndex = dataParser->getModel()->index(i, 0, searchIndex);
+    for (int i = 0; i < dataParser->getStandardItemModel()->rowCount(searchIndex); ++i) {
+      QModelIndex childIndex = dataParser->getStandardItemModel()->index(i, 0, searchIndex);
       if (childIndex.data(Qt::DisplayRole).toString() ==  "barriers") {
         searchIndex = childIndex;
         break;
@@ -172,8 +178,8 @@ void MainWindow::replacePrefab()
 
   case 2: // Gates
     searchIndex = dataParser->getRootIndex();
-    for (int i = 0; i < dataParser->getModel()->rowCount(searchIndex); ++i) {
-      QModelIndex childIndex = dataParser->getModel()->index(i, 0, searchIndex);
+    for (int i = 0; i < dataParser->getStandardItemModel()->rowCount(searchIndex); ++i) {
+      QModelIndex childIndex = dataParser->getStandardItemModel()->index(i, 0, searchIndex);
       if (childIndex.data(Qt::DisplayRole).toString() ==  "gates") {
         searchIndex = childIndex;
         break;
@@ -214,7 +220,8 @@ bool MainWindow::maybeSave()
                                QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
     switch (ret) {
     case QMessageBox::Save:
-        return saveTrackToDb();
+        saveTrackToDb();
+        return true;
     case QMessageBox::Cancel:
         return false;
     default:
@@ -223,19 +230,32 @@ bool MainWindow::maybeSave()
     return true;
 }
 
-bool MainWindow::saveTrackToDb()
+void MainWindow::saveTrackToDb()
 {
-  return true;
+  try {
+    loadedTrack.sceneId = ui->sceneComboBox->currentData().toUInt();
+    loadedTrack.value = *dataParser->exportTrackDataFromModel();
+    getDatabase()->saveTrack(loadedTrack, saveAsNew);
+
+    QString message = tr("The track was saved successfully to the database!");
+    if (saveAsNew)
+      message += tr("\nThe track was saved successfully to the database!\n" \
+                 "New track name: ") + loadedTrack.name;
+
+    QMessageBox::information(nullptr, tr("Save Track"), message);
+
+  } catch (VeloToolkitException& e) {
+    e.Message();
+  }
 }
 
-bool MainWindow::saveTrackToFile()
+void MainWindow::saveTrackToFile()
 {
   QFile *file = new QFile("track.json");
   file->remove();
   file->open(QFile::ReadWrite);
   file->write(*dataParser->exportTrackDataFromModel());
   file->close();
-  return true;
 }
 
 void MainWindow::writeDefaultSettings()
@@ -248,6 +268,7 @@ void MainWindow::writeDefaultSettings()
   settings->setValue("betaSettingsDbFilename", defaultBetaSettingsDbFilename);
   settings->setValue("customUserDbFilename", "");
   settings->setValue("customSettingsDbFilename", "");
+  settings->setValue("saveTrackAsNew", saveAsNew);
   settings->endGroup();
 }
 
@@ -261,6 +282,7 @@ void MainWindow::writeSettings()
   settings->setValue("betaSettingsDbFilename", betaSettingsDbFilename);
   settings->setValue("customUserDbFilename", customUserDbFilename);
   settings->setValue("customSettingsDbFilename", customSettingsDbFilename);
+  settings->setValue("saveTrackAsNew", saveAsNew);
   settings->endGroup();
 }
 
@@ -277,9 +299,8 @@ void MainWindow::loadTrack(const Track& track)
       loadedTrack = track;
 
       dataParser->setPrefabs(veloDb->getPrefabs());
-      if (dataParser->importTrackDataToModel(&i->value) == 0) {
-        ui->treeView->setModel(dataParser->getModel());
-      }
+      dataParser->importTrackDataToModel(&i->value);
+      ui->treeView->setModel(dataParser->getStandardItemModel());
 
       for (QVector<Scene>::iterator i = veloDb->getScenes()->begin(); i != veloDb->getScenes()->end(); ++i) {
         ui->sceneComboBox->addItem(i->title, i->id);
@@ -288,7 +309,7 @@ void MainWindow::loadTrack(const Track& track)
       }
 
       ui->treeView->header()->setSectionResizeMode(NodeTreeColumns::KeyColumn, QHeaderView::ResizeToContents);
-      ui->treeView->hideColumn(NodeTreeColumns::TypeColumn);
+      ui->treeView->hideColumn(NodeTreeColumns::TypeColumn);     
 
       updateReplacePrefabComboBox();
 
@@ -480,4 +501,12 @@ QString MainWindow::browseDatabaseFile() const
                                       tr("Choose Database"),
                                       "C:/Users/lephro/AppData/LocalLow/VelociDrone/",
                                       tr("Database Files (*.db)"));
+}
+
+void MainWindow::on_saveAsNewCheckbox_stateChanged(int arg1)
+{
+  saveAsNew = bool(arg1);
+
+  QSettings *settings = new QSettings("settings.ini", QSettings::IniFormat);
+  settings->setValue("saveTrackAsNew", saveAsNew);
 }

@@ -11,11 +11,13 @@
 #include "exceptions.h"
 #include "sqlite3.h"
 
+
 enum Database {
   Production = 0,
   Beta = 1,
   Custom = 2
 };
+Q_ENUMS(Database)
 
 struct Prefab
 {
@@ -34,16 +36,15 @@ struct Prefab
     return name;
   }
 };
-
 Q_DECLARE_METATYPE(Prefab);
 
 struct Scene
 {
-  uint id;
-  QString name;
-  QString type;
-  QString title;
-  bool enabled;
+  uint id = 0;
+  QString name = "";
+  QString type = "";
+  QString title = "";
+  bool enabled = false;
 
   bool operator < (const Scene& scene)
   {
@@ -58,12 +59,12 @@ struct Scene
 
 struct Track
 {
-  uint id;
-  uint sceneId;
-  QByteArray value;
-  QString name;
-  short protectedTrack;
-  Database database;
+  uint id = 0;
+  uint sceneId = 0;
+  QByteArray value = QByteArray();
+  QString name = "";
+  short protectedTrack = short(true);
+  Database database = Database::Production;
 
   bool operator < (const Track& track) const
   {
@@ -75,7 +76,6 @@ struct Track
     return name;
   }
 };
-
 Q_DECLARE_METATYPE(Track);
 
 class VeloDb
@@ -91,7 +91,7 @@ public:
   void queryScenes();
   void queryTracks();
 
-  int saveChanges();
+  void saveTrack(Track& track, bool createNewEntry = true);
   void setSettingsDbFilename(const QString& filename);
   void setUserDbFilename(const QString& filename);
 
@@ -111,6 +111,9 @@ private:
 
   bool hasValidSettingsDb() const;
   bool hasValidUserDb() const;
+
+  void insertTrack(Track& track);
+  void updateTrack(Track& track);
 
   static int queryPrefabsCallback(void* data, int argc, char** argv, char** azColName);
   static int queryScenesCallback(void* data, int argc, char** argv, char** azColName);

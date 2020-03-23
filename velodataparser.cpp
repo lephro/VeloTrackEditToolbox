@@ -1,9 +1,14 @@
 #include "velodataparser.h"
-#include "errorcodes.h"
 
 VeloDataParser::VeloDataParser()
 {
   model = new QStandardItemModel();
+}
+
+VeloDataParser::~VeloDataParser()
+{
+  delete prefabs;
+  delete model;
 }
 
 void VeloDataParser::changeGateOrder(const uint oldGateNo, const uint newGateNo)
@@ -50,7 +55,7 @@ QByteArray* VeloDataParser::exportTrackDataFromModel()
   return new QByteArray(jsonDoc.toJson(QJsonDocument::Compact));
 }
 
-int VeloDataParser::importTrackDataToModel(const QByteArray* jsonData)
+void VeloDataParser::importTrackDataToModel(const QByteArray* jsonData)
 {
   model->clear();
 
@@ -58,21 +63,14 @@ int VeloDataParser::importTrackDataToModel(const QByteArray* jsonData)
   labels << tr("Node") << tr("Value") << tr("Type");
   model->setHorizontalHeaderLabels(labels);
 
-  QStandardItem *rootItem = model->invisibleRootItem();
+  QStandardItem* rootItem = model->invisibleRootItem();
 
-  doc = new QJsonDocument(QJsonDocument::fromJson(*jsonData));
-  if (doc->isNull())
-    return ERROR_COULD_NOT_PARSE_TRACK;
+  QJsonDocument doc = QJsonDocument(QJsonDocument::fromJson(*jsonData));
+  if (doc.isNull())
+    throw CouldNotParseTrackException();
 
-  QJsonObject* jsonRootObject = new QJsonObject(doc->object());
+  QJsonObject* jsonRootObject = new QJsonObject(doc.object());
   importJsonObject(rootItem, *jsonRootObject);
-
-  return 0;
-}
-
-QJsonDocument* VeloDataParser::getDoc() const
-{
-  return doc;
 }
 
 int VeloDataParser::getGateCount() const
@@ -86,7 +84,7 @@ Prefab VeloDataParser::getPrefab(const uint id) const
     if (i->id == id)
       return *i;
 
-  return *new Prefab;
+  return Prefab();
 }
 
 QString VeloDataParser::getPrefabDesc(const uint id) const
@@ -189,7 +187,7 @@ void VeloDataParser::setPrefabs(QVector<Prefab> *value)
   prefabs = value;
 }
 
-QStandardItemModel *VeloDataParser::getModel() const
+QStandardItemModel *VeloDataParser::getStandardItemModel() const
 {
   return model;
 }

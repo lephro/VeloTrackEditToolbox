@@ -42,15 +42,20 @@ private slots:
   void on_settingsDbLineEdit_textChanged(const QString &arg1);
   void on_userDbLineEdit_textChanged(const QString &arg1);
 
+  void on_saveAsNewCheckbox_stateChanged(int arg1);
+
 protected:
   void closeEvent(QCloseEvent* e) override;
 
-private:
+private:  
   const QString defaultProductionUserDbFilename = "C:/Users/lephro/AppData/LocalLow/VelociDrone/VelociDrone/user11.db";
   const QString defaultBetaUserDbFilename = "C:/Users/lephro/AppData/LocalLow/VelociDrone/VelociDroneBeta/user11.db";
   const QString defaultProductionSettingsDbFilename = "C:/Users/lephro/AppData/LocalLow/VelociDrone/VelociDrone/settings.db";
   const QString defaultBetaSettingsDbFilename = "C:/Users/lephro/AppData/LocalLow/VelociDrone/VelociDroneBeta/settings.db";
 
+  QString defaultWindowTitle;
+
+  bool saveAsNew = true;
   bool trackModified = false;
 
   Database databaseOptionsSelectedDb = Database::Production;
@@ -91,8 +96,8 @@ private:
   void loadTrack(const Track& track);
   bool maybeSave();
   void openTrack();
-  bool saveTrackToDb();
-  bool saveTrackToFile();
+  void saveTrackToDb();
+  void saveTrackToFile();
 
   void replacePrefab();
 

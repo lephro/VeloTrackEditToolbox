@@ -60,7 +60,6 @@ void OpenTrackDialog::on_databaseComboBox_currentIndexChanged(const QString &arg
   }
 }
 
-
 Track OpenTrackDialog::getSelectedTrack() const
 {
   Track track;
