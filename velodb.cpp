@@ -18,6 +18,24 @@ VeloDb::~VeloDb()
   delete tracks;
 }
 
+
+void VeloDb::deleteTrack(Track &track)
+{
+  if (track.id == 0)
+    throw InvalidTrackException();
+
+  if (track.protectedTrack)
+    throw ProtectedTrackException();
+
+  if (track.database != database)
+    throw TrackDoesNotBelongToDatabaseException();
+
+  QString sql = "DELETE FROM tracks WHERE id=%1;";
+  sql = sql.arg(track.id, 0, 10);
+
+  executeStatement(sql);
+}
+
 bool VeloDb::isValid() const
 {
   return hasValidUserDb() && hasValidSettingsDb();
@@ -99,12 +117,14 @@ void VeloDb::queryTracks()
   std::sort(tracks->begin(), tracks->end());
 }
 
-void VeloDb::saveTrack(Track& track, bool createNewEntry)
+uint VeloDb::saveTrack(Track& track, bool createNewEntry)
 {
   if (createNewEntry)
-    insertTrack(track);
-  else
-    updateTrack(track);
+    return insertTrack(track);
+
+  updateTrack(track);
+
+  return track.id;
 }
 
 void VeloDb::setSettingsDbFilename(const QString &filename)
@@ -154,7 +174,7 @@ bool VeloDb::hasValidUserDb() const
   return userDbFile.exists();
 }
 
-void VeloDb::insertTrack(Track &track)
+uint VeloDb::insertTrack(Track &track)
 {
   if (track.id == 0)
     throw InvalidTrackException();
@@ -165,26 +185,14 @@ void VeloDb::insertTrack(Track &track)
   if (track.database != database)
     throw TrackDoesNotBelongToDatabaseException();
 
-  int resultCode = 0;
-  char* zErrMsg = nullptr;
-
-  resultCode = sqlite3_open(userDbFilename.toStdString().c_str(), &db);
-
-  if (resultCode != SQLITE_OK)
-    throw SQLErrorException(resultCode);
-
   QString sql = "INSERT INTO tracks (scene_Id, name, value) " \
                 "VALUES (%1, '%2', '%3');";
 
   sql = sql.arg(track.sceneId, 0, 10);
-  sql = sql.arg(track.name + "-new");
+  sql = sql.arg(track.name);
   sql = sql.arg(track.value.toStdString().c_str());
 
-  resultCode = sqlite3_exec(db, sql.toStdString().c_str(), nullptr, nullptr, &zErrMsg);
-  sqlite3_close(db);
-
-  if (resultCode)
-    throw SQLErrorException(resultCode, zErrMsg);
+  return executeStatement(sql);
 }
 
 void VeloDb::updateTrack(Track &track)
@@ -198,6 +206,20 @@ void VeloDb::updateTrack(Track &track)
   if (track.database != database)
     throw TrackDoesNotBelongToDatabaseException();
 
+  QString sql = "UPDATE tracks " \
+                "SET scene_id=%2, name='%3', value='%4' " \
+                "WHERE id=%1;";
+
+  sql = sql.arg(track.id, 0, 10);
+  sql = sql.arg(track.sceneId, 0, 10);
+  sql = sql.arg(track.name);
+  sql = sql.arg(track.value.toStdString().c_str());
+
+  executeStatement(sql);
+}
+
+uint VeloDb::executeStatement(QString sql)
+{
   int resultCode = 0;
   char* zErrMsg = nullptr;
 
@@ -206,19 +228,16 @@ void VeloDb::updateTrack(Track &track)
   if (resultCode != SQLITE_OK)
     throw SQLErrorException(resultCode);
 
-  QString sql = "UPDATE tracks " \
-                "SET id=%1, scene_id=%2, name='%3' value='%4');";
-
-  sql = sql.arg(track.id, 0, 10);
-  sql = sql.arg(track.sceneId, 0, 10);
-  sql = sql.arg(track.name);
-  sql = sql.arg(track.value.toStdString().c_str());
-
   resultCode = sqlite3_exec(db, sql.toStdString().c_str(), nullptr, nullptr, &zErrMsg);
+
+  uint rowId = uint(sqlite3_last_insert_rowid(db));
+
   sqlite3_close(db);
 
   if (resultCode)
     throw SQLErrorException(resultCode, zErrMsg);
+
+  return rowId;
 }
 
 bool VeloDb::hasValidSettingsDb() const
@@ -303,7 +322,7 @@ int VeloDb::queryTracksCallback(void* data, int argc, char* *argv, char* *azColN
       track.name = QString(QUrl::fromPercentEncoding(argv[i]).replace("+", " "));
     }
     else if (azColName[i] == QString("protected_track")) {
-      track.protectedTrack = short(*argv[i]);
+      track.protectedTrack = QString(argv[i]).toShort();
     }
   }
 

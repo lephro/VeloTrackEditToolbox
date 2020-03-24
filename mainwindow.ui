@@ -7,8 +7,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>612</width>
-    <height>471</height>
+    <width>743</width>
+    <height>469</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -144,11 +144,11 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>2</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="nodeEditorPage">
        <layout class="QGridLayout" name="gridLayout">
-        <item row="4" column="0" colspan="4">
+        <item row="4" column="0" colspan="5">
          <widget class="QTabWidget" name="tabWidget">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
@@ -276,23 +276,10 @@
           </widget>
          </widget>
         </item>
-        <item row="3" column="0" colspan="4">
+        <item row="3" column="0" colspan="5">
          <widget class="QTreeView" name="treeView">
           <property name="showDropIndicator" stdset="0">
            <bool>false</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="0">
-         <widget class="QPushButton" name="openTrackPushButton">
-          <property name="maximumSize">
-           <size>
-            <width>90</width>
-            <height>16777215</height>
-           </size>
-          </property>
-          <property name="text">
-           <string>Open</string>
           </property>
          </widget>
         </item>
@@ -309,7 +296,23 @@
           </property>
          </widget>
         </item>
-        <item row="1" column="2">
+        <item row="1" column="4">
+         <widget class="QComboBox" name="sceneComboBox"/>
+        </item>
+        <item row="1" column="0">
+         <widget class="QPushButton" name="openTrackPushButton">
+          <property name="maximumSize">
+           <size>
+            <width>90</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Open</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="3">
          <widget class="QLabel" name="sceneSelectionLabel">
           <property name="text">
            <string>Scene:</string>
@@ -322,8 +325,18 @@
           </property>
          </widget>
         </item>
-        <item row="1" column="3">
-         <widget class="QComboBox" name="sceneComboBox"/>
+        <item row="1" column="2">
+         <widget class="QPushButton" name="deleteTrackPushButton">
+          <property name="maximumSize">
+           <size>
+            <width>90</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Delete</string>
+          </property>
+         </widget>
         </item>
        </layout>
       </widget>

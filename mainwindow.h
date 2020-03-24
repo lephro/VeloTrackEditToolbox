@@ -44,6 +44,8 @@ private slots:
 
   void on_saveAsNewCheckbox_stateChanged(int arg1);
 
+  void on_deleteTrackPushButton_released();
+
 protected:
   void closeEvent(QCloseEvent* e) override;
 
@@ -91,6 +93,7 @@ private:
   void setDatabaseOptionsUserDb(const QString& value);
   void setDatabaseOptionsSettingsDb(const QString& value);
   void updateDatabaseOptionsDatabaseStatus();
+  void updateWindowTitle();
 
   void closeTrack();
   void loadTrack(const Track& track);

@@ -91,13 +91,15 @@ public:
   void queryScenes();
   void queryTracks();
 
-  void saveTrack(Track& track, bool createNewEntry = true);
+  void deleteTrack(Track &track);
+  uint saveTrack(Track& track, bool createNewEntry = true);
   void setSettingsDbFilename(const QString& filename);
   void setUserDbFilename(const QString& filename);
 
   QVector<Prefab> *getPrefabs() const;
   QVector<Scene>* getScenes() const;
   QVector<Track>* getTracks() const;
+
 
 private:
   Database database;
@@ -112,8 +114,10 @@ private:
   bool hasValidSettingsDb() const;
   bool hasValidUserDb() const;
 
-  void insertTrack(Track& track);
+  uint insertTrack(Track& track);
   void updateTrack(Track& track);
+
+  uint executeStatement(QString sql);
 
   static int queryPrefabsCallback(void* data, int argc, char** argv, char** azColName);
   static int queryScenesCallback(void* data, int argc, char** argv, char** azColName);

@@ -133,6 +133,10 @@ uint VeloDataParser::getSceneId() const
 uint VeloDataParser::replacePrefab(const QModelIndex& searchIndex, const uint fromPrefabId, const uint toPrefabId)
 {
   uint prefabCount = 0;
+
+  if (!searchIndex.isValid())
+    return 0;
+
   Prefab toPrefab = getPrefab(toPrefabId);
 
   QList<QModelIndex> prefabs = findPrefabs(searchIndex);
