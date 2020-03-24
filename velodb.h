@@ -100,7 +100,6 @@ public:
   QVector<Scene>* getScenes() const;
   QVector<Track>* getTracks() const;
 
-
 private:
   Database database;
   QString settingsDbFilename;

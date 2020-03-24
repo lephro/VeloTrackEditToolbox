@@ -325,30 +325,24 @@ void MainWindow::loadTrack(const Track& track)
 
   VeloDb* veloDb = getDatabase();
 
-  for (QVector<Track>::iterator i = veloDb->getTracks()->begin(); i != veloDb->getTracks()->end(); ++i) {
-    if (i->name == track.name) {
-      loadedTrack = track;
+  loadedTrack = track;
 
-      updateWindowTitle();
+  updateWindowTitle();
 
-      dataParser->setPrefabs(veloDb->getPrefabs());
-      dataParser->importTrackDataToModel(&i->value);
-      ui->treeView->setModel(dataParser->getStandardItemModel());
+  dataParser->setPrefabs(veloDb->getPrefabs());
+  dataParser->importTrackDataToModel(&loadedTrack.value);
+  ui->treeView->setModel(dataParser->getStandardItemModel());
 
-      for (QVector<Scene>::iterator i = veloDb->getScenes()->begin(); i != veloDb->getScenes()->end(); ++i) {
-        ui->sceneComboBox->addItem(i->title, i->id);
-        if (i->id == loadedTrack.sceneId)
-          ui->sceneComboBox->setCurrentText(i->title);
-      }
-
-      ui->treeView->header()->setSectionResizeMode(NodeTreeColumns::KeyColumn, QHeaderView::ResizeToContents);
-      ui->treeView->hideColumn(NodeTreeColumns::TypeColumn);     
-
-      updateReplacePrefabComboBox();
-
-      return;
-    }
+  for (QVector<Scene>::iterator i = veloDb->getScenes()->begin(); i != veloDb->getScenes()->end(); ++i) {
+    ui->sceneComboBox->addItem(i->title, i->id);
+    if (i->id == loadedTrack.sceneId)
+      ui->sceneComboBox->setCurrentText(i->title);
   }
+
+  ui->treeView->header()->setSectionResizeMode(NodeTreeColumns::KeyColumn, QHeaderView::ResizeToContents);
+  ui->treeView->hideColumn(NodeTreeColumns::TypeColumn);
+
+  updateReplacePrefabComboBox();
 }
 
 void MainWindow::updateReplacePrefabComboBox()
