@@ -224,6 +224,7 @@ void MainWindow::replacePrefab()
   uint changedPrefabCount = dataParser->replacePrefab(searchIndex,
                                                       ui->replacePrefabComboBox->currentData().toUInt(),
                                                       ui->replacePrefabWithComboBox->currentData().toUInt());
+
   QString changedPrefabInfo = tr("%1 occurence(s) replaced");
   QMessageBox::information(this, tr("Replace successfull"), changedPrefabInfo.arg(changedPrefabCount, 0, 10));
 

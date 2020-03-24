@@ -3,6 +3,7 @@
 
 #include <QDialog>
 #include <QSettings>
+#include <QTreeWidget>
 
 #include "exceptions.h"
 #include "velodb.h"

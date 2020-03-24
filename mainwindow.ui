@@ -297,7 +297,33 @@
          </widget>
         </item>
         <item row="1" column="4">
-         <widget class="QComboBox" name="sceneComboBox"/>
+         <widget class="QComboBox" name="sceneComboBox">
+          <property name="minimumSize">
+           <size>
+            <width>140</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>16777215</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="2">
+         <widget class="QPushButton" name="deleteTrackPushButton">
+          <property name="maximumSize">
+           <size>
+            <width>90</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Delete</string>
+          </property>
+         </widget>
         </item>
         <item row="1" column="0">
          <widget class="QPushButton" name="openTrackPushButton">
@@ -322,19 +348,6 @@
           </property>
           <property name="buddy">
            <cstring>sceneComboBox</cstring>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="2">
-         <widget class="QPushButton" name="deleteTrackPushButton">
-          <property name="maximumSize">
-           <size>
-            <width>90</width>
-            <height>16777215</height>
-           </size>
-          </property>
-          <property name="text">
-           <string>Delete</string>
           </property>
          </widget>
         </item>
@@ -918,6 +931,31 @@
    </layout>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionOpen">
+   <property name="text">
+    <string>&amp;Open</string>
+   </property>
+  </action>
+  <action name="actionSave">
+   <property name="text">
+    <string>&amp;Save</string>
+   </property>
+  </action>
+  <action name="actionDelete">
+   <property name="text">
+    <string>&amp;Delete</string>
+   </property>
+  </action>
+  <action name="action_Exit">
+   <property name="text">
+    <string>&amp;Exit</string>
+   </property>
+  </action>
+  <action name="action_Close">
+   <property name="text">
+    <string>&amp;Close</string>
+   </property>
+  </action>
  </widget>
  <resources>
   <include location="icons.qrc"/>

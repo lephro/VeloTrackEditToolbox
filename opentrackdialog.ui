@@ -21,6 +21,13 @@
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
       <widget class="QLabel" name="label">
+       <property name="text">
+        <string>Track:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="databaseLabel">
        <property name="maximumSize">
         <size>
          <width>80</width>
@@ -44,7 +51,18 @@
     </layout>
    </item>
    <item>
-    <widget class="QListWidget" name="trackListWidget"/>
+    <widget class="QTreeWidget" name="trackListTreeWidget">
+     <column>
+      <property name="text">
+       <string>Name</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Scene</string>
+      </property>
+     </column>
+    </widget>
    </item>
    <item>
     <widget class="QDialogButtonBox" name="openTrackDialogButtonBox">
