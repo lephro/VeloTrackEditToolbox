@@ -11,6 +11,7 @@
 #include <QMainWindow>
 #include <QMessageBox>
 #include <QSettings>
+#include <QStandardPaths>
 #include <QStringList>
 #include <QTreeView>
 #include <QTreeWidgetItem>
@@ -50,10 +51,10 @@ protected:
   void closeEvent(QCloseEvent* e) override;
 
 private:  
-  const QString defaultProductionUserDbFilename = "C:/Users/lephro/AppData/LocalLow/VelociDrone/VelociDrone/user11.db";
-  const QString defaultBetaUserDbFilename = "C:/Users/lephro/AppData/LocalLow/VelociDrone/VelociDroneBeta/user11.db";
-  const QString defaultProductionSettingsDbFilename = "C:/Users/lephro/AppData/LocalLow/VelociDrone/VelociDrone/settings.db";
-  const QString defaultBetaSettingsDbFilename = "C:/Users/lephro/AppData/LocalLow/VelociDrone/VelociDroneBeta/settings.db";
+  const QString defaultProductionUserDbFilename = "C:/Users/<USER>/AppData/LocalLow/VelociDrone/VelociDrone/user11.db";
+  const QString defaultBetaUserDbFilename = "C:/Users/<USER>/AppData/LocalLow/VelociDrone/VelociDroneBeta/user11.db";
+  const QString defaultProductionSettingsDbFilename = "C:/Users/<USER>/AppData/LocalLow/VelociDrone/VelociDrone/settings.db";
+  const QString defaultBetaSettingsDbFilename = "C:/Users/<USER>/AppData/LocalLow/VelociDrone/VelociDroneBeta/settings.db";
 
   QString defaultWindowTitle;
 
@@ -103,5 +104,6 @@ private:
 
   void replacePrefab();
 
+  QString getDefaultPath();
 };
 #endif // MAINWINDOW_H

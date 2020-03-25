@@ -15,9 +15,8 @@
    <string>VeloTrackEditToolbox</string>
   </property>
   <property name="windowIcon">
-   <iconset>
-    <normalon>:/icons/puzzle_pieces_2</normalon>
-   </iconset>
+   <iconset resource="icons.qrc">
+    <normaloff>:/icons/toolbox_with_circle</normaloff>:/icons/toolbox_with_circle</iconset>
   </property>
   <property name="locale">
    <locale language="English" country="UnitedStates"/>

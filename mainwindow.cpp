@@ -155,10 +155,16 @@ void MainWindow::closeEvent(QCloseEvent *e)
     e->ignore();
 }
 
+QString MainWindow::getDefaultPath()
+{
+  // 4 Windoze
+  return QStandardPaths::standardLocations(QStandardPaths::GenericDataLocation).first().replace("AppData/Local", "AppData/LocalLow/VelociDrone");
+}
+
 void MainWindow::readSettings()
 {
   QSettings *settings = new QSettings("settings.ini", QSettings::IniFormat);
-  //settings->clear();
+  settings->clear();
 
   if (settings->value("database/productionUserDbFilename", "").toString() == "") {
     settings->clear();
@@ -294,6 +300,19 @@ void MainWindow::saveTrackToFile()
 
 void MainWindow::writeDefaultSettings()
 {
+  QString defaultFolder = getDefaultPath();
+  if (defaultFolder != "") {
+    productionSettingsDbFilename = defaultFolder + "/VelociDrone/settings.db";
+    productionUserDbFilename = defaultFolder + "/VelociDrone/user11.db";
+    betaSettingsDbFilename = defaultFolder + "/VelociDroneBeta/settings.db";
+    betaUserDbFilename = defaultFolder + "/VelociDroneBeta/user11.db";
+    customSettingsDbFilename = "";
+    customUserDbFilename = "";
+
+    writeSettings();
+    return;
+  }
+
   QSettings *settings = new QSettings("settings.ini", QSettings::IniFormat);
   settings->beginGroup("database");
   settings->setValue("productionUserDbFilename", defaultProductionUserDbFilename);

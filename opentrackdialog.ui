@@ -13,6 +13,10 @@
   <property name="windowTitle">
    <string>Open track</string>
   </property>
+  <property name="windowIcon">
+   <iconset resource="icons.qrc">
+    <normaloff>:/icons/toolbox_with_circle</normaloff>:/icons/toolbox_with_circle</iconset>
+  </property>
   <property name="locale">
    <locale language="English" country="UnitedStates"/>
   </property>
@@ -69,7 +73,9 @@
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources>
+  <include location="icons.qrc"/>
+ </resources>
  <connections>
   <connection>
    <sender>openTrackDialogButtonBox</sender>
