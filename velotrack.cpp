@@ -1,17 +1,17 @@
-#include "velodataparser.h"
+#include "velotrack.h"
 
-VeloDataParser::VeloDataParser()
+VeloTrack::VeloTrack()
 {
   model = new QStandardItemModel();
 }
 
-VeloDataParser::~VeloDataParser()
+VeloTrack::~VeloTrack()
 {
   delete prefabs;
   delete model;
 }
 
-void VeloDataParser::changeGateOrder(const uint oldGateNo, const uint newGateNo)
+void VeloTrack::changeGateOrder(const uint oldGateNo, const uint newGateNo)
 {
   bool shiftLeft = (int(oldGateNo) - int(newGateNo)) > 0;
   QList<QStandardItem*> gateKeys = model->findItems("gate", Qt::MatchRecursive, 0);
@@ -27,14 +27,38 @@ void VeloDataParser::changeGateOrder(const uint oldGateNo, const uint newGateNo)
   }
 }
 
-QByteArray* VeloDataParser::exportTrackDataFromModel()
+bool VeloTrack::isEditableNode(const QModelIndex& keyIndex)
+{
+  QModelIndex valueIndex = keyIndex.siblingAtColumn(1);
+  PrefabData prefab = valueIndex.data(Qt::UserRole).value<PrefabData>();
+
+  if (!valueIndex.isValid())
+    return false;
+
+  if (prefab.id > 0) {
+    return ((prefab.name == "CtrlParent") ||
+            (prefab.name == "DefaultStartGrid") ||
+            (prefab.name == "DefaultKDRAStartGrid") ||
+            (prefab.name == "DR1StartGrid") ||
+            (prefab.name == "PolyStartGrid") ||
+            (prefab.name == "MicroStartGrid") ||
+            (prefab.name == "ControlCurve") ||
+            (prefab.name == "ControlPoint"));
+  } else if (keyIndex.data() == "finish") {
+    return valueIndex.data().toBool() == true;
+  } else if (keyIndex.data() == "start") {
+    return valueIndex.data().toBool() == true;
+  }
+
+  return false;
+}
+
+QByteArray* VeloTrack::exportTrackDataFromModel()
 {
   QJsonDocument jsonDoc;
   QJsonObject jsonObj(jsonDoc.object());
 
   QStandardItem* rootKeyItem = model->invisibleRootItem();
-
-  qDebug() << "Root row count is: " << rootKeyItem->rowCount();
 
   for(int i = 0; i < rootKeyItem->rowCount(); ++i) {
     QModelIndex index = model->index(i, NodeTreeColumns::KeyColumn, rootKeyItem->index());
@@ -55,7 +79,7 @@ QByteArray* VeloDataParser::exportTrackDataFromModel()
   return new QByteArray(jsonDoc.toJson(QJsonDocument::Compact));
 }
 
-void VeloDataParser::importTrackDataToModel(const QByteArray* jsonData)
+void VeloTrack::importTrackDataToModel(const QByteArray* jsonData)
 {
   model->clear();
 
@@ -73,76 +97,82 @@ void VeloDataParser::importTrackDataToModel(const QByteArray* jsonData)
   importJsonObject(rootItem, *jsonRootObject);
 }
 
-int VeloDataParser::getGateCount() const
+bool VeloTrack::isModified()
+{
+  return isModifiedNode(model->invisibleRootItem());
+}
+
+int VeloTrack::getGateCount() const
 {
   return model->findItems("gate", Qt::MatchRecursive, 0).size();
 }
 
-Prefab VeloDataParser::getPrefab(const uint id) const
+PrefabData VeloTrack::getPrefab(const uint id) const
 {
-  for (QVector<Prefab>::iterator i = prefabs->begin(); i != prefabs->end(); ++i)
+  for (QVector<PrefabData>::iterator i = prefabs->begin(); i != prefabs->end(); ++i)
     if (i->id == id)
       return *i;
 
-  return Prefab();
+  return PrefabData();
 }
 
-QString VeloDataParser::getPrefabDesc(const uint id) const
+QString VeloTrack::getPrefabDesc(const uint id) const
 {
-  for (QVector<Prefab>::iterator i = prefabs->begin(); i != prefabs->end(); ++i)
+  for (QVector<PrefabData>::iterator i = prefabs->begin(); i != prefabs->end(); ++i)
     if (i->id == id)
       return i->name + " (" + i->type + ")";
 
   return "";
 }
 
-QVector<Prefab>* VeloDataParser::getPrefabs() const
+QVector<PrefabData>* VeloTrack::getPrefabs() const
 {
   return prefabs;
 }
 
-QVector<Prefab>* VeloDataParser::getPrefabsInUse() const
+QVector<PrefabData>* VeloTrack::getPrefabsInUse() const
 {
-  QMap<uint, Prefab> prefabMap;
+  QMap<uint, PrefabData> prefabMap;
   QList<QModelIndex> prefabs = findPrefabs(model->invisibleRootItem()->index());
   foreach (QModelIndex childIndex, prefabs) {
-    Prefab prefab = childIndex.siblingAtColumn(NodeTreeColumns::ValueColumn).data(Qt::UserRole).value<Prefab>();
+    PrefabData prefab = childIndex.siblingAtColumn(NodeTreeColumns::ValueColumn).data(Qt::UserRole).value<PrefabData>();
     if ((!prefabMap.contains(prefab.id)) && (prefab.id > 0))
-      prefabMap.insert(prefab.id, prefab);
+      if (!isEditableNode(childIndex))
+        prefabMap.insert(prefab.id, prefab);
   }
 
-  QVector<Prefab> prefabsInUse;
-  for (QMap<uint, Prefab>::iterator i = prefabMap.begin(); i != prefabMap.end(); ++i)
+  QVector<PrefabData> prefabsInUse;
+  for (QMap<uint, PrefabData>::iterator i = prefabMap.begin(); i != prefabMap.end(); ++i)
     prefabsInUse.append(i.value());
 
   std::sort(prefabsInUse.begin(), prefabsInUse.end());
 
-  return new QVector<Prefab>(prefabsInUse);
+  return new QVector<PrefabData>(prefabsInUse);
 }
 
-QModelIndex VeloDataParser::getRootIndex() const
+QModelIndex VeloTrack::getRootIndex() const
 {
   return model->invisibleRootItem()->index();
 }
 
-uint VeloDataParser::getSceneId() const
+uint VeloTrack::getSceneId() const
 {
   return sceneId;
 }
 
-uint VeloDataParser::replacePrefab(const QModelIndex& searchIndex, const uint fromPrefabId, const uint toPrefabId)
+uint VeloTrack::replacePrefab(const QModelIndex& searchIndex, const uint fromPrefabId, const uint toPrefabId)
 {
   uint prefabCount = 0;
 
   if (!searchIndex.isValid())
     return 0;
 
-  Prefab toPrefab = getPrefab(toPrefabId);
+  PrefabData toPrefab = getPrefab(toPrefabId);
 
   QList<QModelIndex> prefabs = findPrefabs(searchIndex);
   foreach (QModelIndex childIndex, prefabs) {
     QModelIndex valueIndex = childIndex.siblingAtColumn(NodeTreeColumns::ValueColumn);
-    Prefab prefab = valueIndex.data(Qt::UserRole).value<Prefab>();
+    PrefabData prefab = valueIndex.data(Qt::UserRole).value<PrefabData>();
     if (prefab.id == fromPrefabId) {
       model->setData(valueIndex, toPrefab.name, Qt::EditRole);
       QVariant var;
@@ -159,7 +189,7 @@ uint VeloDataParser::replacePrefab(const QModelIndex& searchIndex, const uint fr
   return prefabCount;
 }
 
-void VeloDataParser::resetFinishGates()
+void VeloTrack::resetFinishGates()
 {
   QList<QStandardItem*> finishKeys = model->findItems("finish", Qt::MatchRecursive, NodeTreeColumns::KeyColumn);
   for (int i = 0; i < finishKeys.size(); ++i) {
@@ -170,7 +200,12 @@ void VeloDataParser::resetFinishGates()
   }
 }
 
-void VeloDataParser::resetStartGates()
+void VeloTrack::resetModified()
+{
+  resetModifiedNodes(model->invisibleRootItem()->index());
+}
+
+void VeloTrack::resetStartGates()
 {
   QList<QStandardItem*> startKeys = model->findItems("start", Qt::MatchRecursive, NodeTreeColumns::KeyColumn);
   for (int i = 0; i < startKeys.size(); ++i) {
@@ -181,22 +216,22 @@ void VeloDataParser::resetStartGates()
   }
 }
 
-void VeloDataParser::setSceneId(const uint &value)
+void VeloTrack::setSceneId(const uint &value)
 {
   sceneId = value;
 }
 
-void VeloDataParser::setPrefabs(QVector<Prefab> *value)
+void VeloTrack::setPrefabs(QVector<PrefabData> *value)
 {
   prefabs = value;
 }
 
-QStandardItemModel *VeloDataParser::getStandardItemModel() const
+QStandardItemModel *VeloTrack::getStandardItemModel() const
 {
   return model;
 }
 
-QJsonArray* VeloDataParser::exportToDataArray(const QStandardItem* treeItem)
+QJsonArray* VeloTrack::exportToDataArray(const QStandardItem* treeItem)
 {
   QJsonArray* array = new QJsonArray();
   for(int i = 0; i < treeItem->rowCount(); ++i) {
@@ -220,7 +255,7 @@ QJsonArray* VeloDataParser::exportToDataArray(const QStandardItem* treeItem)
   return array;
 }
 
-QJsonObject* VeloDataParser::exportToObject(const QStandardItem* treeItem)
+QJsonObject* VeloTrack::exportToObject(const QStandardItem* treeItem)
 {
   QJsonObject* object = new QJsonObject();
   for(int i = 0; i < treeItem->rowCount(); ++i) {
@@ -234,7 +269,7 @@ QJsonObject* VeloDataParser::exportToObject(const QStandardItem* treeItem)
       object->insert(keyItem->text(), valueItem->data(Qt::EditRole).toBool());
     } else if (typeItem->text() == "Double") {
       if (keyItem->text() == "prefab") {
-        Prefab prefab = valueItem->data(Qt::UserRole).value<Prefab>();
+        PrefabData prefab = valueItem->data(Qt::UserRole).value<PrefabData>();
         if (prefab.id > 0)
           object->insert(keyItem->text(), int(prefab.id));
       } else
@@ -249,7 +284,21 @@ QJsonObject* VeloDataParser::exportToObject(const QStandardItem* treeItem)
   return object;
 }
 
-QList<QModelIndex> VeloDataParser::findPrefabs(const QModelIndex& keyItemIndex) const
+void VeloTrack::resetModifiedNodes(const QModelIndex& index)
+{
+  for (int i = 0; i < model->rowCount(index); ++i)
+  {
+    QModelIndex childIndex = model->index(i, NodeTreeColumns::KeyColumn, index);
+    if (childIndex.data(Qt::UserRole).toBool())
+      model->setData(childIndex, false, Qt::UserRole);
+
+    if (model->hasChildren(index)) {
+      return resetModifiedNodes(childIndex);
+    }
+  }
+}
+
+QList<QModelIndex> VeloTrack::findPrefabs(const QModelIndex& keyItemIndex) const
 {
   QList<QModelIndex> foundPrefabs;
   for (int i = 0; i < model->rowCount(keyItemIndex); ++i)
@@ -265,7 +314,7 @@ QList<QModelIndex> VeloDataParser::findPrefabs(const QModelIndex& keyItemIndex) 
   return foundPrefabs;
 }
 
-QString VeloDataParser::getQJsonValueTypeString(const QJsonValue::Type type) const
+QString VeloTrack::getQJsonValueTypeString(const QJsonValue::Type type) const
 {
   switch (type) {
   case QJsonValue::Type::Null:
@@ -286,7 +335,7 @@ QString VeloDataParser::getQJsonValueTypeString(const QJsonValue::Type type) con
   return "";
 }
 
-void VeloDataParser::importJsonArray(QStandardItem* parentItem, const QJsonArray& dataArray)
+void VeloTrack::importJsonArray(QStandardItem* parentItem, const QJsonArray& dataArray)
 {
   for (int i = 0; i < dataArray.size(); ++i) {
     QJsonValue jsonValue = dataArray.at(i);
@@ -312,7 +361,7 @@ void VeloDataParser::importJsonArray(QStandardItem* parentItem, const QJsonArray
   }
 }
 
-void VeloDataParser::importJsonObject(QStandardItem* parentItem, const QJsonObject& dataObject)
+void VeloTrack::importJsonObject(QStandardItem* parentItem, const QJsonObject& dataObject)
 {
   QStringList keyList = dataObject.keys();
   for (int i = 0; i < keyList.size(); ++i) {
@@ -325,7 +374,7 @@ void VeloDataParser::importJsonObject(QStandardItem* parentItem, const QJsonObje
     if (keyList.at(i) == "prefab") {
       uint prefabId = jsonValue.toVariant().toUInt();
       if (prefabId > 0 ) {
-        Prefab prefab = getPrefab(jsonValue.toVariant().toUInt());
+        PrefabData prefab = getPrefab(jsonValue.toVariant().toUInt());
         itemValue->setData(prefab.name, Qt::DisplayRole);
         QVariant var;
         var.setValue(prefab);
@@ -356,5 +405,24 @@ void VeloDataParser::importJsonObject(QStandardItem* parentItem, const QJsonObje
       importJsonArray(itemKey, jsonValue.toArray());
     }
   }
+}
+
+bool VeloTrack::isModifiedNode(const QStandardItem* item) const
+{
+  for (int i = 0; i < item->rowCount(); ++i)
+  {
+    QStandardItem* child = item->child(i, 0);
+    bool test = child->data(Qt::UserRole).toBool();
+    qDebug() << child->index() << " " << child->row() << ":" << child->column() << "(" << child->text() << ") = " << test;
+    if (child->data(Qt::UserRole).toBool())
+      return true;
+
+    if (child->hasChildren()) {
+      if (isModifiedNode(child))
+        return true;
+    }
+  }
+
+  return false;
 }
 

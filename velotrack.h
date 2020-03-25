@@ -23,45 +23,52 @@ enum NodeTreeColumns {
   TypeColumn = 2
 };
 
-class VeloDataParser : QObject
+class VeloTrack : QObject
 {
   Q_OBJECT
 
 public:  
-  VeloDataParser();
-  ~VeloDataParser();
+  VeloTrack();
+  ~VeloTrack();
 
   QByteArray *exportTrackDataFromModel();
   void importTrackDataToModel(const QByteArray *jsonData);
+  bool isModified();
 
   int                 getGateCount() const;
   QStandardItemModel* getStandardItemModel() const;
-  Prefab              getPrefab(const uint id) const;
+  PrefabData              getPrefab(const uint id) const;
   QString             getPrefabDesc(const uint id) const;
-  QVector<Prefab>*    getPrefabs() const;
-  QVector<Prefab>*    getPrefabsInUse() const;
+  QVector<PrefabData>*    getPrefabs() const;
+  QVector<PrefabData>*    getPrefabsInUse() const;
   QModelIndex         getRootIndex() const;
   uint                getSceneId() const;
 
   uint replacePrefab(const QModelIndex& searchIndex, const uint fromPrefabId, const uint toPrefabId);
   void resetFinishGates();
+  void resetModified();
   void resetStartGates();
   void setSceneId(const uint &value);
-  void setPrefabs(QVector<Prefab> *value);
+  void setPrefabs(QVector<PrefabData> *value);
 
   void changeGateOrder(const uint oldGateNo, const uint newGateNo);
+
+  static bool isEditableNode(const QModelIndex &keyIndex);
+
 private:
   uint sceneId;
   QJsonDocument* doc = nullptr;
-  QVector<Prefab>* prefabs;
+  QVector<PrefabData>* prefabs;
   QStandardItemModel* model;
 
   QList<QModelIndex> findPrefabs(const QModelIndex &keyItemIndex) const;
   QString getQJsonValueTypeString(const QJsonValue::Type type) const;
   void importJsonArray(QStandardItem *parentItem, const QJsonArray &dataArray);
   void importJsonObject(QStandardItem *parentItem, const QJsonObject &dataObject);
+  bool isModifiedNode(const QStandardItem* item) const;
   QJsonArray *exportToDataArray(const QStandardItem *treeItem);
   QJsonObject *exportToObject(const QStandardItem *treeItem);
+  void resetModifiedNodes(const QModelIndex &index);
 };
 
 #endif // TRACKPARSER_H

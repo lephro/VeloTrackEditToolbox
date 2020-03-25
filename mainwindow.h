@@ -17,8 +17,8 @@
 
 #include "delegates.h"
 #include "opentrackdialog.h"
-#include "velodataparser.h"
 #include "velodb.h"
+#include "velotrack.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -58,9 +58,8 @@ private:
   QString defaultWindowTitle;
 
   bool saveAsNew = true;
-  bool trackModified = false;
 
-  Database databaseOptionsSelectedDb = Database::Production;
+  DatabaseType databaseOptionsSelectedDbType = DatabaseType::Production;
 
   QString productionUserDbFilename = "";
   QString betaUserDbFilename = "";
@@ -69,10 +68,10 @@ private:
   QString customUserDbFilename = "";
   QString customSettingsDbFilename = "";
 
-  Track loadedTrack;
+  TrackData loadedTrack;
 
   Ui::MainWindow* ui;
-  VeloDataParser* dataParser;
+  VeloTrack* veloTrack;
   VeloDb* selectedDb;
   VeloDb* productionDb;
   VeloDb* betaDb;
@@ -88,15 +87,15 @@ private:
 
   QString browseDatabaseFile() const;
   VeloDb *getDatabase();
-  VeloDb* getDatabase(Database database);
-  void setDatabaseOptionsDatabaseFilenames(const Database index);
+  VeloDb* getDatabase(DatabaseType databaseType);
+  void setDatabaseOptionsDatabaseFilenames(const DatabaseType index);
   void setDatabaseOptionsUserDb(const QString& value);
   void setDatabaseOptionsSettingsDb(const QString& value);
   void updateDatabaseOptionsDatabaseStatus();
   void updateWindowTitle();
 
   void closeTrack();
-  void loadTrack(const Track& track);
+  void loadTrack(const TrackData& track);
   bool maybeSave();
   void openTrack();
   void saveTrackToDb();

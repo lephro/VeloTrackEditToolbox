@@ -1,14 +1,14 @@
 #include "velodb.h"
 
-VeloDb::VeloDb(Database database, const QString& settingsDbFilename, const QString& userDbFilename)
+VeloDb::VeloDb(DatabaseType databaseType, const QString& settingsDbFilename, const QString& userDbFilename)
 {
-  this->database = database;
+  this->databaseType = databaseType;
   this->settingsDbFilename = settingsDbFilename;
   this->userDbFilename = userDbFilename;
 
-  prefabs = new QVector<Prefab>();
-  scenes = new QVector<Scene>();
-  tracks = new QVector<Track>();
+  prefabs = new QVector<PrefabData>();
+  scenes = new QVector<SceneData>();
+  tracks = new QVector<TrackData>();
 }
 
 VeloDb::~VeloDb()
@@ -19,7 +19,7 @@ VeloDb::~VeloDb()
 }
 
 
-void VeloDb::deleteTrack(Track &track)
+void VeloDb::deleteTrack(TrackData &track)
 {
   if (track.id == 0)
     throw InvalidTrackException();
@@ -27,7 +27,7 @@ void VeloDb::deleteTrack(Track &track)
   if (track.protectedTrack)
     throw ProtectedTrackException();
 
-  if (track.database != database)
+  if (track.database != databaseType)
     throw TrackDoesNotBelongToDatabaseException();
 
   QString sql = "DELETE FROM tracks WHERE id=%1;";
@@ -111,13 +111,13 @@ void VeloDb::queryTracks()
   if (resultCode != SQLITE_OK)
     throw SQLErrorException(resultCode, zErrMsg);
 
-  for(QVector<Track>::iterator i = tracks->begin(); i != tracks->end(); ++i)
-    i->database = database;
+  for(QVector<TrackData>::iterator i = tracks->begin(); i != tracks->end(); ++i)
+    i->database = databaseType;
 
   std::sort(tracks->begin(), tracks->end());
 }
 
-uint VeloDb::saveTrack(Track& track, bool createNewEntry)
+uint VeloDb::saveTrack(TrackData& track, bool createNewEntry)
 {
   if (createNewEntry)
     return insertTrack(track);
@@ -152,17 +152,17 @@ void VeloDb::setUserDbFilename(const QString &filename)
   }
 }
 
-QVector<Prefab>* VeloDb::getPrefabs() const
+QVector<PrefabData>* VeloDb::getPrefabs() const
 {
   return prefabs;
 }
 
-QVector<Scene>* VeloDb::getScenes() const
+QVector<SceneData>* VeloDb::getScenes() const
 {
   return scenes;
 }
 
-QVector<Track>* VeloDb::getTracks() const
+QVector<TrackData>* VeloDb::getTracks() const
 {
   return tracks;
 }
@@ -174,7 +174,7 @@ bool VeloDb::hasValidUserDb() const
   return userDbFile.exists();
 }
 
-uint VeloDb::insertTrack(Track &track)
+uint VeloDb::insertTrack(TrackData &track)
 {
   if (track.id == 0)
     throw InvalidTrackException();
@@ -182,7 +182,7 @@ uint VeloDb::insertTrack(Track &track)
   if (track.protectedTrack)
     throw ProtectedTrackException();
 
-  if (track.database != database)
+  if (track.database != databaseType)
     throw TrackDoesNotBelongToDatabaseException();
 
   QString sql = "INSERT INTO tracks (scene_Id, name, value) " \
@@ -195,7 +195,7 @@ uint VeloDb::insertTrack(Track &track)
   return executeStatement(sql);
 }
 
-void VeloDb::updateTrack(Track &track)
+void VeloDb::updateTrack(TrackData &track)
 {
   if (track.id == 0)
     throw InvalidTrackException();
@@ -203,7 +203,7 @@ void VeloDb::updateTrack(Track &track)
   if (track.protectedTrack)
     throw ProtectedTrackException();
 
-  if (track.database != database)
+  if (track.database != databaseType)
     throw TrackDoesNotBelongToDatabaseException();
 
   QString sql = "UPDATE tracks " \
@@ -249,8 +249,8 @@ bool VeloDb::hasValidSettingsDb() const
 
 int VeloDb::queryPrefabsCallback(void *data, int argc, char **argv, char **azColName)
 {
-  QVector<Prefab>* prefabs = reinterpret_cast<QVector<Prefab>*>(data);
-  Prefab prefab;
+  QVector<PrefabData>* prefabs = reinterpret_cast<QVector<PrefabData>*>(data);
+  PrefabData prefab;
 
   for(int i = 0; i < argc; i++) {
     if (azColName[i] == QString("id")) {
@@ -274,8 +274,8 @@ int VeloDb::queryPrefabsCallback(void *data, int argc, char **argv, char **azCol
 
 int VeloDb::queryScenesCallback(void* data, int argc, char* *argv, char* *azColName)
 {
-  QVector<Scene>* scenes = reinterpret_cast<QVector<Scene>*>(data);
-  Scene scene;
+  QVector<SceneData>* scenes = reinterpret_cast<QVector<SceneData>*>(data);
+  SceneData scene;
 
   for(int i = 0; i < argc; i++) {
     if (azColName[i] == QString("id")) {
@@ -305,8 +305,8 @@ int VeloDb::queryScenesCallback(void* data, int argc, char* *argv, char* *azColN
 
 int VeloDb::queryTracksCallback(void* data, int argc, char* *argv, char* *azColName)
 {
-  QVector<Track>* tracks = reinterpret_cast<QVector<Track>* >(data);
-  Track track;
+  QVector<TrackData>* tracks = reinterpret_cast<QVector<TrackData>* >(data);
+  TrackData track;
 
   for(int i = 0; i < argc; i++) {
     if (azColName[i] == QString("id")) {
@@ -332,4 +332,14 @@ int VeloDb::queryTracksCallback(void* data, int argc, char* *argv, char* *azColN
   }
 
   return 0;
+}
+
+bool TrackData::operator <(const TrackData &track) const
+{
+  return name.compare(track.name, Qt::CaseInsensitive) < 0;
+}
+
+TrackData::operator QString()
+{
+  return name;
 }

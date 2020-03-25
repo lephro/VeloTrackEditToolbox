@@ -48,12 +48,12 @@ void OpenTrackDialog::on_databaseComboBox_currentIndexChanged(const QString &arg
   loadDatabase(selectedDb);
 }
 
-Track OpenTrackDialog::getSelectedTrack() const
+TrackData OpenTrackDialog::getSelectedTrack() const
 {
-  Track track;
+  TrackData track;
   QList<QTreeWidgetItem*> selectedTableItems = ui->trackListTreeWidget->selectedItems();
   if (selectedTableItems.size() > 0)
-    track = selectedTableItems.first()->data(0, Qt::UserRole).value<Track>();
+    track = selectedTableItems.first()->data(TrackTreeColumns::NameColumn, Qt::UserRole).value<TrackData>();
 
   return track;
 }
@@ -66,20 +66,20 @@ void OpenTrackDialog::loadDatabase(VeloDb* database)
   database->queryAll();
 
   int row = 0;
-  foreach(Track track, *database->getTracks()) {
+  foreach(TrackData track, *database->getTracks()) {
     QTreeWidgetItem* trackItem = new QTreeWidgetItem();
     trackItem->setText(0, track.name);
 
-    for (QVector<Scene>::iterator i = database->getScenes()->begin(); i != database->getScenes()->end(); ++i) {
+    for (QVector<SceneData>::iterator i = database->getScenes()->begin(); i != database->getScenes()->end(); ++i) {
       if (i->id == track.sceneId) {
-        trackItem->setText(1, i->name);
+        trackItem->setText(TrackTreeColumns::SceneColumn, i->title);
         break;
       }
     }
 
     QVariant var;
     var.setValue(track);
-    trackItem->setData(0, Qt::UserRole, var);
+    trackItem->setData(TrackTreeColumns::NameColumn, Qt::UserRole, var);
 
     ui->trackListTreeWidget->addTopLevelItem(trackItem);
     row++;
@@ -88,7 +88,7 @@ void OpenTrackDialog::loadDatabase(VeloDb* database)
   QStringList labels;
   labels << tr("Name") << tr("Scene");
   ui->trackListTreeWidget->setHeaderLabels(labels);
-  ui->trackListTreeWidget->header()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
+  ui->trackListTreeWidget->header()->setSectionResizeMode(TrackTreeColumns::NameColumn, QHeaderView::ResizeToContents);
 }
 
 

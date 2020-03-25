@@ -21,8 +21,8 @@ SOURCES += \
     main.cpp \
     mainwindow.cpp \
     opentrackdialog.cpp \
-    velodataparser.cpp \
-    velodb.cpp
+    velodb.cpp \
+    velotrack.cpp
 
 HEADERS += \
     delegates.h \
@@ -30,8 +30,8 @@ HEADERS += \
     mainwindow.h \
     opentrackdialog.h \
     sqlite3.h \
-    velodataparser.h \
-    velodb.h
+    velodb.h \
+    velotrack.h
 
 FORMS += \
     mainwindow.ui \

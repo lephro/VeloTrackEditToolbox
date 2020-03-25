@@ -12,6 +12,11 @@ QT_BEGIN_NAMESPACE
 namespace Ui { class OpenTrackDialog; }
 QT_END_NAMESPACE
 
+enum TrackTreeColumns {
+  NameColumn = 0,
+  SceneColumn = 1
+};
+
 class OpenTrackDialog : public QDialog
 {
   Q_OBJECT
@@ -20,7 +25,7 @@ public:
   explicit OpenTrackDialog(QWidget *parent = nullptr, VeloDb* productionDb = nullptr, VeloDb* betaDb = nullptr, VeloDb* customDb = nullptr) noexcept(false);
   ~OpenTrackDialog();
 
-  Track getSelectedTrack() const;
+  TrackData getSelectedTrack() const;
 
 private slots:
   void on_databaseComboBox_currentIndexChanged(const QString &database);

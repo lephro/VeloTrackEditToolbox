@@ -12,21 +12,21 @@
 #include "sqlite3.h"
 
 
-enum Database {
+enum DatabaseType {
   Production = 0,
   Beta = 1,
   Custom = 2
 };
 Q_ENUMS(Database)
 
-struct Prefab
+struct PrefabData
 {
   uint id = 0;
   QString name = "";
   QString type = "";
   bool gate = false;
 
-  bool operator < (const Prefab& prefab)
+  bool operator < (const PrefabData& prefab)
   {
     return name.compare(prefab.name, Qt::CaseInsensitive) < 0;
   }
@@ -36,9 +36,9 @@ struct Prefab
     return name;
   }
 };
-Q_DECLARE_METATYPE(Prefab);
+Q_DECLARE_METATYPE(PrefabData);
 
-struct Scene
+struct SceneData
 {
   uint id = 0;
   QString name = "";
@@ -46,7 +46,7 @@ struct Scene
   QString title = "";
   bool enabled = false;
 
-  bool operator < (const Scene& scene)
+  bool operator < (const SceneData& scene)
   {
     return name.compare(scene.name, Qt::CaseInsensitive) < 0;
   }
@@ -57,31 +57,25 @@ struct Scene
   }
 };
 
-struct Track
+struct TrackData
 {
   uint id = 0;
   uint sceneId = 0;
   QByteArray value = QByteArray();
   QString name = "";
   short protectedTrack = short(true);
-  Database database = Database::Production;
+  DatabaseType database = DatabaseType::Production;
 
-  bool operator < (const Track& track) const
-  {
-    return name.compare(track.name, Qt::CaseInsensitive) < 0;
-  }
+  bool operator < (const TrackData& track) const;
 
-  operator QString()
-  {
-    return name;
-  }
+  operator QString();
 };
-Q_DECLARE_METATYPE(Track);
+Q_DECLARE_METATYPE(TrackData);
 
 class VeloDb
 {
 public:
-  VeloDb(Database database, const QString& userDbFilename = "", const QString& settingsDbFilename = "");
+  VeloDb(DatabaseType databaseType, const QString& userDbFilename = "", const QString& settingsDbFilename = "");
   ~VeloDb();
 
   bool isValid() const;
@@ -91,30 +85,30 @@ public:
   void queryScenes();
   void queryTracks();
 
-  void deleteTrack(Track &track);
-  uint saveTrack(Track& track, bool createNewEntry = true);
+  void deleteTrack(TrackData &track);
+  uint saveTrack(TrackData& track, bool createNewEntry = true);
   void setSettingsDbFilename(const QString& filename);
   void setUserDbFilename(const QString& filename);
 
-  QVector<Prefab> *getPrefabs() const;
-  QVector<Scene>* getScenes() const;
-  QVector<Track>* getTracks() const;
+  QVector<PrefabData> *getPrefabs() const;
+  QVector<SceneData>* getScenes() const;
+  QVector<TrackData>* getTracks() const;
 
 private:
-  Database database;
+  DatabaseType databaseType;
   QString settingsDbFilename;
   QString userDbFilename;
 
   sqlite3* db;
-  QVector<Prefab>* prefabs;
-  QVector<Scene>* scenes;
-  QVector<Track>* tracks;
+  QVector<PrefabData>* prefabs;
+  QVector<SceneData>* scenes;
+  QVector<TrackData>* tracks;
 
   bool hasValidSettingsDb() const;
   bool hasValidUserDb() const;
 
-  uint insertTrack(Track& track);
-  void updateTrack(Track& track);
+  uint insertTrack(TrackData& track);
+  void updateTrack(TrackData& track);
 
   uint executeStatement(QString sql);
 

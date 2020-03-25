@@ -1,6 +1,6 @@
 #include "delegates.h"
 
-JsonTreeViewItemDelegate::JsonTreeViewItemDelegate(QObject *parent, VeloDataParser* dataParser)
+JsonTreeViewItemDelegate::JsonTreeViewItemDelegate(QObject *parent, VeloTrack* dataParser)
   : QStyledItemDelegate(parent)
 {
   this->dataParser = dataParser;
@@ -17,11 +17,11 @@ QWidget *JsonTreeViewItemDelegate::createEditor(QWidget *parent, const QStyleOpt
   if (!keyIndex.isValid() || !valueIndex.isValid() || !typeIndex.isValid())
     return nullptr;
 
-  if (editForbidden(keyIndex))
+  if (VeloTrack::isEditableNode(keyIndex))
     return nullptr;
 
   QWidget* editor = nullptr;
-  Prefab prefab = valueIndex.data(Qt::UserRole).value<Prefab>();
+  PrefabData prefab = valueIndex.data(Qt::UserRole).value<PrefabData>();
   if (prefab.id > 0) {
     editor = new QComboBox(parent);
     QComboBox* comboBox = static_cast<QComboBox*>(editor);
@@ -92,13 +92,13 @@ void JsonTreeViewItemDelegate::setEditorData(QWidget *editor, const QModelIndex 
   if (!keyIndex.isValid() || !valueIndex.isValid() || !typeIndex.isValid())
     return;
 
-  Prefab selectedPrefab = valueIndex.data(Qt::UserRole).value<Prefab>();
+  PrefabData selectedPrefab = valueIndex.data(Qt::UserRole).value<PrefabData>();
   if (selectedPrefab.id > 0) {
     QComboBox* comboBox = static_cast<QComboBox*>(editor);
     if (dataParser->getPrefabs() != nullptr) {
       int index = 0;
       for (int i = 0; i < dataParser->getPrefabs()->size(); ++i) {
-        Prefab prefab = dataParser->getPrefabs()->value(i);
+        PrefabData prefab = dataParser->getPrefabs()->value(i);
         if (selectedPrefab.gate == prefab.gate) {
           QVariant var;
           var.setValue(prefab);
@@ -143,7 +143,7 @@ void JsonTreeViewItemDelegate::setModelData(QWidget *editor, QAbstractItemModel 
   QVariant value;
   if (keyIndex.data() == "prefab") {
     QComboBox* comboBox = static_cast<QComboBox*>(editor);
-    Prefab prefab = comboBox->currentData(Qt::UserRole).value<Prefab>();
+    PrefabData prefab = comboBox->currentData(Qt::UserRole).value<PrefabData>();
     QModelIndex parentKeyItemIndex = valueIndex.parent();
     if (parentKeyItemIndex.isValid()) {
       model->setData(parentKeyItemIndex, prefab.name, Qt::DisplayRole);
@@ -183,6 +183,7 @@ void JsonTreeViewItemDelegate::setModelData(QWidget *editor, QAbstractItemModel 
     value = QVariant(lineEdit->text());
   }
 
+  model->setData(keyIndex, true, Qt::UserRole);
   model->setData(valueIndex, value, Qt::EditRole);
 }
 
@@ -192,29 +193,3 @@ void JsonTreeViewItemDelegate::updateEditorGeometry(QWidget *editor, const QStyl
 
   editor->setGeometry(option.rect);
 }
-
-bool JsonTreeViewItemDelegate::editForbidden(const QModelIndex& keyIndex) const
-{
-  QModelIndex valueIndex = keyIndex.siblingAtColumn(1);
-  Prefab prefab = valueIndex.data(Qt::UserRole).value<Prefab>();
-
-  if (!valueIndex.isValid())
-    return true;
-
-  if (prefab.id > 0) {
-    return ((prefab.name == "DefaultStartGrid") ||
-            (prefab.name == "DefaultKDRAStartGrid") ||
-            (prefab.name == "DR1StartGrid") ||
-            (prefab.name == "PolyStartGrid") ||
-            (prefab.name == "MicroStartGrid") ||
-            (prefab.name == "ControlCurve") ||
-            (prefab.name == "ControlPoint"));
-  } else if (keyIndex.data() == "finish") {
-    return valueIndex.data().toBool() == true;
-  } else if (keyIndex.data() == "start") {
-    return valueIndex.data().toBool() == true;
-  }
-
-  return false;
-}
-

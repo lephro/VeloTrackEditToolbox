@@ -9,10 +9,10 @@ MainWindow::MainWindow(QWidget *parent)
 
   defaultWindowTitle = QString(windowTitle());
 
-  productionDb = new VeloDb(Database::Production);
-  betaDb = new VeloDb(Database::Beta);
-  customDb = new VeloDb(Database::Custom);
-  dataParser = new VeloDataParser();
+  productionDb = new VeloDb(DatabaseType::Production);
+  betaDb = new VeloDb(DatabaseType::Beta);
+  customDb = new VeloDb(DatabaseType::Custom);
+  veloTrack = new VeloTrack();
 
   try {
     readSettings();
@@ -20,7 +20,7 @@ MainWindow::MainWindow(QWidget *parent)
     e.Message();
   }
 
-  ui->treeView->setItemDelegateForColumn(NodeTreeColumns::ValueColumn, new JsonTreeViewItemDelegate(nullptr, dataParser));
+  ui->treeView->setItemDelegateForColumn(NodeTreeColumns::ValueColumn, new JsonTreeViewItemDelegate(nullptr, veloTrack));
 
   ui->saveAsNewCheckbox->setChecked(saveAsNew);
 
@@ -30,8 +30,8 @@ MainWindow::MainWindow(QWidget *parent)
 void MainWindow::closeTrack()
 {
   setWindowTitle(defaultWindowTitle);
-  loadedTrack = Track();
-  dataParser->getStandardItemModel()->clear();
+  loadedTrack = TrackData();
+  veloTrack->getStandardItemModel()->clear();
   ui->sceneComboBox->clear();
   ui->replacePrefabComboBox->clear();
   ui->replacePrefabWithComboBox->clear();
@@ -39,7 +39,7 @@ void MainWindow::closeTrack()
 
 void MainWindow::on_buildTypeComboBox_currentIndexChanged(int index)
 {
-  setDatabaseOptionsDatabaseFilenames(Database(index));
+  setDatabaseOptionsDatabaseFilenames(DatabaseType(index));
   updateDatabaseOptionsDatabaseStatus();
 }
 
@@ -91,9 +91,9 @@ void MainWindow::on_replacePrefabComboBox_currentIndexChanged(int index)
 {
   Q_UNUSED(index)
 
-  Prefab selectedPrefab = dataParser->getPrefab(ui->replacePrefabComboBox->currentData().toUInt());
+  PrefabData selectedPrefab = veloTrack->getPrefab(ui->replacePrefabComboBox->currentData().toUInt());
   ui->replacePrefabWithComboBox->clear();
-  for (QVector<Prefab>::iterator i = dataParser->getPrefabs()->begin(); i != dataParser->getPrefabs()->end(); ++i) {
+  for (QVector<PrefabData>::iterator i = veloTrack->getPrefabs()->begin(); i != veloTrack->getPrefabs()->end(); ++i) {
     if ((i->id != selectedPrefab.id) && (i->gate == selectedPrefab.gate)) {
       ui->replacePrefabWithComboBox->addItem(i->name, i->id);
     }
@@ -134,7 +134,7 @@ void MainWindow::openTrack()
     OpenTrackDialog openTrackDialog(this, productionDb, betaDb, customDb);
     if (openTrackDialog.exec()) {
       if (maybeSave()) {
-        Track selectedTrack = openTrackDialog.getSelectedTrack();
+        TrackData selectedTrack = openTrackDialog.getSelectedTrack();
         if (selectedTrack.id > 0) {
           loadTrack(selectedTrack);
         }
@@ -183,7 +183,7 @@ void MainWindow::readSettings()
   customDb->setSettingsDbFilename(customSettingsDbFilename);
   customDb->setUserDbFilename(customUserDbFilename);
 
-  setDatabaseOptionsDatabaseFilenames(Database::Production);
+  setDatabaseOptionsDatabaseFilenames(DatabaseType::Production);
 }
 
 void MainWindow::replacePrefab()
@@ -192,22 +192,22 @@ void MainWindow::replacePrefab()
   switch (ui->replacePrefabWhereComboBox->currentIndex()) {
 
   case 0: // All nodes
-    searchIndex = dataParser->getRootIndex();
+    searchIndex = veloTrack->getRootIndex();
     break;
 
   case 1: // Barriers
-    searchIndex = dataParser->getRootIndex();
-    for (int i = 0; i < dataParser->getStandardItemModel()->rowCount(searchIndex); ++i) {
-      QModelIndex childIndex = dataParser->getStandardItemModel()->index(i, 0, searchIndex);
+    searchIndex = veloTrack->getRootIndex();
+    for (int i = 0; i < veloTrack->getStandardItemModel()->rowCount(searchIndex); ++i) {
+      QModelIndex childIndex = veloTrack->getStandardItemModel()->index(i, 0, searchIndex);
       if (childIndex.data(Qt::DisplayRole).toString() ==  "barriers")
         searchIndex = childIndex;
     }
     break;
 
   case 2: // Gates
-    searchIndex = dataParser->getRootIndex();
-    for (int i = 0; i < dataParser->getStandardItemModel()->rowCount(searchIndex); ++i) {
-      QModelIndex childIndex = dataParser->getStandardItemModel()->index(i, 0, searchIndex);
+    searchIndex = veloTrack->getRootIndex();
+    for (int i = 0; i < veloTrack->getStandardItemModel()->rowCount(searchIndex); ++i) {
+      QModelIndex childIndex = veloTrack->getStandardItemModel()->index(i, 0, searchIndex);
       if (childIndex.data(Qt::DisplayRole).toString() ==  "gates")
         searchIndex = childIndex;
     }
@@ -221,7 +221,7 @@ void MainWindow::replacePrefab()
   if (!searchIndex.isValid())
     return;
 
-  uint changedPrefabCount = dataParser->replacePrefab(searchIndex,
+  uint changedPrefabCount = veloTrack->replacePrefab(searchIndex,
                                                       ui->replacePrefabComboBox->currentData().toUInt(),
                                                       ui->replacePrefabWithComboBox->currentData().toUInt());
 
@@ -233,11 +233,11 @@ void MainWindow::replacePrefab()
 
 bool MainWindow::maybeSave()
 {
-    if (!trackModified)
+    if (!veloTrack->isModified())
         return true;
     const QMessageBox::StandardButton ret
         = QMessageBox::warning(this,
-                               tr("Application"),
+                               defaultWindowTitle,
                                tr("The track has been modified.\n"
                                   "Do you want to save your changes?"),
                                QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
@@ -259,18 +259,20 @@ void MainWindow::saveTrackToDb()
     return;
 
   loadedTrack.sceneId = ui->sceneComboBox->currentData().toUInt();
-  loadedTrack.value = *dataParser->exportTrackDataFromModel();
+  loadedTrack.value = *veloTrack->exportTrackDataFromModel();
 
   QString message = tr("The track was saved successfully to the database!");
   if (saveAsNew) {
     loadedTrack.name += "-new";
-    message += tr("New track name: ") + loadedTrack.name;
+    message += tr("\n\nNew track name: ") + loadedTrack.name;
 
     updateWindowTitle();
   }
 
   try {
     loadedTrack.id = getDatabase()->saveTrack(loadedTrack, saveAsNew);
+
+    veloTrack->resetModified();
 
     QMessageBox::information(nullptr, tr("Save Track"), message);
   } catch (VeloToolkitException& e) {
@@ -286,7 +288,7 @@ void MainWindow::saveTrackToFile()
   QFile *file = new QFile("track.json");
   file->remove();
   file->open(QFile::ReadWrite);
-  file->write(*dataParser->exportTrackDataFromModel());
+  file->write(*veloTrack->exportTrackDataFromModel());
   file->close();
 }
 
@@ -318,11 +320,9 @@ void MainWindow::writeSettings()
   settings->endGroup();
 }
 
-void MainWindow::loadTrack(const Track& track)
+void MainWindow::loadTrack(const TrackData& track)
 {
   closeTrack();
-
-  trackModified = true;
 
   VeloDb* veloDb = getDatabase();
 
@@ -330,11 +330,11 @@ void MainWindow::loadTrack(const Track& track)
 
   updateWindowTitle();
 
-  dataParser->setPrefabs(veloDb->getPrefabs());
-  dataParser->importTrackDataToModel(&loadedTrack.value);
-  ui->treeView->setModel(dataParser->getStandardItemModel());
+  veloTrack->setPrefabs(veloDb->getPrefabs());
+  veloTrack->importTrackDataToModel(&loadedTrack.value);
+  ui->treeView->setModel(veloTrack->getStandardItemModel());
 
-  for (QVector<Scene>::iterator i = veloDb->getScenes()->begin(); i != veloDb->getScenes()->end(); ++i) {
+  for (QVector<SceneData>::iterator i = veloDb->getScenes()->begin(); i != veloDb->getScenes()->end(); ++i) {
     ui->sceneComboBox->addItem(i->title, i->id);
     if (i->id == loadedTrack.sceneId)
       ui->sceneComboBox->setCurrentText(i->title);
@@ -349,8 +349,8 @@ void MainWindow::loadTrack(const Track& track)
 void MainWindow::updateReplacePrefabComboBox()
 {
   ui->replacePrefabComboBox->clear();
-  QVector<Prefab>* prefabsInUse = dataParser->getPrefabsInUse();
-  for (QVector<Prefab>::iterator i = prefabsInUse->begin(); i != prefabsInUse->end(); ++i)
+  QVector<PrefabData>* prefabsInUse = veloTrack->getPrefabsInUse();
+  for (QVector<PrefabData>::iterator i = prefabsInUse->begin(); i != prefabsInUse->end(); ++i)
   {
     ui->replacePrefabComboBox->addItem(i->name, i->id);
   }
@@ -361,34 +361,34 @@ VeloDb* MainWindow::getDatabase()
   return getDatabase(loadedTrack.database);
 }
 
-VeloDb* MainWindow::getDatabase(Database database)
+VeloDb* MainWindow::getDatabase(DatabaseType databaseType)
 {
-  if (database == Database::Production)
+  if (databaseType == DatabaseType::Production)
     return productionDb;
-  else if (database == Database::Beta)
+  else if (databaseType == DatabaseType::Beta)
     return betaDb;
-  else if (database == Database::Custom)
+  else if (databaseType == DatabaseType::Custom)
     return customDb;
   else
     return productionDb;
 }
 
-void MainWindow::setDatabaseOptionsDatabaseFilenames(const Database database)
+void MainWindow::setDatabaseOptionsDatabaseFilenames(const DatabaseType databaseType)
 {
-  databaseOptionsSelectedDb = database;
+  databaseOptionsSelectedDbType = databaseType;
 
-  switch (database) {
-  case Database::Production:
+  switch (databaseType) {
+  case DatabaseType::Production:
     ui->userDbLineEdit->setText(productionUserDbFilename);
     ui->settingsDbLineEdit->setText(productionSettingsDbFilename);
     break;
 
-  case Database::Beta:
+  case DatabaseType::Beta:
     ui->userDbLineEdit->setText(betaUserDbFilename);
     ui->settingsDbLineEdit->setText(betaSettingsDbFilename);
     break;
 
-  case Database::Custom:
+  case DatabaseType::Custom:
     ui->userDbLineEdit->setText(customUserDbFilename);
     ui->settingsDbLineEdit->setText(customSettingsDbFilename);
     break;
@@ -399,11 +399,11 @@ void MainWindow::setDatabaseOptionsSettingsDb(const QString& settingsDbFilename)
 {
   QSettings* settings = new QSettings("settings.ini", QSettings::IniFormat);
 
-  switch (databaseOptionsSelectedDb) {
-  case Database::Production:
+  switch (databaseOptionsSelectedDbType) {
+  case DatabaseType::Production:
     if (settingsDbFilename != productionSettingsDbFilename) {
-      if ((loadedTrack.database == databaseOptionsSelectedDb) && (!maybeSave())) {
-        setDatabaseOptionsDatabaseFilenames(databaseOptionsSelectedDb);
+      if ((loadedTrack.database == databaseOptionsSelectedDbType) && (!maybeSave())) {
+        setDatabaseOptionsDatabaseFilenames(databaseOptionsSelectedDbType);
       } else {
         productionSettingsDbFilename = settingsDbFilename;
         settings->setValue("database/productionSettingsDbFilename", settingsDbFilename);
@@ -415,10 +415,10 @@ void MainWindow::setDatabaseOptionsSettingsDb(const QString& settingsDbFilename)
     }
     break;
 
-  case Database::Beta:
+  case DatabaseType::Beta:
     if (settingsDbFilename != betaSettingsDbFilename) {
-      if ((loadedTrack.database == databaseOptionsSelectedDb) && (!maybeSave())) {
-        setDatabaseOptionsDatabaseFilenames(databaseOptionsSelectedDb);
+      if ((loadedTrack.database == databaseOptionsSelectedDbType) && (!maybeSave())) {
+        setDatabaseOptionsDatabaseFilenames(databaseOptionsSelectedDbType);
       } else {
         betaSettingsDbFilename = settingsDbFilename;
         settings->setValue("database/betaSettingsDbFilename", settingsDbFilename);
@@ -430,10 +430,10 @@ void MainWindow::setDatabaseOptionsSettingsDb(const QString& settingsDbFilename)
     }
     break;
 
-  case Database::Custom:
+  case DatabaseType::Custom:
     if (settingsDbFilename != customSettingsDbFilename) {
-      if ((loadedTrack.database == databaseOptionsSelectedDb) && (!maybeSave())) {
-        setDatabaseOptionsDatabaseFilenames(databaseOptionsSelectedDb);
+      if ((loadedTrack.database == databaseOptionsSelectedDbType) && (!maybeSave())) {
+        setDatabaseOptionsDatabaseFilenames(databaseOptionsSelectedDbType);
       } else {
         customSettingsDbFilename = settingsDbFilename;
         settings->setValue("database/customSettingsDbFilename", settingsDbFilename);
@@ -446,7 +446,7 @@ void MainWindow::setDatabaseOptionsSettingsDb(const QString& settingsDbFilename)
     break;
   }
 
-  getDatabase(databaseOptionsSelectedDb)->setSettingsDbFilename(settingsDbFilename);
+  getDatabase(databaseOptionsSelectedDbType)->setSettingsDbFilename(settingsDbFilename);
 
   delete settings;
 }
@@ -455,12 +455,12 @@ void MainWindow::setDatabaseOptionsUserDb(const QString& userDbFilename)
 {
   QSettings* settings = new QSettings("settings.ini", QSettings::IniFormat);
 
-  switch (databaseOptionsSelectedDb)
+  switch (databaseOptionsSelectedDbType)
   {
-  case Database::Production:
+  case DatabaseType::Production:
     if (userDbFilename != productionUserDbFilename) {
-      if ((loadedTrack.database == databaseOptionsSelectedDb) && (!maybeSave())) {
-        setDatabaseOptionsDatabaseFilenames(databaseOptionsSelectedDb);
+      if ((loadedTrack.database == databaseOptionsSelectedDbType) && (!maybeSave())) {
+        setDatabaseOptionsDatabaseFilenames(databaseOptionsSelectedDbType);
       } else {
         productionUserDbFilename = userDbFilename;
         settings->setValue("database/productionUserDbFilename", userDbFilename);
@@ -472,10 +472,10 @@ void MainWindow::setDatabaseOptionsUserDb(const QString& userDbFilename)
     }
     break;
 
-  case Database::Beta:
+  case DatabaseType::Beta:
     if (userDbFilename != betaUserDbFilename) {
-      if ((loadedTrack.database == databaseOptionsSelectedDb) && (!maybeSave())) {
-        setDatabaseOptionsDatabaseFilenames(databaseOptionsSelectedDb);
+      if ((loadedTrack.database == databaseOptionsSelectedDbType) && (!maybeSave())) {
+        setDatabaseOptionsDatabaseFilenames(databaseOptionsSelectedDbType);
       } else {
         betaUserDbFilename = userDbFilename;
         settings->setValue("database/betaUserDbFilename", userDbFilename);
@@ -487,10 +487,10 @@ void MainWindow::setDatabaseOptionsUserDb(const QString& userDbFilename)
     }
     break;
 
-  case Database::Custom:
+  case DatabaseType::Custom:
     if (userDbFilename != customUserDbFilename) {
-      if ((loadedTrack.database == databaseOptionsSelectedDb) && (!maybeSave())) {
-        setDatabaseOptionsDatabaseFilenames(databaseOptionsSelectedDb);
+      if ((loadedTrack.database == databaseOptionsSelectedDbType) && (!maybeSave())) {
+        setDatabaseOptionsDatabaseFilenames(databaseOptionsSelectedDbType);
       } else {
         customUserDbFilename = userDbFilename;
         settings->setValue("database/customUserDbFilename", userDbFilename);
@@ -503,7 +503,7 @@ void MainWindow::setDatabaseOptionsUserDb(const QString& userDbFilename)
     break;
   }
 
-  getDatabase(databaseOptionsSelectedDb)->setUserDbFilename(userDbFilename);
+  getDatabase(databaseOptionsSelectedDbType)->setUserDbFilename(userDbFilename);
 
   delete settings;
 }
@@ -525,7 +525,7 @@ void MainWindow::updateDatabaseOptionsDatabaseStatus()
 
 void MainWindow::updateWindowTitle()
 {
-  QString databaseStr = (loadedTrack.database == Database::Production ? "Production" : ((loadedTrack.database == Database::Beta) ? "Beta" : "Custom"));
+  QString databaseStr = (loadedTrack.database == DatabaseType::Production ? "Production" : ((loadedTrack.database == DatabaseType::Beta) ? "Beta" : "Custom"));
   setWindowTitle(loadedTrack.name + " @ " + databaseStr + " - " + defaultWindowTitle);
 }
 
