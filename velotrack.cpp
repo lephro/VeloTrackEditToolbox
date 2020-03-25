@@ -29,7 +29,7 @@ void VeloTrack::changeGateOrder(const uint oldGateNo, const uint newGateNo)
 
 bool VeloTrack::isEditableNode(const QModelIndex& keyIndex)
 {
-  QModelIndex valueIndex = keyIndex.siblingAtColumn(1);
+  QModelIndex valueIndex = keyIndex.siblingAtColumn(NodeTreeColumns::ValueColumn);
   PrefabData prefab = valueIndex.data(Qt::UserRole).value<PrefabData>();
 
   if (!valueIndex.isValid())
@@ -37,13 +37,13 @@ bool VeloTrack::isEditableNode(const QModelIndex& keyIndex)
 
   if (prefab.id > 0) {
     return ((prefab.name == "CtrlParent") ||
+            (prefab.name == "ControlCurve") ||
+            (prefab.name == "ControlPoint") ||
             (prefab.name == "DefaultStartGrid") ||
             (prefab.name == "DefaultKDRAStartGrid") ||
             (prefab.name == "DR1StartGrid") ||
             (prefab.name == "PolyStartGrid") ||
-            (prefab.name == "MicroStartGrid") ||
-            (prefab.name == "ControlCurve") ||
-            (prefab.name == "ControlPoint"));
+            (prefab.name == "MicroStartGrid"));
   } else if (keyIndex.data() == "finish") {
     return valueIndex.data().toBool() == true;
   } else if (keyIndex.data() == "start") {
@@ -202,7 +202,7 @@ void VeloTrack::resetFinishGates()
 
 void VeloTrack::resetModified()
 {
-  resetModifiedNodes(model->invisibleRootItem()->index());
+  resetModifiedNodes(model->invisibleRootItem());
 }
 
 void VeloTrack::resetStartGates()
@@ -284,17 +284,15 @@ QJsonObject* VeloTrack::exportToObject(const QStandardItem* treeItem)
   return object;
 }
 
-void VeloTrack::resetModifiedNodes(const QModelIndex& index)
+void VeloTrack::resetModifiedNodes(const QStandardItem* item) const
 {
-  for (int i = 0; i < model->rowCount(index); ++i)
+  for (int i = 0; i < item->rowCount(); ++i)
   {
-    QModelIndex childIndex = model->index(i, NodeTreeColumns::KeyColumn, index);
-    if (childIndex.data(Qt::UserRole).toBool())
-      model->setData(childIndex, false, Qt::UserRole);
+    QStandardItem* child = item->child(i, 0);
+    child->setData(Qt::UserRole, false);
 
-    if (model->hasChildren(index)) {
-      return resetModifiedNodes(childIndex);
-    }
+    if (child->hasChildren())
+      resetModifiedNodes(child);
   }
 }
 

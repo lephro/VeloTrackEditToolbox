@@ -68,7 +68,7 @@ private:
   bool isModifiedNode(const QStandardItem* item) const;
   QJsonArray *exportToDataArray(const QStandardItem *treeItem);
   QJsonObject *exportToObject(const QStandardItem *treeItem);
-  void resetModifiedNodes(const QModelIndex &index);
+  void resetModifiedNodes(const QStandardItem* item) const;
 };
 
 #endif // TRACKPARSER_H

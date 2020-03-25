@@ -89,7 +89,7 @@
        </property>
        <property name="icon">
         <iconset resource="icons.qrc">
-         <normaloff>:/icons/magnifying_glass</normaloff>:/icons/magnifying_glass</iconset>
+         <normaloff>:/icons/medium</normaloff>:/icons/medium</iconset>
        </property>
        <property name="flags">
         <set>ItemIsSelectable|ItemIsUserCheckable|ItemIsEnabled</set>
@@ -112,7 +112,7 @@
        </property>
        <property name="icon">
         <iconset resource="icons.qrc">
-         <normaloff>:/icons/solutions</normaloff>:/icons/solutions</iconset>
+         <normaloff>:/icons/tree_structure</normaloff>:/icons/tree_structure</iconset>
        </property>
        <property name="flags">
         <set>ItemIsSelectable|ItemIsUserCheckable|ItemIsEnabled</set>
@@ -133,7 +133,7 @@
        </property>
        <property name="icon">
         <iconset resource="icons.qrc">
-         <normaloff>:/icons/gear</normaloff>:/icons/gear</iconset>
+         <normaloff>:/icons/gear2</normaloff>:/icons/gear2</iconset>
        </property>
        <property name="flags">
         <set>ItemIsSelectable|ItemIsUserCheckable|ItemIsEnabled</set>
@@ -265,6 +265,10 @@
               <property name="text">
                <string>Replace</string>
               </property>
+              <property name="icon">
+               <iconset resource="icons.qrc">
+                <normaloff>:/icons/replace</normaloff>:/icons/replace</iconset>
+              </property>
              </widget>
             </item>
            </layout>
@@ -293,6 +297,16 @@
           </property>
           <property name="text">
            <string>Save</string>
+          </property>
+          <property name="icon">
+           <iconset resource="icons.qrc">
+            <normaloff>:/icons/save_all</normaloff>:/icons/save_all</iconset>
+          </property>
+          <property name="iconSize">
+           <size>
+            <width>24</width>
+            <height>24</height>
+           </size>
           </property>
          </widget>
         </item>
@@ -323,6 +337,16 @@
           <property name="text">
            <string>Delete</string>
           </property>
+          <property name="icon">
+           <iconset resource="icons.qrc">
+            <normaloff>:/icons/delete_bin</normaloff>:/icons/delete_bin</iconset>
+          </property>
+          <property name="iconSize">
+           <size>
+            <width>24</width>
+            <height>24</height>
+           </size>
+          </property>
          </widget>
         </item>
         <item row="1" column="0">
@@ -335,6 +359,16 @@
           </property>
           <property name="text">
            <string>Open</string>
+          </property>
+          <property name="icon">
+           <iconset resource="icons.qrc">
+            <normaloff>:/icons/address_book</normaloff>:/icons/address_book</iconset>
+          </property>
+          <property name="iconSize">
+           <size>
+            <width>24</width>
+            <height>24</height>
+           </size>
           </property>
          </widget>
         </item>
