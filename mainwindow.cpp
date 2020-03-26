@@ -347,7 +347,12 @@ void MainWindow::loadTrack(const TrackData& track)
   updateWindowTitle();
 
   veloTrack->setPrefabs(veloDb->getPrefabs());
-  veloTrack->importTrackDataToModel(&loadedTrack.value);
+  try {
+    veloTrack->importTrackDataToModel(&loadedTrack.value);
+  } catch (VeloToolkitException& e) {
+    e.Message();
+  }
+
   ui->treeView->setModel(veloTrack->getStandardItemModel());
 
   for (QVector<SceneData>::iterator i = veloDb->getScenes()->begin(); i != veloDb->getScenes()->end(); ++i) {

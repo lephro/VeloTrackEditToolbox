@@ -53,6 +53,11 @@ bool VeloTrack::isEditableNode(const QModelIndex& keyIndex)
   return false;
 }
 
+TrackData *VeloTrack::mergeTracks(const TrackData &trackToBeAdded)
+{
+
+}
+
 QByteArray* VeloTrack::exportTrackDataFromModel()
 {
   QJsonDocument jsonDoc;
@@ -79,13 +84,15 @@ QByteArray* VeloTrack::exportTrackDataFromModel()
   return new QByteArray(jsonDoc.toJson(QJsonDocument::Compact));
 }
 
-void VeloTrack::importTrackDataToModel(const QByteArray* jsonData)
+void VeloTrack::importTrackDataToModel(const QByteArray* jsonData, const bool addData)
 {
-  model->clear();
+  if (!addData) {
+    model->clear();
 
-  QStringList labels;
-  labels << tr("Node") << tr("Value") << tr("Type");
-  model->setHorizontalHeaderLabels(labels);
+    QStringList labels;
+    labels << tr("Node") << tr("Value") << tr("Type");
+    model->setHorizontalHeaderLabels(labels);
+  }
 
   QStandardItem* rootItem = model->invisibleRootItem();
 
@@ -95,6 +102,9 @@ void VeloTrack::importTrackDataToModel(const QByteArray* jsonData)
 
   QJsonObject* jsonRootObject = new QJsonObject(doc.object());
   importJsonObject(rootItem, *jsonRootObject);
+
+  if (rootItem->rowCount() == 0)
+    throw CouldNotParseTrackException();
 }
 
 bool VeloTrack::isModified()
@@ -192,7 +202,7 @@ void VeloTrack::resetFinishGates()
   for (int i = 0; i < finishKeys.size(); ++i) {
     QModelIndex finishValueIndex = finishKeys.value(i)->index().siblingAtColumn(NodeTreeColumns::ValueColumn);
     if (finishValueIndex.isValid()) {
-      model->setData(finishValueIndex, QVariant(false), Qt::EditRole);
+      model->setData(finishValueIndex, QVariant(false), Qt::UserRole);
     }
   }
 }
@@ -285,8 +295,9 @@ void VeloTrack::resetModifiedNodes(const QStandardItem* item) const
 {
   for (int i = 0; i < item->rowCount(); ++i)
   {
+    model->setData(item->child(i, 0)->index(), true, Qt::UserRole);
     QStandardItem* child = item->child(i, 0);
-    child->setData(Qt::UserRole, false);
+    //child->setData(Qt::UserRole, false);
 
     if (child->hasChildren())
       resetModifiedNodes(child);

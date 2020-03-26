@@ -32,7 +32,7 @@ public:
   ~VeloTrack();
 
   QByteArray *exportTrackDataFromModel();
-  void importTrackDataToModel(const QByteArray *jsonData);
+  void importTrackDataToModel(const QByteArray *jsonData, const bool addData = false);
   bool isModified();
 
   int                 getGateCount() const;
@@ -54,6 +54,7 @@ public:
   void changeGateOrder(const uint oldGateNo, const uint newGateNo);
 
   static bool isEditableNode(const QModelIndex &keyIndex);
+  TrackData* mergeTracks(const TrackData& trackToBeAdded);
 
 private:
   uint sceneId;
