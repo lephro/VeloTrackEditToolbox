@@ -164,9 +164,6 @@ uint VeloTrack::replacePrefab(const QModelIndex& searchIndex, const uint fromPre
 {
   uint prefabCount = 0;
 
-  if (!searchIndex.isValid())
-    return 0;
-
   PrefabData toPrefab = getPrefab(toPrefabId);
 
   QList<QModelIndex> prefabs = findPrefabs(searchIndex);

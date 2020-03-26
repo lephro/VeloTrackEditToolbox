@@ -164,7 +164,7 @@ QString MainWindow::getDefaultPath()
 void MainWindow::readSettings()
 {
   QSettings *settings = new QSettings("settings.ini", QSettings::IniFormat);
-  settings->clear();
+  //settings->clear();
 
   if (settings->value("database/productionUserDbFilename", "").toString() == "") {
     settings->clear();
@@ -223,9 +223,6 @@ void MainWindow::replacePrefab()
     searchIndex = ui->treeView->currentIndex();
     break;
   }
-
-  if (!searchIndex.isValid())
-    return;
 
   uint changedPrefabCount = veloTrack->replacePrefab(searchIndex,
                                                       ui->replacePrefabComboBox->currentData().toUInt(),
