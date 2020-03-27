@@ -66,9 +66,10 @@ struct TrackData
   short protectedTrack = short(true);
   DatabaseType database = DatabaseType::Production;
 
-  bool operator < (const TrackData& track) const;
+  bool operator < (const TrackData& track) const { return name.compare(track.name, Qt::CaseInsensitive) < 0; }
+  bool operator == (const TrackData& track) const { return ((database == track.database) && (id == track.id)); }
 
-  operator QString();
+  operator QString() { return name; }
 };
 Q_DECLARE_METATYPE(TrackData);
 

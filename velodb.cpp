@@ -176,9 +176,6 @@ bool VeloDb::hasValidUserDb() const
 
 uint VeloDb::insertTrack(TrackData &track)
 {
-  if (track.id == 0)
-    throw InvalidTrackException();
-
   if (track.protectedTrack)
     throw ProtectedTrackException();
 
@@ -332,14 +329,4 @@ int VeloDb::queryTracksCallback(void* data, int argc, char* *argv, char* *azColN
   }
 
   return 0;
-}
-
-bool TrackData::operator <(const TrackData &track) const
-{
-  return name.compare(track.name, Qt::CaseInsensitive) < 0;
-}
-
-TrackData::operator QString()
-{
-  return name;
 }

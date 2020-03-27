@@ -1,4 +1,5 @@
 #include "velotrack.h"
+#include "velotrack.h"
 
 VeloTrack::VeloTrack()
 {
@@ -7,7 +8,6 @@ VeloTrack::VeloTrack()
 
 VeloTrack::~VeloTrack()
 {
-  delete prefabs;
   delete model;
 }
 
@@ -35,15 +35,13 @@ bool VeloTrack::isEditableNode(const QModelIndex& keyIndex)
   if (!valueIndex.isValid())
     return false;
 
+  if (isStartGrid(prefab))
+    return true;
+
   if (prefab.id > 0) {
     return ((prefab.name == "CtrlParent") ||
             (prefab.name == "ControlCurve") ||
-            (prefab.name == "ControlPoint") ||
-            (prefab.name == "DefaultStartGrid") ||
-            (prefab.name == "DefaultKDRAStartGrid") ||
-            (prefab.name == "DR1StartGrid") ||
-            (prefab.name == "PolyStartGrid") ||
-            (prefab.name == "MicroStartGrid"));
+            (prefab.name == "ControlPoint"));
   } else if (keyIndex.data() == "finish") {
     return valueIndex.data().toBool() == true;
   } else if (keyIndex.data() == "start") {
@@ -53,12 +51,19 @@ bool VeloTrack::isEditableNode(const QModelIndex& keyIndex)
   return false;
 }
 
-TrackData *VeloTrack::mergeTracks(const TrackData &trackToBeAdded)
+bool VeloTrack::isStartGrid(PrefabData& prefab)
 {
-
+  if (prefab.id > 0) {
+    return ((prefab.name == "DefaultStartGrid") ||
+            (prefab.name == "DefaultKDRAStartGrid") ||
+            (prefab.name == "DR1StartGrid") ||
+            (prefab.name == "PolyStartGrid") ||
+            (prefab.name == "MicroStartGrid"));
+  }
+  return false;
 }
 
-QByteArray* VeloTrack::exportTrackDataFromModel()
+QByteArray* VeloTrack::exportAsJsonData()
 {
   QJsonDocument jsonDoc;
   QJsonObject jsonObj(jsonDoc.object());
@@ -84,27 +89,26 @@ QByteArray* VeloTrack::exportTrackDataFromModel()
   return new QByteArray(jsonDoc.toJson(QJsonDocument::Compact));
 }
 
-void VeloTrack::importTrackDataToModel(const QByteArray* jsonData, const bool addData)
+void VeloTrack::importJsonData(const QByteArray* jsonData)
 {
-  if (!addData) {
-    model->clear();
+  model->clear();
 
-    QStringList labels;
-    labels << tr("Node") << tr("Value") << tr("Type");
-    model->setHorizontalHeaderLabels(labels);
-  }
+  QStringList labels;
+  labels << tr("Node") << tr("Value") << tr("Type");
+  model->setHorizontalHeaderLabels(labels);
 
   QStandardItem* rootItem = model->invisibleRootItem();
 
   QJsonDocument doc = QJsonDocument(QJsonDocument::fromJson(*jsonData));
   if (doc.isNull())
-    throw CouldNotParseTrackException();
+    throw TrackWithoutNodesException();
 
   QJsonObject* jsonRootObject = new QJsonObject(doc.object());
+
   importJsonObject(rootItem, *jsonRootObject);
 
   if (rootItem->rowCount() == 0)
-    throw CouldNotParseTrackException();
+    throw TrackWithoutNodesException();
 }
 
 bool VeloTrack::isModified()
@@ -112,9 +116,90 @@ bool VeloTrack::isModified()
   return isModifiedNode(model->invisibleRootItem());
 }
 
-int VeloTrack::getGateCount() const
+void VeloTrack::mergeJsonData(const QByteArray* jsonData,
+                              const bool addBarriers,
+                              const bool addGates)
 {
-  return model->findItems("gate", Qt::MatchRecursive, 0).size();
+  QStandardItem* rootItem = model->invisibleRootItem();
+
+  QJsonDocument doc = QJsonDocument(QJsonDocument::fromJson(*jsonData));
+  if (doc.isNull())
+    throw TrackWithoutNodesException();
+
+  QJsonObject* jsonRootObject = new QJsonObject(doc.object());
+
+  QStringList keyList = jsonRootObject->keys();
+  for (int i = 0; i < keyList.size(); ++i) {
+    if (!addGates && (keyList.at(i) == "gates"))
+      continue;
+
+    if (!addBarriers && (keyList.at(i) == "barriers"))
+      continue;
+
+    QList<QStandardItem*> foundItems = model->findItems(keyList.at(i));
+    if (foundItems.count() > 0) {
+      if (foundItems.first()->text() == "weather")
+        continue;
+
+      QJsonValue jsonValue = jsonRootObject->value(keyList.at(i));
+      if(jsonValue.type() == QJsonValue::Object)
+        importJsonObject(foundItems.first(), jsonValue.toObject(), getGateCount(), true);
+      else if (jsonValue.type() == QJsonValue::Array) {
+        importJsonArray(foundItems.first(), jsonValue.toArray(), getGateCount(), true);
+      }
+    } else {
+      QJsonValue jsonValue = jsonRootObject->value(keyList.at(i));
+      QStandardItem* itemKey = new QStandardItem();
+      QStandardItem* itemValue = new QStandardItem();
+      QStandardItem* itemType = new QStandardItem();
+
+      itemKey->setData(keyList.at(i), Qt::DisplayRole);
+      itemValue->setData(jsonValue.toVariant(), Qt::EditRole);
+
+      if (keyList.at(i) == "prefab") {
+        uint prefabId = jsonValue.toVariant().toUInt();
+        if (prefabId > 0 ) {
+          PrefabData prefab = getPrefab(jsonValue.toVariant().toUInt());
+          itemValue->setData(prefab.name, Qt::DisplayRole);
+          QVariant var;
+          var.setValue(prefab);
+          itemValue->setData(var, Qt::UserRole);
+        }
+      }
+
+      itemType->setText(getQJsonValueTypeString(jsonValue.type()));
+
+      itemKey->setFlags(itemKey->flags() ^ Qt::ItemIsEditable);
+      if (itemValue->data(Qt::DisplayRole).toString() == "")
+        itemValue->setFlags(itemValue->flags() ^ Qt::ItemIsEditable);
+      itemType->setFlags(itemType->flags() ^ Qt::ItemIsEditable);
+
+      QList<QStandardItem*> childColumns;
+      childColumns << itemKey << itemValue << itemType;
+      rootItem->appendRow(childColumns);
+
+      if (itemKey->text() == "prefab") {
+        if (itemValue->text() != "")
+          rootItem->setText(itemValue->text());
+        else
+        rootItem->setText(itemKey->text());
+      }
+
+      if(jsonValue.type() == QJsonValue::Object)
+        importJsonObject(itemKey, jsonValue.toObject(), getGateCount());
+      else if (jsonValue.type() == QJsonValue::Array) {
+        importJsonArray(itemKey, jsonValue.toArray(), getGateCount());
+      }
+    }
+  }
+
+  if (rootItem->rowCount() == 0)
+    throw TrackWithoutNodesException();
+}
+
+uint VeloTrack::getGateCount() const
+{
+  return uint(model->findItems("gate", Qt::MatchRecursive, 0).size());
 }
 
 PrefabData VeloTrack::getPrefab(const uint id) const
@@ -202,7 +287,7 @@ void VeloTrack::resetFinishGates()
   for (int i = 0; i < finishKeys.size(); ++i) {
     QModelIndex finishValueIndex = finishKeys.value(i)->index().siblingAtColumn(NodeTreeColumns::ValueColumn);
     if (finishValueIndex.isValid()) {
-      model->setData(finishValueIndex, QVariant(false), Qt::UserRole);
+      model->setData(finishValueIndex, QVariant(false), Qt::EditRole);
     }
   }
 }
@@ -297,8 +382,6 @@ void VeloTrack::resetModifiedNodes(const QStandardItem* item) const
   {
     model->setData(item->child(i, 0)->index(), true, Qt::UserRole);
     QStandardItem* child = item->child(i, 0);
-    //child->setData(Qt::UserRole, false);
-
     if (child->hasChildren())
       resetModifiedNodes(child);
   }
@@ -341,7 +424,7 @@ QString VeloTrack::getQJsonValueTypeString(const QJsonValue::Type type) const
   return "";
 }
 
-void VeloTrack::importJsonArray(QStandardItem* parentItem, const QJsonArray& dataArray)
+void VeloTrack::importJsonArray(QStandardItem* parentItem, const QJsonArray& dataArray, const uint gateOffset, const bool skipStartgrid)
 {
   for (int i = 0; i < dataArray.size(); ++i) {
     QJsonValue jsonValue = dataArray.at(i);
@@ -363,11 +446,11 @@ void VeloTrack::importJsonArray(QStandardItem* parentItem, const QJsonArray& dat
     parentItem->appendRow(childColumns);
 
     if (jsonValue.type() == QJsonValue::Object)
-      importJsonObject(itemKey, jsonValue.toObject());
+      importJsonObject(itemKey, jsonValue.toObject(), gateOffset, skipStartgrid);
   }
 }
 
-void VeloTrack::importJsonObject(QStandardItem* parentItem, const QJsonObject& dataObject)
+void VeloTrack::importJsonObject(QStandardItem* parentItem, const QJsonObject& dataObject, const uint gateOffset, const bool skipStartgrid)
 {
   QStringList keyList = dataObject.keys();
   for (int i = 0; i < keyList.size(); ++i) {
@@ -375,18 +458,32 @@ void VeloTrack::importJsonObject(QStandardItem* parentItem, const QJsonObject& d
     QStandardItem* itemKey = new QStandardItem();
     QStandardItem* itemValue = new QStandardItem();
     QStandardItem* itemType = new QStandardItem();
+
     itemKey->setData(keyList.at(i), Qt::DisplayRole);
     itemValue->setData(jsonValue.toVariant(), Qt::EditRole);
+
     if (keyList.at(i) == "prefab") {
       uint prefabId = jsonValue.toVariant().toUInt();
       if (prefabId > 0 ) {
         PrefabData prefab = getPrefab(jsonValue.toVariant().toUInt());
+
+        if (skipStartgrid && isStartGrid(prefab)) {
+          model->removeRows(parentItem->row(), 1, parentItem->parent()->index());
+          return;
+        }
+
         itemValue->setData(prefab.name, Qt::DisplayRole);
         QVariant var;
         var.setValue(prefab);
         itemValue->setData(var, Qt::UserRole);
       }
     }
+
+    if ((gateOffset > 0) && (keyList.at(i) == "gate")) {
+      uint gateId = jsonValue.toVariant().toUInt() + gateOffset;
+      itemValue->setData(gateId, Qt::EditRole);
+    }
+
     itemType->setText(getQJsonValueTypeString(jsonValue.type()));
 
     itemKey->setFlags(itemKey->flags() ^ Qt::ItemIsEditable);
@@ -402,13 +499,13 @@ void VeloTrack::importJsonObject(QStandardItem* parentItem, const QJsonObject& d
       if (itemValue->text() != "")
         parentItem->setText(itemValue->text());
       else
-      parentItem->setText(itemKey->text());
+        parentItem->setText(itemKey->text());
     }
 
     if(jsonValue.type() == QJsonValue::Object)
-      importJsonObject(itemKey, jsonValue.toObject());
+      importJsonObject(itemKey, jsonValue.toObject(), gateOffset);
     else if (jsonValue.type() == QJsonValue::Array) {
-      importJsonArray(itemKey, jsonValue.toArray());
+      importJsonArray(itemKey, jsonValue.toArray(), gateOffset);
     }
   }
 }
@@ -418,8 +515,8 @@ bool VeloTrack::isModifiedNode(const QStandardItem* item) const
   for (int i = 0; i < item->rowCount(); ++i)
   {
     QStandardItem* child = item->child(i, 0);
-    bool test = child->data(Qt::UserRole).toBool();
-    qDebug() << child->index() << " " << child->row() << ":" << child->column() << "(" << child->text() << ") = " << test;
+    //bool test = child->data(Qt::UserRole).toBool();
+    //qDebug() << child->index() << " " << child->row() << ":" << child->column() << "(" << child->text() << ") = " << test;
     if (child->data(Qt::UserRole).toBool())
       return true;
 

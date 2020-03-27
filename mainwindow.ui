@@ -7,8 +7,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>743</width>
-    <height>469</height>
+    <width>753</width>
+    <height>504</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -22,128 +22,11 @@
    <locale language="English" country="UnitedStates"/>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QHBoxLayout" name="horizontalLayout">
-    <item>
-     <widget class="QListWidget" name="navListWidget">
-      <property name="minimumSize">
-       <size>
-        <width>70</width>
-        <height>260</height>
-       </size>
-      </property>
-      <property name="maximumSize">
-       <size>
-        <width>70</width>
-        <height>16777213</height>
-       </size>
-      </property>
-      <property name="horizontalScrollBarPolicy">
-       <enum>Qt::ScrollBarAlwaysOff</enum>
-      </property>
-      <property name="showDropIndicator" stdset="0">
-       <bool>false</bool>
-      </property>
-      <property name="selectionBehavior">
-       <enum>QAbstractItemView::SelectItems</enum>
-      </property>
-      <property name="iconSize">
-       <size>
-        <width>50</width>
-        <height>50</height>
-       </size>
-      </property>
-      <property name="textElideMode">
-       <enum>Qt::ElideNone</enum>
-      </property>
-      <property name="movement">
-       <enum>QListView::Static</enum>
-      </property>
-      <property name="flow">
-       <enum>QListView::TopToBottom</enum>
-      </property>
-      <property name="spacing">
-       <number>5</number>
-      </property>
-      <property name="viewMode">
-       <enum>QListView::IconMode</enum>
-      </property>
-      <property name="wordWrap">
-       <bool>true</bool>
-      </property>
-      <property name="currentRow">
-       <number>-1</number>
-      </property>
-      <item>
-       <property name="text">
-        <string>Node Editor</string>
-       </property>
-       <property name="font">
-        <font>
-         <weight>75</weight>
-         <bold>true</bold>
-        </font>
-       </property>
-       <property name="textAlignment">
-        <set>AlignCenter</set>
-       </property>
-       <property name="icon">
-        <iconset resource="icons.qrc">
-         <normaloff>:/icons/medium</normaloff>:/icons/medium</iconset>
-       </property>
-       <property name="flags">
-        <set>ItemIsSelectable|ItemIsUserCheckable|ItemIsEnabled</set>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>Merge Tracks</string>
-       </property>
-       <property name="font">
-        <font>
-         <family>MS Shell Dlg 2</family>
-         <pointsize>8</pointsize>
-         <weight>75</weight>
-         <bold>true</bold>
-        </font>
-       </property>
-       <property name="textAlignment">
-        <set>AlignCenter</set>
-       </property>
-       <property name="icon">
-        <iconset resource="icons.qrc">
-         <normaloff>:/icons/tree_structure</normaloff>:/icons/tree_structure</iconset>
-       </property>
-       <property name="flags">
-        <set>ItemIsSelectable|ItemIsUserCheckable|ItemIsEnabled</set>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>Options</string>
-       </property>
-       <property name="font">
-        <font>
-         <weight>75</weight>
-         <bold>true</bold>
-        </font>
-       </property>
-       <property name="textAlignment">
-        <set>AlignCenter</set>
-       </property>
-       <property name="icon">
-        <iconset resource="icons.qrc">
-         <normaloff>:/icons/gear2</normaloff>:/icons/gear2</iconset>
-       </property>
-       <property name="flags">
-        <set>ItemIsSelectable|ItemIsUserCheckable|ItemIsEnabled</set>
-       </property>
-      </item>
-     </widget>
-    </item>
-    <item>
+   <layout class="QGridLayout" name="gridLayout_4">
+    <item row="0" column="2">
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="nodeEditorPage">
        <layout class="QGridLayout" name="gridLayout">
@@ -386,8 +269,291 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="page">
-       <layout class="QGridLayout" name="gridLayout_4"/>
+      <widget class="QWidget" name="mergePage">
+       <layout class="QGridLayout" name="gridLayout_5">
+        <item row="0" column="0">
+         <widget class="QGroupBox" name="mergeTrack1GroupBox">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="title">
+           <string>Track</string>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout">
+           <item>
+            <layout class="QHBoxLayout" name="mergeTrack1NameLayout">
+             <item>
+              <widget class="QLabel" name="mergeTrack1NameLabel">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>16777215</height>
+                </size>
+               </property>
+               <property name="text">
+                <string>Name:</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="mergeTrack1Name">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>None</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="mergeTrack1BarriersCheckBox">
+             <property name="text">
+              <string>Barriers</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="mergeTrack1GatesCheckBox">
+             <property name="text">
+              <string>Gates</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="mergeTrack1SelectPushButton">
+             <property name="text">
+              <string>Select</string>
+             </property>
+             <property name="icon">
+              <iconset resource="icons.qrc">
+               <normaloff>:/icons/address_book</normaloff>:/icons/address_book</iconset>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="0" column="4">
+         <widget class="QGroupBox" name="mergeTrackNewTrackGroupBox">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="title">
+           <string>New Track</string>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout_3">
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout">
+             <item alignment="Qt::AlignTop">
+              <widget class="QLabel" name="mergeTrackNewTrackNameLabel">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>Name:</string>
+               </property>
+               <property name="buddy">
+                <cstring>mergeTrackNewTrackNameLineEdit</cstring>
+               </property>
+              </widget>
+             </item>
+             <item alignment="Qt::AlignTop">
+              <widget class="QLineEdit" name="mergeTrackNewTrackNameLineEdit">
+               <property name="maxLength">
+                <number>40</number>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <widget class="QPushButton" name="mergeTrackPushButton">
+             <property name="text">
+              <string>Merge!</string>
+             </property>
+             <property name="icon">
+              <iconset resource="icons.qrc">
+               <normaloff>:/icons/tree_structure</normaloff>:/icons/tree_structure</iconset>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="0" column="2">
+         <widget class="QGroupBox" name="mergeTrack2GroupBox">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="title">
+           <string>Track</string>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout_2">
+           <item>
+            <layout class="QHBoxLayout" name="mergeTrack2NameLayout">
+             <item>
+              <widget class="QLabel" name="mergeTrack2NameLabel">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>16777215</height>
+                </size>
+               </property>
+               <property name="text">
+                <string>Name:</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="mergeTrack2Name">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>None</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="mergeTrack2BarriersCheckBox">
+             <property name="text">
+              <string>Barriers</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="mergeTrack2GatesCheckBox">
+             <property name="text">
+              <string>Gates</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="mergeTrack2SelectPushButton">
+             <property name="text">
+              <string>Select</string>
+             </property>
+             <property name="icon">
+              <iconset resource="icons.qrc">
+               <normaloff>:/icons/address_book</normaloff>:/icons/address_book</iconset>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QLabel" name="mergeTrackPlusLabel">
+          <property name="maximumSize">
+           <size>
+            <width>20</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>12</pointsize>
+            <weight>75</weight>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="text">
+           <string>+</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="3">
+         <widget class="QLabel" name="mergeTrackEqualLabel">
+          <property name="maximumSize">
+           <size>
+            <width>20</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>12</pointsize>
+            <weight>75</weight>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="text">
+           <string>=</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="2">
+         <spacer name="verticalSpacer_2">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>40</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
       </widget>
       <widget class="QWidget" name="optionsPage">
        <layout class="QGridLayout" name="gridLayout_2">
@@ -959,6 +1125,123 @@
         </item>
        </layout>
       </widget>
+     </widget>
+    </item>
+    <item row="0" column="0" rowspan="2">
+     <widget class="QListWidget" name="navListWidget">
+      <property name="minimumSize">
+       <size>
+        <width>70</width>
+        <height>260</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>70</width>
+        <height>16777213</height>
+       </size>
+      </property>
+      <property name="horizontalScrollBarPolicy">
+       <enum>Qt::ScrollBarAlwaysOff</enum>
+      </property>
+      <property name="showDropIndicator" stdset="0">
+       <bool>false</bool>
+      </property>
+      <property name="selectionBehavior">
+       <enum>QAbstractItemView::SelectItems</enum>
+      </property>
+      <property name="iconSize">
+       <size>
+        <width>50</width>
+        <height>50</height>
+       </size>
+      </property>
+      <property name="textElideMode">
+       <enum>Qt::ElideNone</enum>
+      </property>
+      <property name="movement">
+       <enum>QListView::Static</enum>
+      </property>
+      <property name="flow">
+       <enum>QListView::TopToBottom</enum>
+      </property>
+      <property name="spacing">
+       <number>5</number>
+      </property>
+      <property name="viewMode">
+       <enum>QListView::IconMode</enum>
+      </property>
+      <property name="wordWrap">
+       <bool>true</bool>
+      </property>
+      <property name="currentRow">
+       <number>-1</number>
+      </property>
+      <item>
+       <property name="text">
+        <string>Node Editor</string>
+       </property>
+       <property name="font">
+        <font>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="textAlignment">
+        <set>AlignCenter</set>
+       </property>
+       <property name="icon">
+        <iconset resource="icons.qrc">
+         <normaloff>:/icons/medium</normaloff>:/icons/medium</iconset>
+       </property>
+       <property name="flags">
+        <set>ItemIsSelectable|ItemIsUserCheckable|ItemIsEnabled</set>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>Merge Tracks</string>
+       </property>
+       <property name="font">
+        <font>
+         <family>MS Shell Dlg 2</family>
+         <pointsize>8</pointsize>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="textAlignment">
+        <set>AlignCenter</set>
+       </property>
+       <property name="icon">
+        <iconset resource="icons.qrc">
+         <normaloff>:/icons/tree_structure</normaloff>:/icons/tree_structure</iconset>
+       </property>
+       <property name="flags">
+        <set>ItemIsSelectable|ItemIsUserCheckable|ItemIsEnabled</set>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>Options</string>
+       </property>
+       <property name="font">
+        <font>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="textAlignment">
+        <set>AlignCenter</set>
+       </property>
+       <property name="icon">
+        <iconset resource="icons.qrc">
+         <normaloff>:/icons/gear2</normaloff>:/icons/gear2</iconset>
+       </property>
+       <property name="flags">
+        <set>ItemIsSelectable|ItemIsUserCheckable|ItemIsEnabled</set>
+       </property>
+      </item>
      </widget>
     </item>
    </layout>

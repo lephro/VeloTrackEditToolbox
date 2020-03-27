@@ -31,18 +31,19 @@ public:
   VeloTrack();
   ~VeloTrack();
 
-  QByteArray *exportTrackDataFromModel();
-  void importTrackDataToModel(const QByteArray *jsonData, const bool addData = false);
+  QByteArray *exportAsJsonData();
+  void importJsonData(const QByteArray *jsonData);
   bool isModified();
+  void mergeJsonData(const QByteArray *jsonData, const bool addBarriers, const bool addGates);
 
-  int                 getGateCount() const;
-  QStandardItemModel* getStandardItemModel() const;
-  PrefabData              getPrefab(const uint id) const;
-  QString             getPrefabDesc(const uint id) const;
-  QVector<PrefabData>*    getPrefabs() const;
-  QVector<PrefabData>*    getPrefabsInUse() const;
-  QModelIndex         getRootIndex() const;
-  uint                getSceneId() const;
+  uint getGateCount() const;
+  PrefabData            getPrefab(const uint id) const;
+  QString               getPrefabDesc(const uint id) const;
+  QVector<PrefabData>*  getPrefabs() const;
+  QVector<PrefabData>*  getPrefabsInUse() const;
+  QModelIndex           getRootIndex() const;
+  uint                  getSceneId() const;
+  QStandardItemModel*   getStandardItemModel() const;
 
   uint replacePrefab(const QModelIndex& searchIndex, const uint fromPrefabId, const uint toPrefabId);
   void resetFinishGates();
@@ -54,8 +55,7 @@ public:
   void changeGateOrder(const uint oldGateNo, const uint newGateNo);
 
   static bool isEditableNode(const QModelIndex &keyIndex);
-  TrackData* mergeTracks(const TrackData& trackToBeAdded);
-
+  static bool isStartGrid(PrefabData &prefab);
 private:
   uint sceneId;
   QJsonDocument* doc = nullptr;
@@ -64,8 +64,14 @@ private:
 
   QList<QModelIndex> findPrefabs(const QModelIndex &keyItemIndex) const;
   QString getQJsonValueTypeString(const QJsonValue::Type type) const;
-  void importJsonArray(QStandardItem *parentItem, const QJsonArray &dataArray);
-  void importJsonObject(QStandardItem *parentItem, const QJsonObject &dataObject);
+  void importJsonArray(QStandardItem *parentItem,
+                       const QJsonArray &dataArray,
+                       const uint gateOffset = 0,
+                       const bool skipStartgrid = false);
+  void importJsonObject(QStandardItem *parentItem,
+                        const QJsonObject &dataObject,
+                        const uint gateOffset = 0,
+                        const bool skipStartgrid = false);
   bool isModifiedNode(const QStandardItem* item) const;
   QJsonArray *exportToDataArray(const QStandardItem *treeItem);
   QJsonObject *exportToObject(const QStandardItem *treeItem);

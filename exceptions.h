@@ -25,13 +25,6 @@ protected:
   const QString description;
 };
 
-class CouldNotParseTrackException : public VeloToolkitException
-{
-public:
-  CouldNotParseTrackException() :
-    VeloToolkitException("Could not parse Track!") {}
-};
-
 class InvalidTrackException : public VeloToolkitException
 {
 public:
@@ -77,5 +70,14 @@ public:
   TrackDoesNotBelongToDatabaseException() :
     VeloToolkitException("The track does not belong to the database") { }
 };
+
+
+class TrackWithoutNodesException : public VeloToolkitException
+{
+public:
+  TrackWithoutNodesException() :
+    VeloToolkitException("The track does not contain any nodes!") {}
+};
+
 
 #endif // EXCEPTIONS_H

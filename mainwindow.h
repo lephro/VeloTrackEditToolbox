@@ -10,6 +10,7 @@
 #include <QListView>
 #include <QMainWindow>
 #include <QMessageBox>
+#include <QRegularExpressionValidator>
 #include <QSettings>
 #include <QStandardPaths>
 #include <QStringList>
@@ -44,8 +45,10 @@ private slots:
   void on_userDbLineEdit_textChanged(const QString &arg1);
 
   void on_saveAsNewCheckbox_stateChanged(int arg1);
-
   void on_deleteTrackPushButton_released();
+  void on_mergeTrack1SelectPushButton_released();
+  void on_mergeTrack2SelectPushButton_released();
+  void on_mergeTrackPushButton_released();
 
 protected:
   void closeEvent(QCloseEvent* e) override;
@@ -77,6 +80,9 @@ private:
   VeloDb* productionDb;
   VeloDb* betaDb;
   VeloDb* customDb;
+
+  TrackData mergeTrack1;
+  TrackData mergeTrack2;
 
   QTreeWidgetItem lastItem;
 

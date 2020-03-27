@@ -24,6 +24,10 @@ MainWindow::MainWindow(QWidget *parent)
 
   ui->saveAsNewCheckbox->setChecked(saveAsNew);
 
+  QRegularExpression regEx("^[A-Za-z][\\w\\s\\-]+");
+  QRegularExpressionValidator* trackNameValidator = new QRegularExpressionValidator(regEx, this);
+  ui->mergeTrackNewTrackNameLineEdit->setValidator(trackNameValidator);
+
   updateDatabaseOptionsDatabaseStatus();
 }
 
@@ -236,13 +240,13 @@ void MainWindow::replacePrefab()
 
 bool MainWindow::maybeSave()
 {
-    if (!veloTrack->isModified())
+    bool sceneChanged = (loadedTrack.sceneId != ui->sceneComboBox->currentData().toUInt());
+    if (!veloTrack->isModified() && !sceneChanged)
         return true;
     const QMessageBox::StandardButton ret
         = QMessageBox::warning(this,
                                defaultWindowTitle,
-                               tr("The track has been modified.\n"
-                                  "Do you want to save your changes?"),
+                               tr("Do you want to save your changes on \"") + loadedTrack.name + tr("\"?"),
                                QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
     switch (ret) {
     case QMessageBox::Save:
@@ -262,7 +266,7 @@ void MainWindow::saveTrackToDb()
     return;
 
   loadedTrack.sceneId = ui->sceneComboBox->currentData().toUInt();
-  loadedTrack.value = *veloTrack->exportTrackDataFromModel();
+  loadedTrack.value = *veloTrack->exportAsJsonData();
 
   QString message = tr("The track was saved successfully to the database!");
   if (saveAsNew) {
@@ -291,7 +295,7 @@ void MainWindow::saveTrackToFile()
   QFile *file = new QFile("track.json");
   file->remove();
   file->open(QFile::ReadWrite);
-  file->write(*veloTrack->exportTrackDataFromModel());
+  file->write(*veloTrack->exportAsJsonData());
   file->close();
 }
 
@@ -348,7 +352,7 @@ void MainWindow::loadTrack(const TrackData& track)
 
   veloTrack->setPrefabs(veloDb->getPrefabs());
   try {
-    veloTrack->importTrackDataToModel(&loadedTrack.value);
+    veloTrack->importJsonData(&loadedTrack.value);
   } catch (VeloToolkitException& e) {
     e.Message();
   }
@@ -556,4 +560,89 @@ QString MainWindow::browseDatabaseFile() const
                                       tr("Choose Database"),
                                       "C:/Users/lephro/AppData/LocalLow/VelociDrone/",
                                       tr("Database Files (*.db)"));
+}
+
+void MainWindow::on_mergeTrack1SelectPushButton_released()
+{
+  try {
+    OpenTrackDialog openTrackDialog(this, productionDb, betaDb, customDb);
+    if (openTrackDialog.exec()) {
+      TrackData selectedTrack = openTrackDialog.getSelectedTrack();
+      if (selectedTrack.id > 0) {
+        mergeTrack1 = selectedTrack;
+        ui->mergeTrack1Name->setText(selectedTrack.name);
+        if (ui->mergeTrackNewTrackNameLineEdit->text() == "")
+          ui->mergeTrackNewTrackNameLineEdit->setText(selectedTrack.name + "-merged");
+      }
+    }
+  } catch (VeloToolkitException& e) {
+    e.Message();
+  }
+}
+
+void MainWindow::on_mergeTrack2SelectPushButton_released()
+{
+  try {
+    OpenTrackDialog openTrackDialog(this, productionDb, betaDb, customDb);
+    if (openTrackDialog.exec()) {
+      TrackData selectedTrack = openTrackDialog.getSelectedTrack();
+      if (selectedTrack.id > 0) {
+        mergeTrack2 = selectedTrack;
+        ui->mergeTrack2Name->setText(selectedTrack.name);
+      }
+    }
+  } catch (VeloToolkitException& e) {
+    e.Message();
+  }
+}
+
+void MainWindow::on_mergeTrackPushButton_released()
+{
+  if ((mergeTrack1.id == 0) || (mergeTrack2.id == 0)) {
+    QMessageBox::critical(this, tr("Merge error"), tr("Not enough tracks selected\nPlease select two tracks, that you want to merged."));
+    return;
+  }
+
+  if ((mergeTrack1.database == mergeTrack2.database) && (mergeTrack1.id == mergeTrack2.id)) {
+    QMessageBox::critical(this, tr("Merge error"), tr("You are trying to merge a track into itself. Thats a nope!"));
+    return;
+  }
+
+  VeloTrack* newVeloTrack = new VeloTrack();
+  try {
+    newVeloTrack->setPrefabs(getDatabase(mergeTrack1.database)->getPrefabs());
+    newVeloTrack->mergeJsonData(&mergeTrack1.value, ui->mergeTrack1BarriersCheckBox->isChecked(), ui->mergeTrack1GatesCheckBox->isChecked());
+    newVeloTrack->mergeJsonData(&mergeTrack2.value, ui->mergeTrack2BarriersCheckBox->isChecked(), ui->mergeTrack2GatesCheckBox->isChecked());
+  } catch (VeloToolkitException& e) {
+    e.Message();
+    return;
+  }
+
+  TrackData newTrack;
+  newTrack.id = 0;
+  newTrack.name = ui->mergeTrackNewTrackNameLineEdit->text();
+  newTrack.sceneId = mergeTrack1.sceneId;
+  newTrack.database = mergeTrack1.database;
+  newTrack.protectedTrack = 0;
+  newTrack.value = *newVeloTrack->exportAsJsonData();
+
+  try {
+   getDatabase(newTrack.database)->saveTrack(newTrack);
+  } catch (VeloToolkitException& e) {
+    e.Message();
+
+    delete newVeloTrack;
+
+    return;
+  }
+
+  mergeTrack1 = TrackData();
+  mergeTrack2 = TrackData();
+  ui->mergeTrack1Name->setText(tr("None"));
+  ui->mergeTrack2Name->setText(tr("None"));
+  ui->mergeTrackNewTrackNameLineEdit->setText("");
+
+  QMessageBox::information(this, "Merge succeeded!", "The tracks got successfully merged.\nThe new track \"" + newTrack.name + "\" has been written to the database.");
+
+  delete newVeloTrack;
 }
