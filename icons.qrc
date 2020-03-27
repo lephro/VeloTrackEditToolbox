@@ -10,5 +10,7 @@
         <file alias="save_all_merged">icons/icons8-save-all-merged-100.png</file>
         <file alias="toolbox_with_circle">icons/icons8-toolbox-with-circle-100.png</file>
         <file alias="tree_structure">icons/icons8-tree-structure-100.png</file>
+        <file alias="info">icons/icons8-info-100.png</file>
+        <file alias="gnu_logo">icons/1920px-GPLv3_Logo.svg.png</file>
     </qresource>
 </RCC>

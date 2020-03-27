@@ -5,14 +5,19 @@ MainWindow::MainWindow(QWidget *parent)
   : QMainWindow(parent)
   , ui(new Ui::MainWindow)
 {
-  ui->setupUi(this);
-
   defaultWindowTitle = QString(windowTitle());
+
+  ui->setupUi(this);
+  ui->aboutLicenseTextEdit->setVisible(false);
+
+  QRegularExpression regEx("^[A-Za-z][\\w\\s\\-]+");
+  QRegularExpressionValidator* trackNameValidator = new QRegularExpressionValidator(regEx, this);
+  ui->mergeTrackNewTrackNameLineEdit->setValidator(trackNameValidator);
 
   productionDb = new VeloDb(DatabaseType::Production);
   betaDb = new VeloDb(DatabaseType::Beta);
   customDb = new VeloDb(DatabaseType::Custom);
-  veloTrack = new VeloTrack();
+  veloTrack = new VeloTrack();   
 
   try {
     readSettings();
@@ -22,11 +27,7 @@ MainWindow::MainWindow(QWidget *parent)
 
   ui->treeView->setItemDelegateForColumn(NodeTreeColumns::ValueColumn, new JsonTreeViewItemDelegate(nullptr, veloTrack));
 
-  ui->saveAsNewCheckbox->setChecked(saveAsNew);
-
-  QRegularExpression regEx("^[A-Za-z][\\w\\s\\-]+");
-  QRegularExpressionValidator* trackNameValidator = new QRegularExpressionValidator(regEx, this);
-  ui->mergeTrackNewTrackNameLineEdit->setValidator(trackNameValidator);
+  ui->saveAsNewCheckbox->setChecked(saveAsNew);  
 
   updateDatabaseOptionsDatabaseStatus();
 }
@@ -645,4 +646,17 @@ void MainWindow::on_mergeTrackPushButton_released()
   QMessageBox::information(this, "Merge succeeded!", "The tracks got successfully merged.\nThe new track \"" + newTrack.name + "\" has been written to the database.");
 
   delete newVeloTrack;
+}
+
+void MainWindow::on_aboutLicensePushButton_released()
+{
+  if (ui->aboutLicenseTextEdit->isVisible()) {
+    ui->aboutTextEdit->setVisible(true);
+    ui->aboutLicenseTextEdit->setVisible(false);
+    ui->aboutLicensePushButton->setText("License");
+  } else {
+    ui->aboutTextEdit->setVisible(false);
+    ui->aboutLicenseTextEdit->setVisible(true);
+    ui->aboutLicensePushButton->setText(tr("About"));
+  }
 }

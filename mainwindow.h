@@ -15,7 +15,6 @@
 #include <QStandardPaths>
 #include <QStringList>
 #include <QTreeView>
-#include <QTreeWidgetItem>
 
 #include "delegates.h"
 #include "opentrackdialog.h"
@@ -49,6 +48,8 @@ private slots:
   void on_mergeTrack1SelectPushButton_released();
   void on_mergeTrack2SelectPushButton_released();
   void on_mergeTrackPushButton_released();
+
+  void on_aboutLicensePushButton_released();
 
 protected:
   void closeEvent(QCloseEvent* e) override;
