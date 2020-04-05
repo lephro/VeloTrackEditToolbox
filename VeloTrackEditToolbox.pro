@@ -18,18 +18,22 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
     delegates.cpp \
     exceptions.cpp \
+    geodesicdome.cpp \
     main.cpp \
     mainwindow.cpp \
     opentrackdialog.cpp \
+    trackarchive.cpp \
     velodb.cpp \
     velotrack.cpp
 
 HEADERS += \
     delegates.h \
     exceptions.h \
+    geodesicdome.h \
     mainwindow.h \
     opentrackdialog.h \
     sqlite3.h \
+    trackarchive.h \
     velodb.h \
     velotrack.h
 

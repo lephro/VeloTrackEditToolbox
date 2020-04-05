@@ -15,15 +15,26 @@
 #include <QStandardPaths>
 #include <QStringList>
 #include <QTreeView>
+#include <QTreeWidgetItem>
 
 #include "delegates.h"
+#include "geodesicdome.h"
 #include "opentrackdialog.h"
+#include "trackarchive.h"
 #include "velodb.h"
 #include "velotrack.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
+
+enum NavRows {
+  NodeEditorRow = 1,
+  MergeTracksRow = 2,
+  ArchiveRow = 3,
+  OptionsRow = 4,
+  AboutRow = 5
+};
 
 class MainWindow : public QMainWindow
 {
@@ -33,23 +44,32 @@ public:
   MainWindow(QWidget* parent = nullptr);
 
 private slots:
+  void on_aboutLicensePushButton_released();
+  void on_archiveAddTrackPushButton_released();
+  void on_archiveDatabaseSelectionComboBox_currentIndexChanged(const QString &arg1);
+  void on_archiveRestoreTrackPushButton_released();
   void on_buildTypeComboBox_currentIndexChanged(int index);
   void on_browseUserDbToolButton_released();
   void on_browseSettingsDbToolButton_released();
-  void on_openTrackPushButton_released();
-  void on_replacePushButton_released();
-  void on_replacePrefabComboBox_currentIndexChanged(int index);
-  void on_savePushButton_released();
-  void on_settingsDbLineEdit_textChanged(const QString &arg1);
-  void on_userDbLineEdit_textChanged(const QString &arg1);
-
-  void on_saveAsNewCheckbox_stateChanged(int arg1);
   void on_deleteTrackPushButton_released();
+  void on_openTrackPushButton_released();
+  void on_mergeTrackPushButton_released();
   void on_mergeTrack1SelectPushButton_released();
   void on_mergeTrack2SelectPushButton_released();
-  void on_mergeTrackPushButton_released();
+  void on_replacePushButton_released();
+  void on_replacePrefabComboBox_currentIndexChanged(int index);
+  void on_saveAsNewCheckbox_stateChanged(int arg1);
+  void on_savePushButton_released();
+  void on_settingsDbLineEdit_textChanged(const QString &arg1);  
+  void on_trackArchiveSettingsBrowseToolButton_released();
+  void on_userDbLineEdit_textChanged(const QString &arg1);
+  void on_viewNodeTypeColumn_stateChanged(int arg1);
 
-  void on_aboutLicensePushButton_released();
+  void on_trackArchiveSettingsFilepathLineEdit_textChanged(const QString &arg1);
+
+  void on_geoGenTestPushButton_released();
+
+  void on_navListWidget_currentRowChanged(int currentRow);
 
 protected:
   void closeEvent(QCloseEvent* e) override;
@@ -62,7 +82,9 @@ private:
 
   QString defaultWindowTitle;
 
-  bool saveAsNew = true;
+  bool settingMoveToArchive = false;
+  bool settingSaveAsNew = true;
+  bool settingViewTypeColumn = false;
 
   DatabaseType databaseOptionsSelectedDbType = DatabaseType::Production;
 
@@ -72,6 +94,7 @@ private:
   QString betaSettingsDbFilename = "";
   QString customUserDbFilename = "";
   QString customSettingsDbFilename = "";
+  QString archiveDbFileName = "";
 
   TrackData loadedTrack;
 
@@ -81,6 +104,8 @@ private:
   VeloDb* productionDb;
   VeloDb* betaDb;
   VeloDb* customDb;
+
+  TrackArchive* archive;
 
   TrackData mergeTrack1;
   TrackData mergeTrack2;
@@ -107,10 +132,13 @@ private:
   bool maybeSave();
   void openTrack();
   void saveTrackToDb();
-  void saveTrackToFile();
+  void saveTrackToFile();  
 
   void replacePrefab();
 
   QString getDefaultPath();
+  bool maybeCreateOrCreateArchive();
+  void loadArchive();
+  void loadDatabaseForArchive(VeloDb *database);
 };
 #endif // MAINWINDOW_H

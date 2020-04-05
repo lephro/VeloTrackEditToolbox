@@ -54,7 +54,7 @@ public:
 
   void changeGateOrder(const uint oldGateNo, const uint newGateNo);
 
-  static bool isEditableNode(const QModelIndex &keyIndex);
+  static bool isNotEditableNode(const QModelIndex &keyIndex);
   static bool isStartGrid(PrefabData &prefab);
 private:
   uint sceneId;
@@ -63,7 +63,7 @@ private:
   QStandardItemModel* model;
 
   QList<QModelIndex> findPrefabs(const QModelIndex &keyItemIndex) const;
-  QString getQJsonValueTypeString(const QJsonValue::Type type) const;
+  QString getJsonValueTypeString(const QJsonValue::Type type) const;
   void importJsonArray(QStandardItem *parentItem,
                        const QJsonArray &dataArray,
                        const uint gateOffset = 0,

@@ -27,7 +27,7 @@ void VeloTrack::changeGateOrder(const uint oldGateNo, const uint newGateNo)
   }
 }
 
-bool VeloTrack::isEditableNode(const QModelIndex& keyIndex)
+bool VeloTrack::isNotEditableNode(const QModelIndex& keyIndex)
 {
   QModelIndex valueIndex = keyIndex.siblingAtColumn(NodeTreeColumns::ValueColumn);
   PrefabData prefab = valueIndex.data(Qt::UserRole).value<PrefabData>();
@@ -167,7 +167,7 @@ void VeloTrack::mergeJsonData(const QByteArray* jsonData,
         }
       }
 
-      itemType->setText(getQJsonValueTypeString(jsonValue.type()));
+      itemType->setText(getJsonValueTypeString(jsonValue.type()));
 
       itemKey->setFlags(itemKey->flags() ^ Qt::ItemIsEditable);
       if (itemValue->data(Qt::DisplayRole).toString() == "")
@@ -232,7 +232,7 @@ QVector<PrefabData>* VeloTrack::getPrefabsInUse() const
   foreach (QModelIndex childIndex, prefabs) {
     PrefabData prefab = childIndex.siblingAtColumn(NodeTreeColumns::ValueColumn).data(Qt::UserRole).value<PrefabData>();
     if ((!prefabMap.contains(prefab.id)) && (prefab.id > 0))
-      if (!isEditableNode(childIndex))
+      if (!isNotEditableNode(childIndex))
         prefabMap.insert(prefab.id, prefab);
   }
 
@@ -262,15 +262,18 @@ uint VeloTrack::replacePrefab(const QModelIndex& searchIndex, const uint fromPre
   PrefabData toPrefab = getPrefab(toPrefabId);
 
   QList<QModelIndex> prefabs = findPrefabs(searchIndex);
-  foreach (QModelIndex childIndex, prefabs) {
-    QModelIndex valueIndex = childIndex.siblingAtColumn(NodeTreeColumns::ValueColumn);
-    PrefabData prefab = valueIndex.data(Qt::UserRole).value<PrefabData>();
+  foreach (QModelIndex prefabIndex, prefabs) {
+    QModelIndex prefabValueIndex = prefabIndex.siblingAtColumn(NodeTreeColumns::ValueColumn);
+    PrefabData prefab = prefabValueIndex.data(Qt::UserRole).value<PrefabData>();
     if (prefab.id == fromPrefabId) {
-      model->setData(valueIndex, toPrefab.name, Qt::EditRole);
+      model->setData(prefabIndex, true, Qt::UserRole);
+      model->setData(prefabValueIndex, toPrefab.name, Qt::EditRole);
+
       QVariant var;
       var.setValue(toPrefab);
-      model->setData(valueIndex, var, Qt::UserRole);
-      QModelIndex parentKeyIndex = childIndex.parent();
+      model->setData(prefabValueIndex, var, Qt::UserRole);
+
+      QModelIndex parentKeyIndex = prefabIndex.parent();
       if (parentKeyIndex.data(Qt::DisplayRole).toString() == prefab.name) {
         model->setData(parentKeyIndex, toPrefab.name, Qt::EditRole);
       }
@@ -403,7 +406,7 @@ QList<QModelIndex> VeloTrack::findPrefabs(const QModelIndex& keyItemIndex) const
   return foundPrefabs;
 }
 
-QString VeloTrack::getQJsonValueTypeString(const QJsonValue::Type type) const
+QString VeloTrack::getJsonValueTypeString(const QJsonValue::Type type) const
 {
   switch (type) {
   case QJsonValue::Type::Null:
@@ -433,7 +436,7 @@ void VeloTrack::importJsonArray(QStandardItem* parentItem, const QJsonArray& dat
     QStandardItem* itemType = new QStandardItem();
     itemKey->setText(QString("[%1]").arg(i, 0, 10));
     itemValue->setData(jsonValue.toVariant(), Qt::EditRole);
-    itemType->setText(getQJsonValueTypeString(jsonValue.type()));
+    itemType->setText(getJsonValueTypeString(jsonValue.type()));
 
     itemKey->setFlags(itemKey->flags() ^ Qt::ItemIsEditable);
     if (itemValue->data(Qt::EditRole).toString() == "") {
@@ -484,7 +487,7 @@ void VeloTrack::importJsonObject(QStandardItem* parentItem, const QJsonObject& d
       itemValue->setData(gateId, Qt::EditRole);
     }
 
-    itemType->setText(getQJsonValueTypeString(jsonValue.type()));
+    itemType->setText(getJsonValueTypeString(jsonValue.type()));
 
     itemKey->setFlags(itemKey->flags() ^ Qt::ItemIsEditable);
     if (itemValue->data(Qt::DisplayRole).toString() == "")

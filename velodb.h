@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QFile>
+#include <QList>
 #include <QString>
 #include <QUrl>
 #include <QVariant>
@@ -11,11 +12,11 @@
 #include "exceptions.h"
 #include "sqlite3.h"
 
-
 enum DatabaseType {
   Production = 0,
   Beta = 1,
-  Custom = 2
+  Custom = 2,
+  Archive = 3
 };
 Q_ENUMS(Database)
 
@@ -64,10 +65,12 @@ struct TrackData
   QByteArray value = QByteArray();
   QString name = "";
   short protectedTrack = short(true);
-  DatabaseType database = DatabaseType::Production;
+  DatabaseType assignedDatabase = DatabaseType::Production;
+  uint onlineId = 0;
+  uint type = 0;
 
   bool operator < (const TrackData& track) const { return name.compare(track.name, Qt::CaseInsensitive) < 0; }
-  bool operator == (const TrackData& track) const { return ((database == track.database) && (id == track.id)); }
+  bool operator == (const TrackData& track) const { return ((assignedDatabase == track.assignedDatabase) && (id == track.id)); }
 
   operator QString() { return name; }
 };
@@ -79,6 +82,8 @@ public:
   VeloDb(DatabaseType databaseType, const QString& userDbFilename = "", const QString& settingsDbFilename = "");
   ~VeloDb();
 
+  void createTrackTable();
+
   bool isValid() const;
 
   void queryAll();
@@ -87,13 +92,18 @@ public:
   void queryTracks();
 
   void deleteTrack(TrackData &track);
-  uint saveTrack(TrackData& track, bool createNewEntry = true);
+  uint saveTrack(TrackData &track, const bool createNewEntry = true);
   void setSettingsDbFilename(const QString& filename);
-  void setUserDbFilename(const QString& filename);
+  void setUserDbFilename(const QString& filename, bool refreshData = true);
 
+  DatabaseType getDatabaseType() const;
   QVector<PrefabData> *getPrefabs() const;
   QVector<SceneData>* getScenes() const;
   QVector<TrackData>* getTracks() const;
+
+  static int queryPrefabsCallback(void* data, int argc, char** argv, char** azColName);
+  static int queryScenesCallback(void* data, int argc, char** argv, char** azColName);
+  static int queryTracksCallback(void* data, int argc, char** argv, char** azColName);
 
 private:
   DatabaseType databaseType;
@@ -108,14 +118,10 @@ private:
   bool hasValidSettingsDb() const;
   bool hasValidUserDb() const;
 
-  uint insertTrack(TrackData& track);
-  void updateTrack(TrackData& track);
+  uint insertTrack(const TrackData &track);
+  void updateTrack(const TrackData &track);
 
   uint executeStatement(QString sql);
-
-  static int queryPrefabsCallback(void* data, int argc, char** argv, char** azColName);
-  static int queryScenesCallback(void* data, int argc, char** argv, char** azColName);
-  static int queryTracksCallback(void* data, int argc, char** argv, char** azColName);
 };
 
 #endif // VELODB_H

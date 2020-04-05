@@ -17,7 +17,7 @@ QWidget *JsonTreeViewItemDelegate::createEditor(QWidget *parent, const QStyleOpt
   if (!keyIndex.isValid() || !valueIndex.isValid() || !typeIndex.isValid())
     return nullptr;
 
-  if (VeloTrack::isEditableNode(keyIndex))
+  if (VeloTrack::isNotEditableNode(keyIndex))
     return nullptr;
 
   QWidget* editor = nullptr;

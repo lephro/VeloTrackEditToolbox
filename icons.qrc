@@ -12,5 +12,6 @@
         <file alias="tree_structure">icons/icons8-tree-structure-100.png</file>
         <file alias="info">icons/icons8-info-100.png</file>
         <file alias="gnu_logo">icons/1920px-GPLv3_Logo.svg.png</file>
+        <file alias="safe">icons/icons8-safe-100.png</file>
     </qresource>
 </RCC>

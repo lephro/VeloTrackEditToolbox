@@ -32,6 +32,13 @@ public:
     VeloToolkitException("The track is invalid") {}
 };
 
+class NoDatabasesFileNameException : public VeloToolkitException
+{
+public:
+  NoDatabasesFileNameException() :
+    VeloToolkitException("Cannot access the database! No filename was set.") {}
+};
+
 class NoValidDatabasesFoundException : public VeloToolkitException
 {
 public:
