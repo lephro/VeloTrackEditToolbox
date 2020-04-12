@@ -29,11 +29,17 @@ namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
 enum NavRows {
-  NodeEditorRow = 1,
-  MergeTracksRow = 2,
-  ArchiveRow = 3,
-  OptionsRow = 4,
-  AboutRow = 5
+  NodeEditorRow = 0,
+  MergeTracksRow = 1,
+  ArchiveRow = 2,
+  OptionsRow = 3,
+  AboutRow = 4
+};
+
+enum AboutStackedWidgetPages {
+  AboutPage = 0,
+  PatchLogPage = 1,
+  LicensePage = 2,
 };
 
 class MainWindow : public QMainWindow
@@ -44,6 +50,8 @@ public:
   MainWindow(QWidget* parent = nullptr);
 
 private slots:
+  void on_aboutPatchLogPushButton_released();
+  void on_aboutPushButton_released();
   void on_aboutLicensePushButton_released();
   void on_archiveAddTrackPushButton_released();
   void on_archiveDatabaseSelectionComboBox_currentIndexChanged(const QString &arg1);
@@ -56,20 +64,19 @@ private slots:
   void on_mergeTrackPushButton_released();
   void on_mergeTrack1SelectPushButton_released();
   void on_mergeTrack2SelectPushButton_released();
+  void on_navListWidget_currentRowChanged(int currentRow);
   void on_replacePushButton_released();
   void on_replacePrefabComboBox_currentIndexChanged(int index);
   void on_saveAsNewCheckbox_stateChanged(int arg1);
   void on_savePushButton_released();
   void on_settingsDbLineEdit_textChanged(const QString &arg1);  
   void on_trackArchiveSettingsBrowseToolButton_released();
+  void on_trackArchiveSettingsFilepathLineEdit_textChanged(const QString &arg1);
   void on_userDbLineEdit_textChanged(const QString &arg1);
   void on_viewNodeTypeColumn_stateChanged(int arg1);
 
-  void on_trackArchiveSettingsFilepathLineEdit_textChanged(const QString &arg1);
 
   void on_geoGenTestPushButton_released();
-
-  void on_navListWidget_currentRowChanged(int currentRow);
 
 protected:
   void closeEvent(QCloseEvent* e) override;
@@ -79,8 +86,22 @@ private:
   const QString defaultBetaUserDbFilename = "C:/Users/<USER>/AppData/LocalLow/VelociDrone/VelociDroneBeta/user11.db";
   const QString defaultProductionSettingsDbFilename = "C:/Users/<USER>/AppData/LocalLow/VelociDrone/VelociDrone/settings.db";
   const QString defaultBetaSettingsDbFilename = "C:/Users/<USER>/AppData/LocalLow/VelociDrone/VelociDroneBeta/settings.db";
+  const QString nodeCountLabelText = tr("Nodes: %1");
+  const QString prefabCountLabelText = tr("Prefabs: %1");
+  const QString gateCountLabelText = tr("Gates: %1");
+  const QString splineCountLabelText = tr("Splines: %1");
 
   QString defaultWindowTitle;
+
+  QLabel* nodeCountLabel;
+  QLabel* prefabCountLabel;
+  QLabel* gateCountLabel;
+  QLabel* splineCountLabel;
+
+  uint nodeCount = 0;
+  uint prefabCount = 0;
+  uint splineCount = 0;
+  uint gateCount = 0;
 
   bool settingMoveToArchive = false;
   bool settingSaveAsNew = true;
@@ -110,8 +131,6 @@ private:
   TrackData mergeTrack1;
   TrackData mergeTrack2;
 
-  QTreeWidgetItem lastItem;
-
   void writeDefaultSettings();
   void readSettings();
   void writeSettings();
@@ -125,6 +144,7 @@ private:
   void setDatabaseOptionsUserDb(const QString& value);
   void setDatabaseOptionsSettingsDb(const QString& value);
   void updateDatabaseOptionsDatabaseStatus();
+  void updateStatusBar();
   void updateWindowTitle();
 
   void closeTrack();
@@ -140,5 +160,7 @@ private:
   bool maybeCreateOrCreateArchive();
   void loadArchive();
   void loadDatabaseForArchive(VeloDb *database);
+
+  bool maybeDontBecauseItsBeta();
 };
 #endif // MAINWINDOW_H

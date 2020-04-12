@@ -121,6 +121,9 @@ void VeloDb::queryTracks()
 
   tracks->clear();
 
+  if (userDbFilename == "")
+    return;
+
   resultCode = sqlite3_open(userDbFilename.toStdString().c_str(), &db);
 
   if (resultCode != SQLITE_OK)
@@ -323,7 +326,7 @@ void VeloDb::updateTrack(const TrackData &track)
     throw TrackDoesNotBelongToDatabaseException();
 
   QString sql = "UPDATE tracks " \
-                "SET scene_id=%2, name='%3', value='%4' online_id='%5' protected_track='%6' " \
+                "SET scene_id=%2, name='%3', value='%4', online_id='%5', protected_track='%6' " \
                 "WHERE id=%1;";
 
   sql = sql.arg(track.id, 0, 10);

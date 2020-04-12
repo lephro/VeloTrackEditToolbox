@@ -7,8 +7,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>753</width>
-    <height>504</height>
+    <width>925</width>
+    <height>592</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -23,169 +23,10 @@
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout_4">
-    <item row="0" column="0" rowspan="2">
-     <widget class="QListWidget" name="navListWidget">
-      <property name="minimumSize">
-       <size>
-        <width>70</width>
-        <height>425</height>
-       </size>
-      </property>
-      <property name="maximumSize">
-       <size>
-        <width>70</width>
-        <height>16777213</height>
-       </size>
-      </property>
-      <property name="horizontalScrollBarPolicy">
-       <enum>Qt::ScrollBarAlwaysOff</enum>
-      </property>
-      <property name="showDropIndicator" stdset="0">
-       <bool>false</bool>
-      </property>
-      <property name="selectionBehavior">
-       <enum>QAbstractItemView::SelectItems</enum>
-      </property>
-      <property name="iconSize">
-       <size>
-        <width>50</width>
-        <height>50</height>
-       </size>
-      </property>
-      <property name="textElideMode">
-       <enum>Qt::ElideNone</enum>
-      </property>
-      <property name="movement">
-       <enum>QListView::Static</enum>
-      </property>
-      <property name="flow">
-       <enum>QListView::TopToBottom</enum>
-      </property>
-      <property name="spacing">
-       <number>5</number>
-      </property>
-      <property name="viewMode">
-       <enum>QListView::IconMode</enum>
-      </property>
-      <property name="wordWrap">
-       <bool>true</bool>
-      </property>
-      <property name="currentRow">
-       <number>-1</number>
-      </property>
-      <item>
-       <property name="text">
-        <string>Node Editor</string>
-       </property>
-       <property name="font">
-        <font>
-         <weight>75</weight>
-         <bold>true</bold>
-        </font>
-       </property>
-       <property name="textAlignment">
-        <set>AlignCenter</set>
-       </property>
-       <property name="icon">
-        <iconset resource="icons.qrc">
-         <normaloff>:/icons/medium</normaloff>:/icons/medium</iconset>
-       </property>
-       <property name="flags">
-        <set>ItemIsSelectable|ItemIsUserCheckable|ItemIsEnabled</set>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>Merge Tracks</string>
-       </property>
-       <property name="font">
-        <font>
-         <family>MS Shell Dlg 2</family>
-         <pointsize>8</pointsize>
-         <weight>75</weight>
-         <bold>true</bold>
-        </font>
-       </property>
-       <property name="textAlignment">
-        <set>AlignCenter</set>
-       </property>
-       <property name="icon">
-        <iconset resource="icons.qrc">
-         <normaloff>:/icons/tree_structure</normaloff>:/icons/tree_structure</iconset>
-       </property>
-       <property name="flags">
-        <set>ItemIsSelectable|ItemIsUserCheckable|ItemIsEnabled</set>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>Track Archive</string>
-       </property>
-       <property name="font">
-        <font>
-         <weight>75</weight>
-         <bold>true</bold>
-        </font>
-       </property>
-       <property name="textAlignment">
-        <set>AlignCenter</set>
-       </property>
-       <property name="icon">
-        <iconset resource="icons.qrc">
-         <normaloff>:/icons/safe</normaloff>:/icons/safe</iconset>
-       </property>
-       <property name="flags">
-        <set>ItemIsSelectable|ItemIsUserCheckable|ItemIsEnabled</set>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>Options</string>
-       </property>
-       <property name="font">
-        <font>
-         <weight>75</weight>
-         <bold>true</bold>
-        </font>
-       </property>
-       <property name="textAlignment">
-        <set>AlignCenter</set>
-       </property>
-       <property name="icon">
-        <iconset resource="icons.qrc">
-         <normaloff>:/icons/gear2</normaloff>:/icons/gear2</iconset>
-       </property>
-       <property name="flags">
-        <set>ItemIsSelectable|ItemIsUserCheckable|ItemIsEnabled</set>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>About</string>
-       </property>
-       <property name="font">
-        <font>
-         <weight>75</weight>
-         <bold>true</bold>
-        </font>
-       </property>
-       <property name="textAlignment">
-        <set>AlignCenter</set>
-       </property>
-       <property name="icon">
-        <iconset resource="icons.qrc">
-         <normaloff>:/icons/info</normaloff>:/icons/info</iconset>
-       </property>
-       <property name="flags">
-        <set>ItemIsSelectable|ItemIsUserCheckable|ItemIsEnabled</set>
-       </property>
-      </item>
-     </widget>
-    </item>
     <item row="0" column="2">
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>3</number>
       </property>
       <widget class="QWidget" name="nodeEditorPage">
        <layout class="QGridLayout" name="gridLayout">
@@ -204,7 +45,7 @@
            </size>
           </property>
           <property name="currentIndex">
-           <number>1</number>
+           <number>0</number>
           </property>
           <widget class="QWidget" name="tab">
            <attribute name="title">
@@ -228,7 +69,11 @@
              </widget>
             </item>
             <item>
-             <widget class="QComboBox" name="replacePrefabComboBox"/>
+             <widget class="QComboBox" name="replacePrefabComboBox">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select the prefab that you want to replace here.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+             </widget>
             </item>
             <item>
              <widget class="QLabel" name="replacePrefabWithLabel">
@@ -247,7 +92,11 @@
              </widget>
             </item>
             <item>
-             <widget class="QComboBox" name="replacePrefabWithComboBox"/>
+             <widget class="QComboBox" name="replacePrefabWithComboBox">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select the prefab that you want to be used as a replacement.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+             </widget>
             </item>
             <item>
              <widget class="QLabel" name="replacePrefabInLabel">
@@ -272,6 +121,9 @@
                 <width>100</width>
                 <height>16777215</height>
                </size>
+              </property>
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The nodes in which the prefab gets replaced.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
               <item>
                <property name="text">
@@ -303,6 +155,9 @@
                 <height>16777215</height>
                </size>
               </property>
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Replaces a prefab with another in all selected instances (by default: in all nodes).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
               <property name="text">
                <string>Replace</string>
               </property>
@@ -328,7 +183,7 @@
              </rect>
             </property>
             <property name="text">
-             <string>GeoGenTest</string>
+             <string>GeodesicTest</string>
             </property>
            </widget>
           </widget>
@@ -348,6 +203,9 @@
             <width>90</width>
             <height>16777215</height>
            </size>
+          </property>
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Saves the currently opened track into its assigned database. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
           <property name="text">
            <string>Save</string>
@@ -388,6 +246,9 @@
             <height>16777215</height>
            </size>
           </property>
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Deletes the currently opened track. Use with caution. No undo or jumping back in time after this point.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
           <property name="text">
            <string>Delete</string>
           </property>
@@ -410,6 +271,9 @@
             <width>90</width>
             <height>16777215</height>
            </size>
+          </property>
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Opens a track from a Velocidrone database into the Node Editor.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
           <property name="text">
            <string>Open</string>
@@ -496,6 +360,9 @@
            </item>
            <item>
             <widget class="QCheckBox" name="mergeTrack1BarriersCheckBox">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Check this box if you want to include the barriers of the track in the merge process.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="text">
               <string>Barriers</string>
              </property>
@@ -506,6 +373,9 @@
            </item>
            <item>
             <widget class="QCheckBox" name="mergeTrack1GatesCheckBox">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Check this box if you want to include the gates of the track in the merge process.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="text">
               <string>Gates</string>
              </property>
@@ -516,6 +386,9 @@
            </item>
            <item>
             <widget class="QPushButton" name="mergeTrack1SelectPushButton">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Opens the track selection dialog, which enables you to select a track for the merge process.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="text">
               <string>Select</string>
              </property>
@@ -560,6 +433,9 @@
              </item>
              <item alignment="Qt::AlignTop">
               <widget class="QLineEdit" name="mergeTrackNewTrackNameLineEdit">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enter the name of the track, that gets created in the merge process, here.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
                <property name="maxLength">
                 <number>40</number>
                </property>
@@ -569,6 +445,9 @@
            </item>
            <item>
             <widget class="QPushButton" name="mergeTrackPushButton">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Merges the selected tracks into a new track, with the given name. Only the first track's starting grid will be used.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="text">
               <string>Merge!</string>
              </property>
@@ -634,6 +513,9 @@
            </item>
            <item>
             <widget class="QCheckBox" name="mergeTrack2BarriersCheckBox">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Check this box if you want to include the barriers of the track in the merge process.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="text">
               <string>Barriers</string>
              </property>
@@ -644,6 +526,9 @@
            </item>
            <item>
             <widget class="QCheckBox" name="mergeTrack2GatesCheckBox">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Check this box if you want to include the gates of the track in the merge process.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="text">
               <string>Gates</string>
              </property>
@@ -654,6 +539,9 @@
            </item>
            <item>
             <widget class="QPushButton" name="mergeTrack2SelectPushButton">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Opens the track selection dialog, which enables you to select a track for the merge process.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="text">
               <string>Select</string>
              </property>
@@ -776,7 +664,11 @@
          </spacer>
         </item>
         <item row="0" column="0">
-         <widget class="QComboBox" name="archiveDatabaseSelectionComboBox"/>
+         <widget class="QComboBox" name="archiveDatabaseSelectionComboBox">
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Choose a database you want to select tracks from.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+         </widget>
         </item>
         <item row="3" column="1">
          <widget class="QPushButton" name="archiveAddTrackPushButton">
@@ -859,6 +751,9 @@
            </item>
            <item row="1" column="2">
             <widget class="QToolButton" name="trackArchiveSettingsBrowseToolButton">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Opens a dialog that lets you choose the filepath to the archive database file.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="text">
               <string>...</string>
              </property>
@@ -866,6 +761,9 @@
            </item>
            <item row="0" column="0">
             <widget class="QCheckBox" name="archiveMoveToArchiveCheckBox">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This option will move a track into your archive, rather then to copy it. Useally this is something you would probably expect by default, but since this is still a beta build - which contains a lot of not fully tested stuf - this option is disabled by default.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="text">
               <string>Move files to archive (Instead of copy)</string>
              </property>
@@ -896,10 +794,17 @@
            <item row="3" column="3">
             <layout class="QHBoxLayout" name="browseSettingsDbLayout">
              <item>
-              <widget class="QLineEdit" name="settingsDbLineEdit"/>
+              <widget class="QLineEdit" name="settingsDbLineEdit">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The filepath to the &amp;quot;settings.db&amp;quot;-file of the selected database needs to be provided here.&lt;br/&gt;&lt;br/&gt;For Windows based systems the files for the production build should be located here: &amp;quot;C:\Users\%username%\AppData\LocalLow\VelociDrone\VelociDrone&amp;quot;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+              </widget>
              </item>
              <item>
               <widget class="QToolButton" name="browseSettingsDbToolButton">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Opens a dialog that lets you choose a filepath to the database file.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
                <property name="text">
                 <string>...</string>
                </property>
@@ -933,10 +838,17 @@
            <item row="2" column="3">
             <layout class="QHBoxLayout" name="browseUserDbLayout">
              <item>
-              <widget class="QLineEdit" name="userDbLineEdit"/>
+              <widget class="QLineEdit" name="userDbLineEdit">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The filepath to the &amp;quot;user11.db&amp;quot;-file of the selected database needs to be provided here.&lt;br/&gt;&lt;br/&gt;For Windows based systems the files for the production build should be located here: &amp;quot;C:\Users\%username%\AppData\LocalLow\VelociDrone\VelociDrone&amp;quot;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+              </widget>
              </item>
              <item>
               <widget class="QToolButton" name="browseUserDbToolButton">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Opens a dialog that lets you choose a filepath to the database file.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
                <property name="text">
                 <string>...</string>
                </property>
@@ -961,6 +873,9 @@
             <layout class="QHBoxLayout" name="buildTypeLayout">
              <item>
               <widget class="QComboBox" name="buildTypeComboBox">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Choose the database of which filepaths you want to set.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
                <item>
                 <property name="text">
                  <string>Production</string>
@@ -1471,6 +1386,9 @@
            </item>
            <item>
             <widget class="QCheckBox" name="viewNodeTypeColumn">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Views the Json data type column in the node editor. In about 99.9% of the cases this information will provide no value for you and therefore disabled by default.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="text">
               <string>View &quot;Type&quot; column</string>
              </property>
@@ -1489,22 +1407,44 @@
            <string>About</string>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_4">
+           <property name="spacing">
+            <number>0</number>
+           </property>
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
            <item>
-            <widget class="QTextEdit" name="aboutTextEdit">
-             <property name="frameShadow">
-              <enum>QFrame::Plain</enum>
-             </property>
-             <property name="lineWidth">
+            <widget class="QStackedWidget" name="aboutStackedWidget">
+             <property name="currentIndex">
               <number>0</number>
              </property>
-             <property name="undoRedoEnabled">
-              <bool>false</bool>
-             </property>
-             <property name="readOnly">
-              <bool>true</bool>
-             </property>
-             <property name="html">
-              <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+             <widget class="QWidget" name="aboutStackedWidgetAboutPage">
+              <layout class="QVBoxLayout" name="verticalLayout_6">
+               <item>
+                <widget class="QTextEdit" name="aboutTextEdit">
+                 <property name="frameShadow">
+                  <enum>QFrame::Plain</enum>
+                 </property>
+                 <property name="lineWidth">
+                  <number>0</number>
+                 </property>
+                 <property name="undoRedoEnabled">
+                  <bool>false</bool>
+                 </property>
+                 <property name="readOnly">
+                  <bool>true</bool>
+                 </property>
+                 <property name="html">
+                  <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;&quot;&gt;
@@ -1512,31 +1452,67 @@ p, li { white-space: pre-wrap; }
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:8pt;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;The VeloTrackEditToolbox is a free, open source tool for the convenient access and editing of the data of Velocidrone tracks, created by Peter &amp;quot;lephro&amp;quot; Rozmus for the Velocidrone track editing community.&lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:8pt;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;Although this program is created for a safe usage and handling with the Velocidrone internal files and data, this does not mean that is will work under any circumstance or in every case. To make it clear: &lt;/span&gt;&lt;span style=&quot; font-size:8pt; font-weight:600;&quot;&gt;YOU CAN FUCK UP ALL YOUR TRACKS AND VELOCIDRONE DATABASES&lt;/span&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt; and I will take &lt;/span&gt;&lt;span style=&quot; font-size:8pt; font-weight:600;&quot;&gt;NO RESPONSIBILTY&lt;/span&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt; for any &lt;/span&gt;&lt;span style=&quot; font-size:8pt; font-weight:600;&quot;&gt;KIND OF DAMAGE&lt;/span&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt; done.&lt;/span&gt;&lt;span style=&quot; font-size:8pt; font-weight:600;&quot;&gt; USE IT AT YOUR OWN RISK&lt;/span&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;. &lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;Although this program is created for a safe usage and handling with the Velocidrone internal files and data, this does not mean that it will work under any circumstance or in every case. To make it clear: &lt;/span&gt;&lt;span style=&quot; font-size:8pt; font-weight:600;&quot;&gt;YOU CAN FUCK UP ALL YOUR TRACKS AND VELOCIDRONE DATABASES&lt;/span&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt; and I will take &lt;/span&gt;&lt;span style=&quot; font-size:8pt; font-weight:600;&quot;&gt;NO RESPONSIBILTY&lt;/span&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt; for any &lt;/span&gt;&lt;span style=&quot; font-size:8pt; font-weight:600;&quot;&gt;KIND OF DAMAGE&lt;/span&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt; done.&lt;/span&gt;&lt;span style=&quot; font-size:8pt; font-weight:600;&quot;&gt; USE IT AT YOUR OWN RISK&lt;/span&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;. &lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;&lt;br /&gt;Or in more legal terms:&lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;The program is provided &lt;/span&gt;&lt;span style=&quot; font-size:8pt; font-weight:600;&quot;&gt;AS IS&lt;/span&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt; with&lt;/span&gt;&lt;span style=&quot; font-size:8pt; font-weight:600;&quot;&gt; NO WARRANTY OF ANY KIND, INCLUDING THE WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE&lt;/span&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;.&lt;br /&gt;&lt;br /&gt;Released under GNU General Public License 3.0, 29 June 2007&lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;&lt;br /&gt;Source code available at: &lt;/span&gt;&lt;a href=&quot;https://github.com/lephro/VeloTrackEditToolbox&quot;&gt;&lt;span style=&quot; font-size:8pt; text-decoration: underline; color:#007af4;&quot;&gt;https://github.com/lephro/VeloTrackEditToolbox&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;&lt;br /&gt;&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:8pt;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:8pt;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:8pt;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:8pt; font-weight:600; text-decoration: underline;&quot;&gt;Special Thanks:&lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;- Ashley Davis (Creator of Velocidrone)&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;- Colby Curtola (Greatest Velocidrone track designer of all times*)&lt;br /&gt;&lt;br /&gt;- Everyone in the Velocidrone Community.&lt;br /&gt;&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:8pt;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;&lt;br /&gt;* imho&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QTextEdit" name="aboutLicenseTextEdit">
-             <property name="documentTitle">
-              <string notr="true">GNU Public License</string>
-             </property>
-             <property name="undoRedoEnabled">
-              <bool>false</bool>
-             </property>
-             <property name="readOnly">
-              <bool>true</bool>
-             </property>
-             <property name="html">
-              <string notr="true">&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;- Colby Curtola (Greatest Velocidrone track designer of all times*)&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;As well as all other Velocidrone track managers namely:&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;- Ali Craig Barret&lt;br /&gt;- David Bauhard&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;- Neil Marek&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;- Greg Hurst&lt;br /&gt;&lt;br /&gt;- Everyone in the Velocidrone Community.&lt;br /&gt;&lt;br /&gt;&lt;br /&gt;&lt;br /&gt;* imho&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+             <widget class="QWidget" name="aboutStackedWidgetPathLogPage">
+              <layout class="QVBoxLayout" name="verticalLayout_7">
+               <item>
+                <widget class="QTextEdit" name="aboutPatchLogTextEdit">
+                 <property name="html">
+                  <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Version Beta 0.4:&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;- Added this patch log&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;- Added the license page&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;- Added a track archive feature&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;- Added tooltips to many most controls&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;- Added some status bar information&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;- Added a geodesic sphere generator (not completly working)&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;- Fixed online_id and protected_track values beeing set on save&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;- Fixed ctrlp and jo nodes not beeing written corretly&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;- (Code) Encapsulated the json parsing stuff in its own class&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+             <widget class="QWidget" name="aboutStackedWidgetLicensePage">
+              <layout class="QVBoxLayout" name="verticalLayout_8">
+               <item>
+                <widget class="QTextEdit" name="aboutLicenseTextEdit">
+                 <property name="toolTip">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;You are not really reading this license agreement. Are you?&lt;br/&gt;&lt;br/&gt;BUILD A TRACK instead, unless you're an lawyer or something. Even then you should try to build a track. It's fun. Maybe you can build your favorite courtyard in the libary scene or something. Who knows? You won't if you do it right now.&lt;br/&gt;&lt;br/&gt;So do what everyone else do - don't read the license - just agree. You haven't bought a car or a new dishwasher. It's all free and the tracks stay yours.&lt;br/&gt;&lt;br/&gt;This is the 100% unchanged version of the GPL - nothing new,  nothing special.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
+                 <property name="documentTitle">
+                  <string notr="true">GNU Public License</string>
+                 </property>
+                 <property name="undoRedoEnabled">
+                  <bool>false</bool>
+                 </property>
+                 <property name="readOnly">
+                  <bool>true</bool>
+                 </property>
+                 <property name="html">
+                  <string notr="true">&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;title&gt;GNU Public License&lt;/title&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;&quot;&gt;
@@ -1652,24 +1628,214 @@ p, li { white-space: pre-wrap; }
 &lt;h4 style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;a name=&quot;section17&quot;&gt;&lt;/a&gt;&lt;span style=&quot; font-size:8pt; font-weight:600;&quot;&gt;1&lt;/span&gt;&lt;span style=&quot; font-size:8pt; font-weight:600;&quot;&gt;7. Interpretation of Sections 15 and 16. &lt;/span&gt;&lt;/h4&gt;
 &lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;If the disclaimer of warranty and limitation of liability provided above cannot be given local legal effect according to their terms, reviewing courts shall apply local law that most closely approximates an absolute waiver of all civil liability in connection with the Program, unless a warranty or assumption of liability accompanies a copy of the Program in return for a fee. &lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;END OF TERMS AND CONDITIONS&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-             </property>
-             <property name="textInteractionFlags">
-              <set>Qt::TextBrowserInteraction</set>
-             </property>
+                 </property>
+                 <property name="textInteractionFlags">
+                  <set>Qt::TextBrowserInteraction</set>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
             </widget>
            </item>
            <item>
-            <widget class="QPushButton" name="aboutLicensePushButton">
-             <property name="text">
-              <string>License</string>
-             </property>
-            </widget>
+            <layout class="QHBoxLayout" name="aboutButtonHorizontalLayout">
+             <item>
+              <widget class="QPushButton" name="aboutPushButton">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Push this button and you get informations about the genius that made this awesome tool, which is just another step to world domination. If you're now asking yourself what this tool has to do with world domination, then you actually found the reason why I should dominate the world and not you.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="text">
+                <string>About</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="aboutPatchLogPushButton">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Yes. Its a patch log button. It opens a patch log. Wow. Incredible. Mind blowing. Full of notes of changes that I made or at least the ones I actually found to be worthy to mention.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="text">
+                <string>Patch Log</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="aboutLicensePushButton">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;You must be really bored to read the tooltip for the license button.&lt;br/&gt;Maybe the time would be better spend in building a track, rather then reading a boring license agreement, that I put there just because I'm 100% sure someone would otherwise take my code and sell it, because its such an awesome tool. Full of technology secrets of the gaming industry, kappa. Now go build a track.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="text">
+                <string>License</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </item>
           </layout>
          </widget>
         </item>
        </layout>
       </widget>
+     </widget>
+    </item>
+    <item row="0" column="0" rowspan="2">
+     <widget class="QListWidget" name="navListWidget">
+      <property name="minimumSize">
+       <size>
+        <width>70</width>
+        <height>425</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>70</width>
+        <height>16777213</height>
+       </size>
+      </property>
+      <property name="horizontalScrollBarPolicy">
+       <enum>Qt::ScrollBarAlwaysOff</enum>
+      </property>
+      <property name="showDropIndicator" stdset="0">
+       <bool>false</bool>
+      </property>
+      <property name="selectionBehavior">
+       <enum>QAbstractItemView::SelectItems</enum>
+      </property>
+      <property name="iconSize">
+       <size>
+        <width>50</width>
+        <height>50</height>
+       </size>
+      </property>
+      <property name="textElideMode">
+       <enum>Qt::ElideNone</enum>
+      </property>
+      <property name="movement">
+       <enum>QListView::Static</enum>
+      </property>
+      <property name="flow">
+       <enum>QListView::TopToBottom</enum>
+      </property>
+      <property name="spacing">
+       <number>5</number>
+      </property>
+      <property name="viewMode">
+       <enum>QListView::IconMode</enum>
+      </property>
+      <property name="wordWrap">
+       <bool>true</bool>
+      </property>
+      <property name="currentRow">
+       <number>-1</number>
+      </property>
+      <item>
+       <property name="text">
+        <string>Node Editor</string>
+       </property>
+       <property name="font">
+        <font>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="textAlignment">
+        <set>AlignCenter</set>
+       </property>
+       <property name="icon">
+        <iconset resource="icons.qrc">
+         <normaloff>:/icons/medium</normaloff>:/icons/medium</iconset>
+       </property>
+       <property name="flags">
+        <set>ItemIsSelectable|ItemIsUserCheckable|ItemIsEnabled</set>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>Merge Tracks</string>
+       </property>
+       <property name="font">
+        <font>
+         <family>MS Shell Dlg 2</family>
+         <pointsize>8</pointsize>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="textAlignment">
+        <set>AlignCenter</set>
+       </property>
+       <property name="icon">
+        <iconset resource="icons.qrc">
+         <normaloff>:/icons/tree_structure</normaloff>:/icons/tree_structure</iconset>
+       </property>
+       <property name="flags">
+        <set>ItemIsSelectable|ItemIsUserCheckable|ItemIsEnabled</set>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>Track Archive</string>
+       </property>
+       <property name="font">
+        <font>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="textAlignment">
+        <set>AlignCenter</set>
+       </property>
+       <property name="icon">
+        <iconset resource="icons.qrc">
+         <normaloff>:/icons/safe</normaloff>:/icons/safe</iconset>
+       </property>
+       <property name="flags">
+        <set>ItemIsSelectable|ItemIsUserCheckable|ItemIsEnabled</set>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>Options</string>
+       </property>
+       <property name="font">
+        <font>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="textAlignment">
+        <set>AlignCenter</set>
+       </property>
+       <property name="icon">
+        <iconset resource="icons.qrc">
+         <normaloff>:/icons/gear2</normaloff>:/icons/gear2</iconset>
+       </property>
+       <property name="flags">
+        <set>ItemIsSelectable|ItemIsUserCheckable|ItemIsEnabled</set>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>About</string>
+       </property>
+       <property name="font">
+        <font>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="textAlignment">
+        <set>AlignCenter</set>
+       </property>
+       <property name="icon">
+        <iconset resource="icons.qrc">
+         <normaloff>:/icons/info</normaloff>:/icons/info</iconset>
+       </property>
+       <property name="flags">
+        <set>ItemIsSelectable|ItemIsUserCheckable|ItemIsEnabled</set>
+       </property>
+      </item>
      </widget>
     </item>
    </layout>

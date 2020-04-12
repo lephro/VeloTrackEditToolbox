@@ -21,9 +21,11 @@ SOURCES += \
     geodesicdome.cpp \
     main.cpp \
     mainwindow.cpp \
+    mainwindow_func.cpp \
     opentrackdialog.cpp \
     trackarchive.cpp \
     velodb.cpp \
+    velojsonparser.cpp \
     velotrack.cpp
 
 HEADERS += \
@@ -35,6 +37,7 @@ HEADERS += \
     sqlite3.h \
     trackarchive.h \
     velodb.h \
+    velojsonparser.h \
     velotrack.h
 
 FORMS += \

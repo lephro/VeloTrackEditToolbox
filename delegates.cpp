@@ -71,7 +71,7 @@ QWidget *JsonTreeViewItemDelegate::createEditor(QWidget *parent, const QStyleOpt
         spinBox->setRange(-99999, 99999);
       }
       if (keyIndex.data() == "gate") {
-        spinBox->setRange(0, dataParser->getGateCount() - 1);
+        spinBox->setRange(0, int(dataParser->getGateCount()) - 1);
       }
     }
   } else {
@@ -99,12 +99,12 @@ void JsonTreeViewItemDelegate::setEditorData(QWidget *editor, const QModelIndex 
       int index = 0;
       for (int i = 0; i < dataParser->getPrefabs()->size(); ++i) {
         PrefabData prefab = dataParser->getPrefabs()->value(i);
-        if (selectedPrefab.gate == prefab.gate) {
+        if (prefab.gate == selectedPrefab.gate) {
           QVariant var;
           var.setValue(prefab);
           comboBox->insertItem(index, prefab.name, var);
           if (prefab.id == selectedPrefab.id) {
-           comboBox->setCurrentIndex(index);
+            comboBox->setCurrentIndex(index);
           }
           index++;
         }
