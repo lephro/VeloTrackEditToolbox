@@ -73,7 +73,7 @@ private:
   uint gateCount = 0;
 
   QList<QModelIndex> findPrefabs(const QModelIndex &keyItemIndex) const;
-  bool isModifiedNode(const QStandardItem* item) const;
+  bool containsModifiedNode(const QStandardItem* item) const;
   void resetModifiedNodes(const QStandardItem* item) const;
 };
 

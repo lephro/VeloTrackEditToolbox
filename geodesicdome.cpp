@@ -12,6 +12,7 @@ GeodesicDome::GeodesicDome(QObject *parent, const unsigned int frequency) : QObj
 
 QByteArray GeodesicDome::getVeloTrackData()
 {
+  const QVector3D up(0, 1, 0);
   const QString trackTemplate = "{\"gates\":[{\"prefab\":88,\"trans\":{\"pos\":[1500,0,1000],\"rot\":[707,-707,0,0],\"scale\":[100,100,100]},\"gate\":0,\"start\":true,\"finish\":false},{\"prefab\":88,\"trans\":{\"pos\":[1500,0,1500],\"rot\":[707,-707,0,0],\"scale\":[100,100,100]},\"gate\":1,\"start\":false,\"finish\":true}],\"barriers\":[%1{\"prefab\":422,\"trans\":{\"pos\":[1500,0,500],\"rot\":[1000,0,0,0],\"scale\":[100,100,100]}}]}";
   const QString prefabTemplate = "{\"prefab\":%0,\"trans\":{\"pos\":[%1,%2,%3],\"rot\":[%4,%5,%6,%7],\"scale\":[%8,%9,%10]}}";
   QString prefabs;
@@ -33,22 +34,28 @@ QByteArray GeodesicDome::getVeloTrackData()
               .arg(100) + ",";
     }
 
-    const QVector3D up(0, 1, 0);
-
     for (int i = 0; i < 3; ++i) {
-      const QVector3D position = getMidpoint(vertices[int(index[i])], vertices[int(index[(i + 1) % 3])]);
-      QVector3D direction = position - up;
-      direction.normalize();
-      const QQuaternion rotation = getPrefabRotation(direction);
+      const QVector3D position = vertices[int(index[i])];//getMidpoint(vertices[int(index[i])], vertices[int(index[(i + 1) % 3])]);
+      QVector3D direction = vertices[int(index[(i + 1) % 3])] - vertices[int(index[i])];
+      //direction.normalize();
+      QQuaternion rotation = getPrefabRotation(direction);
+      //QQuaternion rotation = QQuaternion::fromDirection(direction, up);
+      const QVector3D defaultRotVec(0, 1, 0);
+      const QQuaternion defaultRotation = QQuaternion::fromDirection(defaultRotVec, up);
+      QQuaternion result = rotation.rotationTo(up, direction);
+      //QQuaternion result = defaultRotation * rotation;
       prefabs += prefabTemplate
               .arg(340)
+
               .arg(int((position.x() * 10000) - (vertices[int(index[i])].distanceToPoint(vertices[int(index[(i + 1) % 3])]) / 2)), 0, 10)
               .arg(int(position.y() * 10000), 0, 10)
               .arg(int(position.z() * 10000), 0, 10)
-              .arg(1000/*int(rotation.x())*/)
-              .arg(0/*int(rotation.y())*/)
-              .arg(0/*int(rotation.z())*/)
-              .arg(0/*int(rotation.scalar())*/)
+
+              .arg(int(result.x() * 1000))
+              .arg(int(result.y() * 1000))
+              .arg(int(result.z() * 1000))
+              .arg(int(result.scalar() * 1000))
+
               .arg(15 + int(vertices[int(index[i])].distanceToPoint(vertices[int(index[(i + 1) % 3])]) * 10000))
               .arg(150)
               .arg(150) + ",";

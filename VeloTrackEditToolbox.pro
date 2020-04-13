@@ -61,3 +61,5 @@ DISTFILES += \
 
 RESOURCES += \
   icons.qrc
+
+RC_ICONS = VeloTrackEditToolbox.ico

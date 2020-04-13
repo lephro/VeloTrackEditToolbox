@@ -135,8 +135,11 @@ void MainWindow::on_replacePrefabComboBox_currentIndexChanged(int index)
   PrefabData selectedPrefab = veloTrack->getPrefab(ui->replacePrefabComboBox->currentData().toUInt());
   ui->replacePrefabWithComboBox->clear();
   for (QVector<PrefabData>::iterator i = veloTrack->getPrefabs()->begin(); i != veloTrack->getPrefabs()->end(); ++i) {
-    if ((i->id != selectedPrefab.id) && (i->gate == selectedPrefab.gate)) {
-      ui->replacePrefabWithComboBox->addItem(i->name, i->id);
+    if (i->gate == selectedPrefab.gate) {
+      ui->replacePrefabWithComboBox->addItem(i->name, i->id);      
+      if (i->id == selectedPrefab.id) {
+        ui->replacePrefabWithComboBox->setCurrentIndex(ui->replacePrefabWithComboBox->count() - 1);
+      }
     }
   }
 }

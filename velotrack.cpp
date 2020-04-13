@@ -120,7 +120,7 @@ uint VeloTrack::getSplineCount() const
 
 bool VeloTrack::isModified()
 {
-  return isModifiedNode(model->invisibleRootItem());
+  return containsModifiedNode(model->invisibleRootItem());
 }
 
 uint VeloTrack::getGateCount() const
@@ -280,7 +280,7 @@ QList<QModelIndex> VeloTrack::findPrefabs(const QModelIndex& keyItemIndex) const
 }
 
 
-bool VeloTrack::isModifiedNode(const QStandardItem* item) const
+bool VeloTrack::containsModifiedNode(const QStandardItem* item) const
 {
   for (int i = 0; i < item->rowCount(); ++i)
   {
@@ -291,7 +291,7 @@ bool VeloTrack::isModifiedNode(const QStandardItem* item) const
       return true;
 
     if (child->hasChildren()) {
-      if (isModifiedNode(child))
+      if (containsModifiedNode(child))
         return true;
     }
   }

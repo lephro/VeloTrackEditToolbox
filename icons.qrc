@@ -13,5 +13,8 @@
         <file alias="info">icons/icons8-info-100.png</file>
         <file alias="gnu_logo">icons/1920px-GPLv3_Logo.svg.png</file>
         <file alias="safe">icons/icons8-safe-100.png</file>
+        <file>VeloTrackEditToolbox.ico</file>
+        <file alias="double_arrow_left">icons/icons8-double-left-100.png</file>
+        <file alias="double_arrow_right">icons/icons8-double-right-100.png</file>
     </qresource>
 </RCC>

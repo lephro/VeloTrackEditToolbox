@@ -195,7 +195,7 @@ void MainWindow::saveTrackToDb()
   loadedTrack.sceneId = ui->sceneComboBox->currentData().toUInt();
   loadedTrack.value = *veloTrack->exportAsJsonData();
 
-  QString message = tr("The track \"%1\" was saved successfully to the database!");
+  QString message = tr("The track was saved successfully to the database!");
 
   if (settingSaveAsNew) {
     loadedTrack.name += "-new";
@@ -530,6 +530,6 @@ QString MainWindow::browseDatabaseFile() const
 {
   return QFileDialog::getOpenFileName(nullptr,
                                       tr("Choose Database"),
-                                      "C:/Users/lephro/AppData/LocalLow/VelociDrone/",
+                                      "C:/Users/%username%/AppData/LocalLow/VelociDrone/",
                                       tr("Database Files (*.db)"));
 }
