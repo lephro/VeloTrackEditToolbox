@@ -129,7 +129,7 @@ void VeloDb::queryTracks()
   if (resultCode != SQLITE_OK)
     throw SQLErrorException(resultCode);
 
-  resultCode = sqlite3_exec(db, "SELECT* from tracks WHERE protected_track=0", queryTracksCallback, tracks, &zErrMsg);
+  resultCode = sqlite3_exec(db, "SELECT* from tracks WHERE protected_track!=0", queryTracksCallback, tracks, &zErrMsg);
 
   sqlite3_close(db);
 
