@@ -43,7 +43,7 @@ QString MainWindow::getDefaultPath()
   return QStandardPaths::standardLocations(QStandardPaths::GenericDataLocation).first().replace("AppData/Local", "AppData/LocalLow/VelociDrone");
 }
 
-bool MainWindow::maybeCreateOrCreateArchive()
+bool MainWindow::maybeCreateOrSelectArchive()
 {
 
   if (archive->getFileName() != "")
@@ -155,7 +155,10 @@ void MainWindow::replacePrefab()
 
   uint changedPrefabCount = veloTrack->replacePrefab(searchIndex,
                                                      ui->replacePrefabComboBox->currentData().toUInt(),
-                                                     ui->replacePrefabWithComboBox->currentData().toUInt());
+                                                     ui->replacePrefabWithComboBox->currentData().toUInt(),
+                                                     QVector3D(float(ui->replaceScalingXDoubleSpinBox->value()),
+                                                               float(ui->replaceScalingYDoubleSpinBox->value()),
+                                                               float(ui->replaceScalingZDoubleSpinBox->value())));
 
   QString changedPrefabInfo = tr("%1 occurence(s) replaced");
   QMessageBox::information(this, tr("Replace successfull"), changedPrefabInfo.arg(changedPrefabCount, 0, 10));

@@ -13,6 +13,7 @@
 #include <QStandardItem>
 #include <QString>
 #include <QTreeWidgetItem>
+#include <QVector3D>
 
 #include "exceptions.h"
 #include "velodb.h"
@@ -49,7 +50,7 @@ public:
   uint                  getSplineCount() const;
   QStandardItemModel*   getStandardItemModel() const;
 
-  uint replacePrefab(const QModelIndex& searchIndex, const uint fromPrefabId, const uint toPrefabId);
+  uint replacePrefab(const QModelIndex& searchIndex, const uint fromPrefabId, const uint toPrefabId, const QVector3D scaling = QVector3D(1, 1, 1));
   void resetFinishGates();
   void resetModified();
   void resetStartGates();

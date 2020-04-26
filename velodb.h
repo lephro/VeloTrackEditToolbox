@@ -91,7 +91,7 @@ public:
   void queryScenes();
   void queryTracks();
 
-  void deleteTrack(TrackData &track);
+  void deleteTrack(const TrackData &track);
   uint saveTrack(TrackData &track, const bool createNewEntry = true);
   void setSettingsDbFilename(const QString& filename);
   void setUserDbFilename(const QString& filename, bool refreshData = true);
@@ -121,7 +121,7 @@ private:
   uint insertTrack(const TrackData &track);
   void updateTrack(const TrackData &track);
 
-  uint executeStatement(QString sql);
+  uint executeStatement(const QString sql);
 };
 
 #endif // VELODB_H

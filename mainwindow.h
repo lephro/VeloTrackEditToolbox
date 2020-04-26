@@ -78,6 +78,10 @@ private slots:
 
   void on_geoGenTestPushButton_released();
 
+  void on_replaceScalingResetPushButton_released();
+
+  void on_archiveMoveToArchiveCheckBox_stateChanged(int arg1);
+
 protected:
   void closeEvent(QCloseEvent* e) override;
 
@@ -157,7 +161,7 @@ private:
   void replacePrefab();
 
   QString getDefaultPath();
-  bool maybeCreateOrCreateArchive();
+  bool maybeCreateOrSelectArchive();
   void loadArchive();
   void loadDatabaseForArchive(VeloDb *database);
 

@@ -12,7 +12,7 @@ GeodesicDome::GeodesicDome(QObject *parent, const unsigned int frequency) : QObj
 
 QByteArray GeodesicDome::getVeloTrackData()
 {
-  const QVector3D up(0, 1, 0);
+  const QVector3D defaultDirection(1, 0, 0);
   const QString trackTemplate = "{\"gates\":[{\"prefab\":88,\"trans\":{\"pos\":[1500,0,1000],\"rot\":[707,-707,0,0],\"scale\":[100,100,100]},\"gate\":0,\"start\":true,\"finish\":false},{\"prefab\":88,\"trans\":{\"pos\":[1500,0,1500],\"rot\":[707,-707,0,0],\"scale\":[100,100,100]},\"gate\":1,\"start\":false,\"finish\":true}],\"barriers\":[%1{\"prefab\":422,\"trans\":{\"pos\":[1500,0,500],\"rot\":[1000,0,0,0],\"scale\":[100,100,100]}}]}";
   const QString prefabTemplate = "{\"prefab\":%0,\"trans\":{\"pos\":[%1,%2,%3],\"rot\":[%4,%5,%6,%7],\"scale\":[%8,%9,%10]}}";
   QString prefabs;
@@ -35,15 +35,9 @@ QByteArray GeodesicDome::getVeloTrackData()
     }
 
     for (int i = 0; i < 3; ++i) {
-      const QVector3D position = vertices[int(index[i])];//getMidpoint(vertices[int(index[i])], vertices[int(index[(i + 1) % 3])]);
-      QVector3D direction = vertices[int(index[(i + 1) % 3])] - vertices[int(index[i])];
-      //direction.normalize();
-      QQuaternion rotation = getPrefabRotation(direction);
-      //QQuaternion rotation = QQuaternion::fromDirection(direction, up);
-      const QVector3D defaultRotVec(0, 1, 0);
-      const QQuaternion defaultRotation = QQuaternion::fromDirection(defaultRotVec, up);
-      QQuaternion result = rotation.rotationTo(up, direction);
-      //QQuaternion result = defaultRotation * rotation;
+      const QVector3D position = vertices[int(index[i])];
+      const QVector3D direction = vertices[int(index[i])] - vertices[int(index[(i + 1) % 3])];
+      const QQuaternion result = QQuaternion::rotationTo(defaultDirection, direction);
       prefabs += prefabTemplate
               .arg(340)
 
@@ -55,6 +49,7 @@ QByteArray GeodesicDome::getVeloTrackData()
               .arg(int(result.y() * 1000))
               .arg(int(result.z() * 1000))
               .arg(int(result.scalar() * 1000))
+
 
               .arg(15 + int(vertices[int(index[i])].distanceToPoint(vertices[int(index[(i + 1) % 3])]) * 10000))
               .arg(150)
@@ -76,6 +71,61 @@ QByteArray GeodesicDome::getVeloTrackData()
 //            .arg(150) + ",";
 //  }
   qDebug() << "Prefabs: " << prefabs;
+  return trackTemplate.arg(prefabs).toStdString().c_str();
+}
+
+QByteArray GeodesicDome::getVeloTrackDataTest() {
+  const QVector3D up(0, 1, 0);
+  const QVector3D defaultDirection(1, 0, 0);
+  const QString trackTemplate = "{\"gates\":[{\"prefab\":88,\"trans\":{\"pos\":[1500,0,1000],\"rot\":[707,-707,0,0],\"scale\":[100,100,100]},\"gate\":0,\"start\":true,\"finish\":false},{\"prefab\":88,\"trans\":{\"pos\":[1500,0,1500],\"rot\":[707,-707,0,0],\"scale\":[100,100,100]},\"gate\":1,\"start\":false,\"finish\":true}],\"barriers\":[%1{\"prefab\":422,\"trans\":{\"pos\":[1500,0,500],\"rot\":[1000,0,0,0],\"scale\":[100,100,100]}}]}";
+  const QString prefabTemplate = "{\"prefab\":%0,\"trans\":{\"pos\":[%1,%2,%3],\"rot\":[%4,%5,%6,%7],\"scale\":[%8,%9,%10]}}";
+  QString prefabs;
+
+  const QList<QVector3D> points = {{0, 0.01f, -1}, {1, 0.01f, 0}, {0, 0.01f, 1}, {0, 1.01f, 1}};
+  const QList<QVector3D> pointIdx = {{0, 1, 2}, {0, 3, 2}, {1, 3, 2}};
+
+  foreach (QVector3D point, points) {
+    prefabs += prefabTemplate
+            .arg(357)
+            .arg(int(point.x() * 10000), 0, 10)
+            .arg(int(point.y() * 10000), 0, 10)
+            .arg(int(point.z() * 10000), 0, 10)
+            .arg(1000)
+            .arg(0)
+            .arg(0)
+            .arg(0)
+            .arg(100)
+            .arg(100)
+            .arg(100) + ",";
+  }
+
+  foreach (QVector3D idx, pointIdx) {
+    for (int i = 0; i < 3; ++i) {
+      const QVector3D position = points[int(idx[i])];
+      const QVector3D direction = points[int(idx[(i + 1) % 3])] - points[int(idx[i])];
+      const QQuaternion result = QQuaternion::fromDirection(direction, up);
+      //const QVector3D directionInv = points[int(idx[i])] - points[int(idx[(i + 1) % 3])];
+      //const QQuaternion result = QQuaternion::rotationTo(defaultDirection, direction);
+      qDebug() << "Pos:" << position << " Tar:" << points[int(idx[(i + 1) % 3])] << "Dir:" << direction << " Quart:" << result;
+      prefabs += prefabTemplate
+              .arg(340)
+
+              .arg(int((position.x() * 10000) - (points[int(idx[i])].distanceToPoint(points[int(idx[(i + 1) % 3])]) / 2)), 0, 10)
+              .arg(int(position.y() * 10000), 0, 10)
+              .arg(int(position.z() * 10000), 0, 10)
+
+              .arg(int(result.x() * 1000))
+              .arg(int(result.y() * 1000))
+              .arg(int(result.z() * 1000))
+              .arg(int(result.scalar() * 1000))
+
+
+              .arg(15 + int(points[int(idx[i])].distanceToPoint(points[int(idx[(i + 1) % 3])]) * 10000))
+              .arg(150)
+              .arg(150) + ",";
+    }
+  }
+
   return trackTemplate.arg(prefabs).toStdString().c_str();
 }
 

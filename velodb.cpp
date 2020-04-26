@@ -35,7 +35,7 @@ void VeloDb::createTrackTable()
   executeStatement(sql);
 }
 
-void VeloDb::deleteTrack(TrackData &track)
+void VeloDb::deleteTrack(const TrackData &track)
 {
   if (track.id == 0)
     throw InvalidTrackException();
@@ -129,7 +129,7 @@ void VeloDb::queryTracks()
   if (resultCode != SQLITE_OK)
     throw SQLErrorException(resultCode);
 
-  resultCode = sqlite3_exec(db, "SELECT* from tracks WHERE protected_track!=0", queryTracksCallback, tracks, &zErrMsg);
+  resultCode = sqlite3_exec(db, "SELECT* from tracks WHERE protected_track!=1", queryTracksCallback, tracks, &zErrMsg);
 
   sqlite3_close(db);
 
@@ -159,6 +159,8 @@ void VeloDb::setSettingsDbFilename(const QString &filename)
 {
   if (settingsDbFilename != filename) {
     this->settingsDbFilename = filename;
+
+    // Reload the database if its valid
     try {
       if (hasValidSettingsDb()) {
         queryPrefabs();
@@ -339,7 +341,7 @@ void VeloDb::updateTrack(const TrackData &track)
   executeStatement(sql);
 }
 
-uint VeloDb::executeStatement(QString sql)
+uint VeloDb::executeStatement(const QString sql)
 {
   if (userDbFilename == "")
     throw NoDatabasesFileNameException();
@@ -367,6 +369,6 @@ uint VeloDb::executeStatement(QString sql)
 bool VeloDb::hasValidSettingsDb() const
 {
   QFile settingsDbFile(settingsDbFilename);
-  // Todo: Check if tables exists
+  // ToDo: Check if tables exists
   return settingsDbFile.exists();
 }

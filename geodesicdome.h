@@ -28,7 +28,8 @@ class GeodesicDome : public QObject
 public:
   explicit GeodesicDome(QObject *parent = nullptr, const unsigned int frequency = 1);
 
-  QByteArray getVeloTrackData();
+  QByteArray getVeloTrackData();  
+  QByteArray getVeloTrackDataTest();
 
 private:
   QList<QVector3D> indices;  

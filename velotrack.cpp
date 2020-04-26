@@ -181,28 +181,58 @@ uint VeloTrack::getSceneId() const
   return sceneId;
 }
 
-uint VeloTrack::replacePrefab(const QModelIndex& searchIndex, const uint fromPrefabId, const uint toPrefabId)
+uint VeloTrack::replacePrefab(const QModelIndex &searchIndex, const uint fromPrefabId, const uint toPrefabId, const QVector3D scaling)
 {
   uint prefabCount = 0;
 
-  PrefabData toPrefab = getPrefab(toPrefabId);
+  const PrefabData toPrefab = getPrefab(toPrefabId);
 
-  QList<QModelIndex> prefabs = findPrefabs(searchIndex);
+  const QList<QModelIndex> prefabs = findPrefabs(searchIndex);
   foreach (QModelIndex prefabIndex, prefabs) {
-    QModelIndex prefabValueIndex = prefabIndex.siblingAtColumn(NodeTreeColumns::ValueColumn);
-    PrefabData prefab = prefabValueIndex.data(Qt::UserRole).value<PrefabData>();
+    const QModelIndex prefabValueIndex = prefabIndex.siblingAtColumn(NodeTreeColumns::ValueColumn);
+    const PrefabData prefab = prefabValueIndex.data(Qt::UserRole).value<PrefabData>();
     if (prefab.id == fromPrefabId) {
+      // Set modified flag
       model->setData(prefabIndex, true, Qt::UserRole);
+
+      // Set item description
       model->setData(prefabValueIndex, toPrefab.name, Qt::EditRole);
 
+      // Update item data
       QVariant var;
       var.setValue(toPrefab);
       model->setData(prefabValueIndex, var, Qt::UserRole);
 
-      QModelIndex parentKeyIndex = prefabIndex.parent();
-      if (parentKeyIndex.data(Qt::DisplayRole).toString() == prefab.name) {
-        model->setData(parentKeyIndex, toPrefab.name, Qt::EditRole);
+      // Update parent description
+      model->setData(prefabIndex.parent(), toPrefab.name + " " + QString("(%1)").arg(toPrefabId, 0, 10), Qt::EditRole);
+
+      // Apply Scaling
+      const QStandardItem* parentItem = model->itemFromIndex(prefabIndex.parent());
+      for(int transRow = 0; transRow < parentItem->rowCount(); ++transRow) {
+        const QStandardItem* transItem = parentItem->child(transRow, NodeTreeColumns::KeyColumn);
+        if (transItem->text() == "trans") {
+          for(int scaleRow = 0; scaleRow < transItem->rowCount(); ++scaleRow) {
+            const QStandardItem* scaleItem = transItem->child(scaleRow, NodeTreeColumns::KeyColumn);
+            if (scaleItem->text() == "scale") {
+              QStandardItem* xValueItem = scaleItem->child(0, NodeTreeColumns::ValueColumn);
+              QStandardItem* yValueItem = scaleItem->child(1, NodeTreeColumns::ValueColumn);
+              QStandardItem* zValueItem = scaleItem->child(2, NodeTreeColumns::ValueColumn);
+              if ((xValueItem != nullptr) && (scaling.x() != 1.0f)) {
+                xValueItem->setData(xValueItem->text().toFloat() * scaling.x(), Qt::EditRole);
+              }
+              if ((yValueItem != nullptr) && (scaling.y() != 1.0f)) {
+                yValueItem->setData(yValueItem->text().toFloat() * scaling.y(), Qt::EditRole);
+              }
+              if ((zValueItem != nullptr) && (scaling.z() != 1.0f)) {
+                zValueItem->setData(zValueItem->text().toFloat() * scaling.z(), Qt::EditRole);
+              }
+              break;
+            }
+          }
+          break;
+        }
       }
+
       prefabCount++;
     }
   }
