@@ -36,7 +36,7 @@ private:
   QList<QVector3D> vertices;
 
   QVector3D& getMidpoint(const QVector3D &v1, const QVector3D &v2) const;
-  QQuaternion& getPrefabRotation(const QVector3D &direction) const;
+  QQuaternion getPrefabRotation(const QVector3D &direction) const;
 
   void subdivideVertex(const QVector3D& v1,
                        const QVector3D& v2,

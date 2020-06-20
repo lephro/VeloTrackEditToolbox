@@ -1,4 +1,4 @@
-#include "velojsonparser.h"
+#include "velodataparser.h"
 
 VeloDataParser::VeloDataParser(QObject* parent, QVector<PrefabData>* prefabs, QStandardItemModel* model) : QObject(parent)
 {

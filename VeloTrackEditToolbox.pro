@@ -21,11 +21,17 @@ SOURCES += \
     geodesicdome.cpp \
     main.cpp \
     mainwindow.cpp \
-    mainwindow_func.cpp \
+    mainwindow_archive.cpp \
+    mainwindow_merge.cpp \
+    mainwindow_nodeeditor.cpp \
+    mainwindow_settings.cpp \
+    nodefilter.cpp \
     opentrackdialog.cpp \
+    prefabitem.cpp \
+    searchfilterlayout.cpp \
     trackarchive.cpp \
+    velodataparser.cpp \
     velodb.cpp \
-    velojsonparser.cpp \
     velotrack.cpp
 
 HEADERS += \
@@ -33,11 +39,14 @@ HEADERS += \
     exceptions.h \
     geodesicdome.h \
     mainwindow.h \
+    nodefilter.h \
     opentrackdialog.h \
+    prefabitem.h \
+    searchfilterlayout.h \
     sqlite3.h \
     trackarchive.h \
+    velodataparser.h \
     velodb.h \
-    velojsonparser.h \
     velotrack.h
 
 FORMS += \

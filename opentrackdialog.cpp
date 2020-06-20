@@ -66,11 +66,11 @@ void OpenTrackDialog::loadDatabase(VeloDb* database)
   database->queryAll();
 
   int row = 0;
-  foreach(TrackData track, *database->getTracks()) {
+  foreach(TrackData track, database->getTracks()) {
     QTreeWidgetItem* trackItem = new QTreeWidgetItem();
     trackItem->setText(0, track.name);
 
-    for (QVector<SceneData>::iterator i = database->getScenes()->begin(); i != database->getScenes()->end(); ++i) {
+    for (QVector<SceneData>::iterator i = database->getScenes().begin(); i != database->getScenes().end(); ++i) {
       if (i->id == track.sceneId) {
         trackItem->setText(TrackTreeColumns::SceneColumn, i->title);
         break;

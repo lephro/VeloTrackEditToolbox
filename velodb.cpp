@@ -5,17 +5,6 @@ VeloDb::VeloDb(DatabaseType databaseType, const QString& settingsDbFilename, con
   this->databaseType = databaseType;
   this->settingsDbFilename = settingsDbFilename;
   this->userDbFilename = userDbFilename;
-
-  prefabs = new QVector<PrefabData>();
-  scenes = new QVector<SceneData>();
-  tracks = new QVector<TrackData>();
-}
-
-VeloDb::~VeloDb()
-{
-  delete prefabs;
-  delete scenes;
-  delete tracks;
 }
 
 void VeloDb::createTrackTable()
@@ -72,21 +61,21 @@ void VeloDb::queryPrefabs()
   int resultCode = 0;
   char* zErrMsg = nullptr;
 
-  prefabs->clear();
+  prefabs.clear();
 
   resultCode = sqlite3_open(settingsDbFilename.toStdString().c_str(), &db);
 
   if (resultCode != SQLITE_OK)
     throw SQLErrorException(resultCode);
 
-  resultCode = sqlite3_exec(db, "SELECT*  from trackprefabs", queryPrefabsCallback, prefabs, &zErrMsg);
+  resultCode = sqlite3_exec(db, "SELECT*  from trackprefabs", queryPrefabsCallback, &prefabs, &zErrMsg);
 
   sqlite3_close(db);
 
   if (resultCode != SQLITE_OK)
     throw SQLErrorException(resultCode, zErrMsg);
 
-  std::sort(prefabs->begin(), prefabs->end());
+  std::sort(prefabs.begin(), prefabs.end());
 }
 
 void VeloDb::queryScenes()
@@ -97,21 +86,21 @@ void VeloDb::queryScenes()
   int resultCode = 0;
   char* zErrMsg = nullptr;
 
-  scenes->clear();
+  scenes.clear();
 
   resultCode = sqlite3_open(settingsDbFilename.toStdString().c_str(), &db);
 
   if (resultCode != SQLITE_OK)
     throw SQLErrorException(resultCode);
 
-  resultCode = sqlite3_exec(db, "SELECT* from sceneries", queryScenesCallback, scenes, &zErrMsg);
+  resultCode = sqlite3_exec(db, "SELECT* from sceneries", queryScenesCallback, &scenes, &zErrMsg);
 
   sqlite3_close(db);
 
   if (resultCode != SQLITE_OK)
     throw SQLErrorException(resultCode, zErrMsg);
 
-  std::sort(scenes->begin(), scenes->end());
+  std::sort(scenes.begin(), scenes.end());
 }
 
 void VeloDb::queryTracks()
@@ -119,7 +108,7 @@ void VeloDb::queryTracks()
   int resultCode = 0;
   char* zErrMsg = nullptr;
 
-  tracks->clear();
+  tracks.clear();
 
   if (userDbFilename == "")
     return;
@@ -129,17 +118,17 @@ void VeloDb::queryTracks()
   if (resultCode != SQLITE_OK)
     throw SQLErrorException(resultCode);
 
-  resultCode = sqlite3_exec(db, "SELECT* from tracks WHERE protected_track!=1", queryTracksCallback, tracks, &zErrMsg);
+  resultCode = sqlite3_exec(db, "SELECT* from tracks WHERE protected_track!=1", queryTracksCallback, &tracks, &zErrMsg);
 
   sqlite3_close(db);
 
   if (resultCode != SQLITE_OK)
     throw SQLErrorException(resultCode, zErrMsg);
 
-  for(QVector<TrackData>::iterator i = tracks->begin(); i != tracks->end(); ++i)
+  for(QVector<TrackData>::iterator i = tracks.begin(); i != tracks.end(); ++i)
     i->assignedDatabase = databaseType;
 
-  std::sort(tracks->begin(), tracks->end());
+  std::sort(tracks.begin(), tracks.end());
 }
 
 uint VeloDb::saveTrack(TrackData &track, const bool createNewEntry)
@@ -187,17 +176,17 @@ DatabaseType VeloDb::getDatabaseType() const
   return databaseType;
 }
 
-QVector<PrefabData>* VeloDb::getPrefabs() const
+QVector<PrefabData> VeloDb::getPrefabs() const
 {
   return prefabs;
 }
 
-QVector<SceneData>* VeloDb::getScenes() const
+QVector<SceneData> VeloDb::getScenes() const
 {
   return scenes;
 }
 
-QVector<TrackData>* VeloDb::getTracks() const
+QVector<TrackData> VeloDb::getTracks() const
 {
   return tracks;
 }

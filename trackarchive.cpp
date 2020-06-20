@@ -70,7 +70,7 @@ void TrackArchive::queryTracks()
     Q_UNUSED(e)
   }
 
-  tracks = archiveDb->getTracks()->toList();
+  tracks = archiveDb->getTracks().toList();
 }
 
 

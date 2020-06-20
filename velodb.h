@@ -80,7 +80,6 @@ class VeloDb
 {
 public:
   VeloDb(DatabaseType databaseType, const QString& userDbFilename = "", const QString& settingsDbFilename = "");
-  ~VeloDb();
 
   void createTrackTable();
 
@@ -97,9 +96,9 @@ public:
   void setUserDbFilename(const QString& filename, bool refreshData = true);
 
   DatabaseType getDatabaseType() const;
-  QVector<PrefabData> *getPrefabs() const;
-  QVector<SceneData>* getScenes() const;
-  QVector<TrackData>* getTracks() const;
+  QVector<PrefabData> getPrefabs() const;
+  QVector<SceneData> getScenes() const;
+  QVector<TrackData> getTracks() const;
 
   static int queryPrefabsCallback(void* data, int argc, char** argv, char** azColName);
   static int queryScenesCallback(void* data, int argc, char** argv, char** azColName);
@@ -111,9 +110,9 @@ private:
   QString userDbFilename;
 
   sqlite3* db;
-  QVector<PrefabData>* prefabs;
-  QVector<SceneData>* scenes;
-  QVector<TrackData>* tracks;
+  QVector<PrefabData> prefabs;
+  QVector<SceneData> scenes;
+  QVector<TrackData> tracks;
 
   bool hasValidSettingsDb() const;
   bool hasValidUserDb() const;

@@ -19,7 +19,7 @@ class JsonTreeViewItemDelegate  : public QStyledItemDelegate
 public:
   JsonTreeViewItemDelegate(QObject* parent = nullptr, VeloTrack* dataParser = nullptr);
 
-  QWidget*  createEditor(QWidget* parent, const QStyleOptionViewItem &option, const QModelIndex &index) const override;
+  QWidget* createEditor(QWidget* parent, const QStyleOptionViewItem &option, const QModelIndex &index) const override;
 
   // QAbstractItemDelegate interface
 public:

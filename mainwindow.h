@@ -18,8 +18,11 @@
 #include <QTreeWidgetItem>
 
 #include "delegates.h"
+#include "nodefilter.h"
 #include "geodesicdome.h"
 #include "opentrackdialog.h"
+#include "prefabitem.h"
+#include "searchfilterlayout.h"
 #include "trackarchive.h"
 #include "velodb.h"
 #include "velotrack.h"
@@ -55,6 +58,7 @@ private slots:
   void on_aboutLicensePushButton_released();
   void on_archiveAddTrackPushButton_released();
   void on_archiveDatabaseSelectionComboBox_currentIndexChanged(const QString &arg1);
+  void on_archiveMoveToArchiveCheckBox_stateChanged(int arg1);
   void on_archiveRestoreTrackPushButton_released();
   void on_buildTypeComboBox_currentIndexChanged(int index);
   void on_browseUserDbToolButton_released();
@@ -67,20 +71,22 @@ private slots:
   void on_navListWidget_currentRowChanged(int currentRow);
   void on_replacePushButton_released();
   void on_replacePrefabComboBox_currentIndexChanged(int index);
+  void on_replaceScalingResetPushButton_released();
   void on_saveAsNewCheckbox_stateChanged(int arg1);
   void on_savePushButton_released();
+  void on_searchAddFilterPushButton_released();
+  void on_searchClearFilterPushButton_released();
+  void on_searchTypeComboBox_currentIndexChanged(int index);
   void on_settingsDbLineEdit_textChanged(const QString &arg1);  
   void on_trackArchiveSettingsBrowseToolButton_released();
   void on_trackArchiveSettingsFilepathLineEdit_textChanged(const QString &arg1);
   void on_userDbLineEdit_textChanged(const QString &arg1);
   void on_viewNodeTypeColumn_stateChanged(int arg1);
-
-
   void on_geoGenTestPushButton_released();
 
-  void on_replaceScalingResetPushButton_released();
+  void updateDynamicTabControlSize(int index);
 
-  void on_archiveMoveToArchiveCheckBox_stateChanged(int arg1);
+  void on_searchPushButton_released();
 
 protected:
   void closeEvent(QCloseEvent* e) override;
@@ -97,10 +103,10 @@ private:
 
   QString defaultWindowTitle;
 
-  QLabel* nodeCountLabel;
-  QLabel* prefabCountLabel;
-  QLabel* gateCountLabel;
-  QLabel* splineCountLabel;
+  QLabel nodeCountLabel;
+  QLabel prefabCountLabel;
+  QLabel gateCountLabel;
+  QLabel splineCountLabel;
 
   uint nodeCount = 0;
   uint prefabCount = 0;
@@ -124,7 +130,9 @@ private:
   TrackData loadedTrack;
 
   Ui::MainWindow* ui;
-  VeloTrack* veloTrack;
+  SearchFilterLayout* searchFilterLayout;
+
+  VeloTrack veloTrack;
   VeloDb* selectedDb;
   VeloDb* productionDb;
   VeloDb* betaDb;
@@ -142,7 +150,7 @@ private:
   void updateReplacePrefabComboBox();
 
   QString browseDatabaseFile() const;
-  VeloDb *getDatabase();
+  VeloDb* getDatabase();
   VeloDb* getDatabase(DatabaseType databaseType);
   void setDatabaseOptionsDatabaseFilenames(const DatabaseType index);
   void setDatabaseOptionsUserDb(const QString& value);

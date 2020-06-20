@@ -2,17 +2,17 @@
 
 VeloTrack::VeloTrack()
 {
-  model = new QStandardItemModel();
+
 }
 
 VeloTrack::~VeloTrack()
 {
-  delete model;
+
 }
 
 QByteArray *VeloTrack::exportAsJsonData()
 {
-  VeloDataParser parser(nullptr, prefabs, model);
+  VeloDataParser parser(nullptr, &prefabs, &model);
   QByteArray* veloByteData = parser.exportToJson();
 
   if (nodeCount != parser.getNodeCount())
@@ -32,7 +32,7 @@ QByteArray *VeloTrack::exportAsJsonData()
 
 void VeloTrack::importJsonData(const QByteArray *jsonData)
 {
-  VeloDataParser parser(nullptr, prefabs, model);
+  VeloDataParser parser(nullptr, &prefabs, &model);
   parser.importJson(jsonData);
   gateCount = parser.getGateCount();
   nodeCount = parser.getNodeCount();
@@ -43,7 +43,7 @@ void VeloTrack::importJsonData(const QByteArray *jsonData)
 
 void VeloTrack::mergeJsonData(const QByteArray *jsonData, const bool addBarriers, const bool addGates)
 {
-  VeloDataParser parser(nullptr, prefabs, model);
+  VeloDataParser parser(nullptr, &prefabs, &model);
   parser.mergeJson(jsonData, addBarriers, addGates);
   gateCount = parser.getGateCount();
   nodeCount = parser.getNodeCount();
@@ -54,15 +54,15 @@ void VeloTrack::mergeJsonData(const QByteArray *jsonData, const bool addBarriers
 void VeloTrack::changeGateOrder(const uint oldGateNo, const uint newGateNo)
 {
   bool shiftLeft = (int(oldGateNo) - int(newGateNo)) > 0;
-  QList<QStandardItem*> gateKeys = model->findItems("gate", Qt::MatchRecursive, 0);
+  QList<QStandardItem*> gateKeys = model.findItems("gate", Qt::MatchRecursive, 0);
   for (int i = 0; i < gateKeys.size(); ++i) {
     QModelIndex gateValueIndex = gateKeys.value(i)->index().siblingAtColumn(NodeTreeColumns::ValueColumn);
     if (gateValueIndex.isValid()) {
       uint gateNo = gateValueIndex.data().toUInt();
       if (shiftLeft && (gateNo >= newGateNo) && (gateNo < oldGateNo))
-        model->setData(gateValueIndex, gateNo + 1, Qt::EditRole);
+        model.setData(gateValueIndex, gateNo + 1, Qt::EditRole);
       else if (!shiftLeft && (gateNo > oldGateNo) && (gateNo <= newGateNo))
-        model->setData(gateValueIndex, gateNo - 1, Qt::EditRole);
+        model.setData(gateValueIndex, gateNo - 1, Qt::EditRole);
     }
   }
 }
@@ -120,17 +120,17 @@ uint VeloTrack::getSplineCount() const
 
 bool VeloTrack::isModified()
 {
-  return containsModifiedNode(model->invisibleRootItem());
+  return containsModifiedNode(model.invisibleRootItem());
 }
 
 uint VeloTrack::getGateCount() const
 {
-  return uint(model->findItems("gate", Qt::MatchRecursive, 0).size());
+  return uint(model.findItems("gate", Qt::MatchRecursive, 0).size());
 }
 
-PrefabData VeloTrack::getPrefab(const uint id) const
+const PrefabData VeloTrack::getPrefab(const uint id) const
 {
-  for (QVector<PrefabData>::iterator i = prefabs->begin(); i != prefabs->end(); ++i)
+  for (QVector<PrefabData>::const_iterator i = prefabs.begin(); i != prefabs.end(); ++i)
     if (i->id == id)
       return *i;
 
@@ -139,22 +139,22 @@ PrefabData VeloTrack::getPrefab(const uint id) const
 
 QString VeloTrack::getPrefabDesc(const uint id) const
 {
-  for (QVector<PrefabData>::iterator i = prefabs->begin(); i != prefabs->end(); ++i)
+  for (QVector<PrefabData>::const_iterator i = prefabs.begin(); i != prefabs.end(); ++i)
     if (i->id == id)
       return i->name + " (" + i->type + ")";
 
   return "";
 }
 
-QVector<PrefabData>* VeloTrack::getPrefabs() const
+const QVector<PrefabData>* VeloTrack::getPrefabs() const
 {
-  return prefabs;
+  return &prefabs;
 }
 
-QVector<PrefabData>* VeloTrack::getPrefabsInUse() const
+QVector<PrefabData> VeloTrack::getPrefabsInUse() const
 {
   QMap<uint, PrefabData> prefabMap;
-  QList<QModelIndex> prefabs = findPrefabs(model->invisibleRootItem()->index());
+  QList<QModelIndex> prefabs = findPrefabs(model.invisibleRootItem()->index());
   foreach (QModelIndex childIndex, prefabs) {
     PrefabData prefab = childIndex.siblingAtColumn(NodeTreeColumns::ValueColumn).data(Qt::UserRole).value<PrefabData>();
     if ((!prefabMap.contains(prefab.id)) && (prefab.id > 0))
@@ -168,12 +168,12 @@ QVector<PrefabData>* VeloTrack::getPrefabsInUse() const
 
   std::sort(prefabsInUse.begin(), prefabsInUse.end());
 
-  return new QVector<PrefabData>(prefabsInUse);
+  return prefabsInUse;
 }
 
 QModelIndex VeloTrack::getRootIndex() const
 {
-  return model->invisibleRootItem()->index();
+  return model.invisibleRootItem()->index();
 }
 
 uint VeloTrack::getSceneId() const
@@ -193,21 +193,21 @@ uint VeloTrack::replacePrefab(const QModelIndex &searchIndex, const uint fromPre
     const PrefabData prefab = prefabValueIndex.data(Qt::UserRole).value<PrefabData>();
     if (prefab.id == fromPrefabId) {
       // Set modified flag
-      model->setData(prefabIndex, true, Qt::UserRole);
+      model.setData(prefabIndex, true, Qt::UserRole);
 
       // Set item description
-      model->setData(prefabValueIndex, toPrefab.name, Qt::EditRole);
+      model.setData(prefabValueIndex, toPrefab.name, Qt::EditRole);
 
       // Update item data
       QVariant var;
       var.setValue(toPrefab);
-      model->setData(prefabValueIndex, var, Qt::UserRole);
+      model.setData(prefabValueIndex, var, Qt::UserRole);
 
       // Update parent description
-      model->setData(prefabIndex.parent(), toPrefab.name + " " + QString("(%1)").arg(toPrefabId, 0, 10), Qt::EditRole);
+      model.setData(prefabIndex.parent(), toPrefab.name + " " + QString("(%1)").arg(toPrefabId, 0, 10), Qt::EditRole);
 
       // Apply Scaling
-      const QStandardItem* parentItem = model->itemFromIndex(prefabIndex.parent());
+      const QStandardItem* parentItem = model.itemFromIndex(prefabIndex.parent());
       for(int transRow = 0; transRow < parentItem->rowCount(); ++transRow) {
         const QStandardItem* transItem = parentItem->child(transRow, NodeTreeColumns::KeyColumn);
         if (transItem->text() == "trans") {
@@ -240,31 +240,196 @@ uint VeloTrack::replacePrefab(const QModelIndex &searchIndex, const uint fromPre
   return prefabCount;
 }
 
+void VeloTrack::repositionAndRescale(const QModelIndex &searchIndex, const QVector3D positionOffset, const QVector3D scale)
+{
+  Q_UNUSED(searchIndex)
+  Q_UNUSED(positionOffset)
+  Q_UNUSED(scale)
+}
+
 void VeloTrack::resetFinishGates()
 {
-  QList<QStandardItem*> finishKeys = model->findItems("finish", Qt::MatchRecursive, NodeTreeColumns::KeyColumn);
+  QList<QStandardItem*> finishKeys = model.findItems("finish", Qt::MatchRecursive, NodeTreeColumns::KeyColumn);
   for (int i = 0; i < finishKeys.size(); ++i) {
     QModelIndex finishValueIndex = finishKeys.value(i)->index().siblingAtColumn(NodeTreeColumns::ValueColumn);
     if (finishValueIndex.isValid()) {
-      model->setData(finishValueIndex, QVariant(false), Qt::EditRole);
+      model.setData(finishValueIndex, QVariant(false), Qt::EditRole);
     }
   }
 }
 
 void VeloTrack::resetModified()
 {
-  resetModifiedNodes(model->invisibleRootItem());
+  resetModifiedNodes(model.invisibleRootItem());
 }
 
 void VeloTrack::resetStartGates()
 {
-  QList<QStandardItem*> startKeys = model->findItems("start", Qt::MatchRecursive, NodeTreeColumns::KeyColumn);
+  QList<QStandardItem*> startKeys = model.findItems("start", Qt::MatchRecursive, NodeTreeColumns::KeyColumn);
   for (int i = 0; i < startKeys.size(); ++i) {
     QModelIndex finishValueIndex = startKeys.value(i)->index().siblingAtColumn(NodeTreeColumns::ValueColumn);
     if (finishValueIndex.isValid()) {
-      model->setData(finishValueIndex, QVariant(false), Qt::EditRole);
+      model.setData(finishValueIndex, QVariant(false), Qt::EditRole);
     }
   }
+}
+
+QList<PrefabItem*> VeloTrack::search(const QList<PrefabItem*>& initialMatchList, QList<NodeFilter*> filterList) {
+  QList<PrefabItem*> matchList = initialMatchList;
+  foreach(PrefabItem* prefab, matchList) {
+    qDebug() << prefab << prefab->getId() << prefab->getData();
+  }
+
+  if (matchList.count() == 0)
+    return matchList;
+
+  foreach(NodeFilter* filter, filterList) {
+    if (filter->getFilterType() != FilterTypes::Object)
+      continue;
+
+    foreach(PrefabItem* prefab, matchList) {
+      if (int(prefab->getId()) != filter->getFilterValue()) {
+        matchList.removeOne(prefab);
+      }
+    }
+  }
+
+  if (matchList.count() == 0)
+    return matchList;
+
+  foreach(NodeFilter* filter, filterList) {
+    if (filter->getFilterType() != FilterTypes::Position)
+      continue;
+
+    QString filterValue = QString("%1").arg(filter->getFilterValue());
+    foreach(PrefabItem* prefab, matchList) {
+      bool match = false;
+      for (int i = 0; i < 3; ++i) {
+        QString prefabValue = QString("%1").arg(prefab->getPosition(i));
+        if (prefabValue.indexOf(filterValue) > -1)
+          match = true;
+      }
+      if (!match)
+        matchList.removeOne(prefab);
+    }
+  }
+
+  if (matchList.count() == 0)
+    return matchList;
+
+  foreach(NodeFilter* filter, filterList) {
+    if (filter->getFilterType() != FilterTypes::Rotation)
+      continue;
+
+    QString filterValue = QString("%1").arg(filter->getFilterValue());
+    foreach(PrefabItem* prefab, matchList) {
+      bool match = false;
+      for (int i = 0; i < 3; ++i) {
+        QString prefabValue = QString("%1").arg(prefab->getRotation(i));
+        if (prefabValue.indexOf(filterValue) > -1)
+          match = true;
+      }
+      if (!match)
+        matchList.removeOne(prefab);
+    }
+  }
+
+  if (matchList.count() == 0)
+    return matchList;
+
+  foreach(NodeFilter* filter, filterList) {
+    if (filter->getFilterType() != FilterTypes::Scaling)
+      continue;
+
+    QString filterValue = QString("%1").arg(filter->getFilterValue());
+    foreach(PrefabItem* prefab, matchList) {
+      bool match = false;
+      for (int i = 0; i < 3; ++i) {
+        QString prefabValue = QString("%1").arg(prefab->getScaling(i));
+        if (prefabValue.indexOf(filterValue) > -1)
+          match = true;
+      }
+      if (!match)
+        matchList.removeOne(prefab);
+    }
+  }
+
+  if (matchList.count() == 0)
+    return matchList;
+
+  foreach(NodeFilter* filter, filterList) {
+    if (filter->getFilterType() != FilterTypes::GateNo)
+      continue;
+
+    foreach(PrefabItem* prefab, matchList) {
+      if (int(prefab->getGateNo()) != filter->getFilterValue()) {
+        matchList.removeOne(prefab);
+      }
+    }
+  }
+
+  if (matchList.count() == 0)
+    return matchList;
+
+  foreach(NodeFilter* filter, filterList) {
+    if (filter->getFilterType() != FilterTypes::IsOnSpline)
+      continue;
+    // ToDo
+    // Check if spline index is valid?
+  }
+
+  if (matchList.count() == 0)
+    return matchList;
+
+  foreach(NodeFilter* filter, filterList) {
+    if (filter->getFilterType() != FilterTypes::IsDublicate)
+      continue;
+    foreach(PrefabItem* prefab, matchList) {
+      // Search for a prefab that matches our own
+      // We just create a new filter set and search at our index again :)
+      QList<NodeFilter*> dublicateFilterList;
+      NodeFilter dublicateIdFilter(nullptr, FilterTypes::Object, int(prefab->getId()), "");
+      NodeFilter dublicatePosRFilter(nullptr, FilterTypes::Position, prefab->getPositionR(), "");
+      NodeFilter dublicatePosGFilter(nullptr, FilterTypes::Position, prefab->getPositionB(), "");
+      NodeFilter dublicatePosBFilter(nullptr, FilterTypes::Position, prefab->getPositionG(), "");
+      NodeFilter dublicateRotLFilter(nullptr, FilterTypes::Rotation, prefab->getRotationL(), "");
+      NodeFilter dublicateRotIFilter(nullptr, FilterTypes::Rotation, prefab->getRotationI(), "");
+      NodeFilter dublicateRotJFilter(nullptr, FilterTypes::Rotation, prefab->getRotationJ(), "");
+      NodeFilter dublicateRotKFilter(nullptr, FilterTypes::Rotation, prefab->getRotationK(), "");
+      NodeFilter dublicateScaleRFilter(nullptr, FilterTypes::Scaling, prefab->getScalingR(), "");
+      NodeFilter dublicateScaleGFilter(nullptr, FilterTypes::Scaling, prefab->getScalingB(), "");
+      NodeFilter dublicateScaleBFilter(nullptr, FilterTypes::Scaling, prefab->getScalingG(), "");
+      dublicateFilterList.append(&dublicateIdFilter);
+      dublicateFilterList.append(&dublicatePosRFilter);
+      dublicateFilterList.append(&dublicatePosGFilter);
+      dublicateFilterList.append(&dublicatePosBFilter);
+      dublicateFilterList.append(&dublicateRotLFilter);
+      dublicateFilterList.append(&dublicateRotIFilter);
+      dublicateFilterList.append(&dublicateRotJFilter);
+      dublicateFilterList.append(&dublicateRotKFilter);
+      dublicateFilterList.append(&dublicateScaleRFilter);
+      dublicateFilterList.append(&dublicateScaleGFilter);
+      dublicateFilterList.append(&dublicateScaleBFilter);
+
+      search(initialMatchList, dublicateFilterList);
+    }
+  }
+
+  foreach(PrefabItem* prefab, matchList) {
+    qDebug() << prefab << prefab->getId() << prefab->getData();
+  }
+}
+
+void VeloTrack::search(QModelIndex& index, QList<NodeFilter*> filterList) {
+  QList<PrefabItem*> matchList;
+  QList<QModelIndex> prefabs = findPrefabs(index);
+  foreach(QModelIndex prefabIndex, prefabs) {
+    PrefabItem* prefab = new PrefabItem();
+    prefab->parseIndex(&model, prefabIndex);
+    matchList.append(prefab);
+  }
+
+  search(matchList, filterList);
 }
 
 void VeloTrack::setSceneId(const uint &value)
@@ -272,21 +437,21 @@ void VeloTrack::setSceneId(const uint &value)
   sceneId = value;
 }
 
-void VeloTrack::setPrefabs(QVector<PrefabData> *value)
+void VeloTrack::setPrefabs(const QVector<PrefabData> value)
 {
   prefabs = value;
 }
 
-QStandardItemModel *VeloTrack::getStandardItemModel() const
+QStandardItemModel& VeloTrack::getStandardItemModel()
 {
   return model;
 }
 
-void VeloTrack::resetModifiedNodes(const QStandardItem* item) const
+void VeloTrack::resetModifiedNodes(const QStandardItem* item)
 {
   for (int i = 0; i < item->rowCount(); ++i)
   {
-    model->setData(item->child(i, 0)->index(), true, Qt::UserRole);
+    model.setData(item->child(i, 0)->index(), true, Qt::UserRole);
     QStandardItem* child = item->child(i, 0);
     if (child->hasChildren())
       resetModifiedNodes(child);
@@ -296,12 +461,12 @@ void VeloTrack::resetModifiedNodes(const QStandardItem* item) const
 QList<QModelIndex> VeloTrack::findPrefabs(const QModelIndex& keyItemIndex) const
 {
   QList<QModelIndex> foundPrefabs;
-  for (int i = 0; i < model->rowCount(keyItemIndex); ++i)
+  for (int i = 0; i < model.rowCount(keyItemIndex); ++i)
   {
-    QModelIndex childIndex = model->index(i, NodeTreeColumns::KeyColumn, keyItemIndex);
+    QModelIndex childIndex = model.index(i, NodeTreeColumns::KeyColumn, keyItemIndex);
     if (childIndex.data(Qt::DisplayRole) == "prefab")
       foundPrefabs.append(childIndex);
-    if (model->hasChildren(childIndex)) {
+    if (model.hasChildren(childIndex)) {
       foundPrefabs += findPrefabs(childIndex);
     }
   }

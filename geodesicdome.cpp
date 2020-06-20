@@ -99,20 +99,21 @@ QByteArray GeodesicDome::getVeloTrackDataTest() {
             .arg(100) + ",";
   }
 
-  foreach (QVector3D idx, pointIdx) {
-    for (int i = 0; i < 3; ++i) {
-      const QVector3D position = points[int(idx[i])];
-      const QVector3D direction = points[int(idx[(i + 1) % 3])] - points[int(idx[i])];
-      const QQuaternion result = QQuaternion::fromDirection(direction, up);
-      //const QVector3D directionInv = points[int(idx[i])] - points[int(idx[(i + 1) % 3])];
+  for (int i = 0; i < points.count(); ++i) {
+    for(int j = i + 1; j < points.count(); ++j) {
+      const QVector3D position = points[i];
+      const QVector3D direction = points[j] - points[i];
+      //const QQuaternion result = QQuaternion::fromDirection(direction, up);
+      //const QVector3D directionInv = points[i] - points[j];
       //const QQuaternion result = QQuaternion::rotationTo(defaultDirection, direction);
-      qDebug() << "Pos:" << position << " Tar:" << points[int(idx[(i + 1) % 3])] << "Dir:" << direction << " Quart:" << result;
+      const QQuaternion result = getPrefabRotation(direction);
+      qDebug() << "Pos:" << position << " Tar:" << points[j] << "Dir:" << direction << " Quart:" << result;
       prefabs += prefabTemplate
               .arg(340)
 
-              .arg(int((position.x() * 10000) - (points[int(idx[i])].distanceToPoint(points[int(idx[(i + 1) % 3])]) / 2)), 0, 10)
-              .arg(int(position.y() * 10000), 0, 10)
-              .arg(int(position.z() * 10000), 0, 10)
+              .arg(int((points[j].x() * 10000) + (points[j].distanceToPoint(points[i]) / 2)), 0, 10)
+              .arg(int(points[j].y() * 10000), 0, 10)
+              .arg(int(points[j].z() * 10000), 0, 10)
 
               .arg(int(result.x() * 1000))
               .arg(int(result.y() * 1000))
@@ -120,11 +121,12 @@ QByteArray GeodesicDome::getVeloTrackDataTest() {
               .arg(int(result.scalar() * 1000))
 
 
-              .arg(15 + int(points[int(idx[i])].distanceToPoint(points[int(idx[(i + 1) % 3])]) * 10000))
+              .arg(15 + int(points[i].distanceToPoint(points[j]) * 10000))
               .arg(150)
               .arg(150) + ",";
     }
   }
+
 
   return trackTemplate.arg(prefabs).toStdString().c_str();
 }
@@ -138,34 +140,17 @@ QVector3D& GeodesicDome::getMidpoint(const QVector3D& v1, const QVector3D& v2) c
   return *vector;
 }
 
-QQuaternion& GeodesicDome::getPrefabRotation(const QVector3D& direction) const
+QQuaternion GeodesicDome::getPrefabRotation(const QVector3D& direction) const
 {
-  QQuaternion* rotation = new QQuaternion();
   const QVector3D up(0, 1, 0);
-  *rotation = QQuaternion::rotationTo(up, direction);
-//  QVector3D xaxis = QVector3D::crossProduct(up, direction);
-//  xaxis.normalize();
-
-//  QVector3D yaxis = QVector3D::crossProduct(direction, xaxis);
-//  yaxis.normalize();
-
-//  QVector3D column1;
-//  column1.setX(xaxis.x());
-//  column1.setY(yaxis.x());
-//  column1.setZ(direction.x());
-
-//  QVector3D column2;
-//  column2.setX(xaxis.y());
-//  column2.setY(yaxis.y());
-//  column2.setZ(direction.y());
-
-//  QVector3D column3;
-//  column3.setX(xaxis.z());
-//  column3.setY(yaxis.z());
-//  column3.setZ(direction.z());
-
-//  QMatrix3x3 matrix;
-  return *rotation;
+  const QVector3D forward(1, 0, 0);
+  if (direction == up) {
+    return QQuaternion::rotationTo(forward, direction);
+  } else {
+    QVector3D v = direction + up * -QVector3D::dotProduct(up, direction);
+    QQuaternion rotation = QQuaternion::rotationTo(forward, v);
+    return QQuaternion::rotationTo(v, direction) * rotation;
+  }
 }
 
 void GeodesicDome::subdivideVertex(const QVector3D &v1, const QVector3D &v2, const QVector3D &v3, const unsigned int depth)

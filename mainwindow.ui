@@ -7,8 +7,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>925</width>
-    <height>667</height>
+    <width>900</width>
+    <height>481</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -22,7 +22,7 @@
    <locale language="English" country="UnitedStates"/>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QGridLayout" name="gridLayout_4">
+   <layout class="QGridLayout" name="centralwidgetLayout">
     <item row="0" column="0" rowspan="2">
      <widget class="QListWidget" name="navListWidget">
       <property name="minimumSize">
@@ -182,17 +182,36 @@
       </item>
      </widget>
     </item>
-    <item row="0" column="2">
+    <item row="0" column="1">
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
        <number>0</number>
       </property>
       <widget class="QWidget" name="nodeEditorPage">
-       <layout class="QGridLayout" name="gridLayout">
-        <item row="3" column="0" colspan="5">
-         <widget class="QTreeView" name="treeView">
-          <property name="showDropIndicator" stdset="0">
-           <bool>false</bool>
+       <layout class="QGridLayout" name="nodeEditorPageLayout">
+        <item row="1" column="0">
+         <widget class="QPushButton" name="openTrackPushButton">
+          <property name="maximumSize">
+           <size>
+            <width>90</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Opens a track from a Velocidrone database into the Node Editor.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="text">
+           <string>Open</string>
+          </property>
+          <property name="icon">
+           <iconset resource="icons.qrc">
+            <normaloff>:/icons/address_book</normaloff>:/icons/address_book</iconset>
+          </property>
+          <property name="iconSize">
+           <size>
+            <width>24</width>
+            <height>24</height>
+           </size>
           </property>
          </widget>
         </item>
@@ -219,19 +238,6 @@
             <width>24</width>
             <height>24</height>
            </size>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="3">
-         <widget class="QLabel" name="sceneSelectionLabel">
-          <property name="text">
-           <string>Scene:</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-          </property>
-          <property name="buddy">
-           <cstring>sceneComboBox</cstring>
           </property>
          </widget>
         </item>
@@ -262,6 +268,19 @@
          </widget>
         </item>
         <item row="1" column="4">
+         <widget class="QLabel" name="sceneSelectionLabel">
+          <property name="text">
+           <string>Scene:</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+          <property name="buddy">
+           <cstring>sceneComboBox</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="5">
          <widget class="QComboBox" name="sceneComboBox">
           <property name="minimumSize">
            <size>
@@ -277,371 +296,858 @@
           </property>
          </widget>
         </item>
-        <item row="1" column="0">
-         <widget class="QPushButton" name="openTrackPushButton">
-          <property name="maximumSize">
-           <size>
-            <width>90</width>
-            <height>16777215</height>
-           </size>
-          </property>
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Opens a track from a Velocidrone database into the Node Editor.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="text">
-           <string>Open</string>
-          </property>
-          <property name="icon">
-           <iconset resource="icons.qrc">
-            <normaloff>:/icons/address_book</normaloff>:/icons/address_book</iconset>
-          </property>
-          <property name="iconSize">
-           <size>
-            <width>24</width>
-            <height>24</height>
-           </size>
-          </property>
-         </widget>
-        </item>
-        <item row="4" column="0" colspan="5">
-         <widget class="QTabWidget" name="tabWidget">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>16777215</width>
-            <height>100</height>
-           </size>
-          </property>
-          <property name="currentIndex">
-           <number>0</number>
-          </property>
-          <widget class="QWidget" name="tab">
-           <attribute name="title">
-            <string>Replace</string>
-           </attribute>
-           <layout class="QGridLayout" name="gridLayout_8">
-            <item row="0" column="0">
-             <layout class="QHBoxLayout" name="horizontalLayout_2">
-              <item>
-               <widget class="QLabel" name="replacePrefabReplaceLabel">
+        <item row="2" column="0" colspan="6">
+         <layout class="QVBoxLayout" name="nodeEditorVLayout">
+          <item>
+           <widget class="QTreeView" name="treeView">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="showDropIndicator" stdset="0">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QTabWidget" name="nodeEditorToolsTabWidget">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="currentIndex">
+             <number>0</number>
+            </property>
+            <widget class="QWidget" name="searchTab">
+             <attribute name="title">
+              <string>Filter</string>
+             </attribute>
+             <layout class="QGridLayout" name="searchTabLayout">
+              <item row="0" column="0" colspan="2">
+               <widget class="QGroupBox" name="searchFilterGroupBox">
                 <property name="sizePolicy">
-                 <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
                   <horstretch>0</horstretch>
                   <verstretch>0</verstretch>
                  </sizepolicy>
                 </property>
-                <property name="maximumSize">
-                 <size>
-                  <width>16777215</width>
-                  <height>16777215</height>
-                 </size>
-                </property>
-                <property name="text">
-                 <string>Replace</string>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                <property name="title">
+                 <string>Filter</string>
                 </property>
                </widget>
               </item>
-              <item>
-               <widget class="QComboBox" name="replacePrefabComboBox">
-                <property name="toolTip">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select the prefab that you want to replace here.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QLabel" name="replacePrefabWithLabel">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="maximumSize">
-                 <size>
-                  <width>30</width>
-                  <height>16777215</height>
-                 </size>
-                </property>
-                <property name="text">
-                 <string>with</string>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignCenter</set>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QComboBox" name="replacePrefabWithComboBox">
-                <property name="toolTip">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select the prefab that you want to be used as a replacement.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QLabel" name="replacePrefabInLabel">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="maximumSize">
-                 <size>
-                  <width>20</width>
-                  <height>16777215</height>
-                 </size>
-                </property>
-                <property name="text">
-                 <string>in</string>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignCenter</set>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QComboBox" name="replacePrefabWhereComboBox">
+              <item row="2" column="0">
+               <widget class="QPushButton" name="searchClearFilterPushButton">
                 <property name="maximumSize">
                  <size>
                   <width>100</width>
                   <height>16777215</height>
                  </size>
                 </property>
-                <property name="toolTip">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The nodes in which the prefab gets replaced.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                <property name="text">
+                 <string>Clear Filter</string>
                 </property>
-                <item>
-                 <property name="text">
-                  <string>All Nodes</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Barriers</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Gates</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Selected Node</string>
-                 </property>
-                </item>
                </widget>
+              </item>
+              <item row="3" column="0" colspan="2">
+               <layout class="QHBoxLayout" name="searchFilterControlsHLayout">
+                <item>
+                 <widget class="QGroupBox" name="searchAddFilterGroupBox">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="title">
+                   <string>Add Filter</string>
+                  </property>
+                  <layout class="QHBoxLayout" name="searchAddFilterGroupBoxLayout">
+                   <property name="sizeConstraint">
+                    <enum>QLayout::SetDefaultConstraint</enum>
+                   </property>
+                   <item>
+                    <widget class="QComboBox" name="searchTypeComboBox">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="minimumSize">
+                      <size>
+                       <width>100</width>
+                       <height>0</height>
+                      </size>
+                     </property>
+                     <property name="maximumSize">
+                      <size>
+                       <width>16777215</width>
+                       <height>16777215</height>
+                      </size>
+                     </property>
+                     <property name="sizeAdjustPolicy">
+                      <enum>QComboBox::AdjustToContents</enum>
+                     </property>
+                     <item>
+                      <property name="text">
+                       <string>Object</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string>Position</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string>Rotation</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string>Scaling</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string>Gate No.</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string>is dublicate</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string>is on spline</string>
+                      </property>
+                     </item>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QLabel" name="searchValueLabel">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="text">
+                      <string>filter</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QComboBox" name="searchValueComboBox">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="minimumSize">
+                      <size>
+                       <width>100</width>
+                       <height>0</height>
+                      </size>
+                     </property>
+                     <property name="maxVisibleItems">
+                      <number>20</number>
+                     </property>
+                     <property name="sizeAdjustPolicy">
+                      <enum>QComboBox::AdjustToContents</enum>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QSpinBox" name="searchValueSpinBox">
+                     <property name="minimum">
+                      <number>-99999</number>
+                     </property>
+                     <property name="maximum">
+                      <number>99999</number>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QPushButton" name="searchAddFilterPushButton">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="maximumSize">
+                      <size>
+                       <width>150</width>
+                       <height>16777215</height>
+                      </size>
+                     </property>
+                     <property name="text">
+                      <string>Add</string>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QGroupBox" name="searchSearchGroupBox">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="title">
+                   <string>Search</string>
+                  </property>
+                  <layout class="QHBoxLayout" name="searchSearchGroupBoxLayout">
+                   <property name="sizeConstraint">
+                    <enum>QLayout::SetDefaultConstraint</enum>
+                   </property>
+                   <property name="topMargin">
+                    <number>9</number>
+                   </property>
+                   <property name="rightMargin">
+                    <number>8</number>
+                   </property>
+                   <item>
+                    <widget class="QLabel" name="searchInLabel">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Fixed" vsizetype="Minimum">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="text">
+                      <string>in</string>
+                     </property>
+                     <property name="alignment">
+                      <set>Qt::AlignCenter</set>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QComboBox" name="searchInComboBox">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="minimumSize">
+                      <size>
+                       <width>105</width>
+                       <height>9</height>
+                      </size>
+                     </property>
+                     <item>
+                      <property name="text">
+                       <string>All Nodes</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string>Barriers</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string>Gates</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string>Selected Node</string>
+                      </property>
+                     </item>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QPushButton" name="searchPushButton">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="maximumSize">
+                      <size>
+                       <width>150</width>
+                       <height>16777215</height>
+                      </size>
+                     </property>
+                     <property name="text">
+                      <string>Search</string>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </widget>
+                </item>
+               </layout>
               </item>
              </layout>
-            </item>
-            <item row="1" column="0">
-             <layout class="QHBoxLayout" name="replaceScalingLayout">
+            </widget>
+            <widget class="QWidget" name="replaceTab">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>16777215</width>
+               <height>200</height>
+              </size>
+             </property>
+             <attribute name="title">
+              <string>Replace</string>
+             </attribute>
+             <layout class="QVBoxLayout" name="replaceTabLayout">
               <item>
-               <widget class="QLabel" name="replaceScalingLabel">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="text">
-                 <string>Scaling</string>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignCenter</set>
-                </property>
-               </widget>
+               <layout class="QHBoxLayout" name="replaceHorizontalLayout">
+                <item>
+                 <widget class="QLabel" name="replacePrefabReplaceLabel">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>16777215</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <property name="text">
+                   <string>Replace</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QComboBox" name="replacePrefabComboBox">
+                  <property name="toolTip">
+                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select the prefab that you want to replace here.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  </property>
+                  <property name="maxVisibleItems">
+                   <number>20</number>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="replacePrefabWithLabel">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>30</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <property name="text">
+                   <string>with</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignCenter</set>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QComboBox" name="replacePrefabWithComboBox">
+                  <property name="toolTip">
+                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select the prefab that you want to be used as a replacement.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  </property>
+                  <property name="maxVisibleItems">
+                   <number>20</number>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="replacePrefabInLabel">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>20</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <property name="text">
+                   <string>in</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignCenter</set>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QComboBox" name="replacePrefabWhereComboBox">
+                  <property name="maximumSize">
+                   <size>
+                    <width>100</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <property name="toolTip">
+                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The nodes in which the prefab gets replaced.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  </property>
+                  <item>
+                   <property name="text">
+                    <string>All Nodes</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>Barriers</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>Gates</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>Selected Node</string>
+                   </property>
+                  </item>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="replacePushButton">
+                  <property name="maximumSize">
+                   <size>
+                    <width>90</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <property name="toolTip">
+                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Replaces a prefab with another in all selected instances (by default: in all nodes).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  </property>
+                  <property name="text">
+                   <string>Replace</string>
+                  </property>
+                  <property name="icon">
+                   <iconset resource="icons.qrc">
+                    <normaloff>:/icons/replace</normaloff>:/icons/replace</iconset>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
               </item>
               <item>
-               <widget class="QLabel" name="replaceScalingXLabel">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
+               <layout class="QHBoxLayout" name="replaceScalingLayout">
+                <property name="sizeConstraint">
+                 <enum>QLayout::SetDefaultConstraint</enum>
                 </property>
-                <property name="text">
-                 <string>x</string>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QDoubleSpinBox" name="replaceScalingXDoubleSpinBox">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="prefix">
-                 <string/>
-                </property>
-                <property name="decimals">
-                 <number>6</number>
-                </property>
-                <property name="singleStep">
-                 <double>0.100000000000000</double>
-                </property>
-                <property name="value">
-                 <double>1.000000000000000</double>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QLabel" name="replaceScalingYLabel">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="text">
-                 <string>y</string>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QDoubleSpinBox" name="replaceScalingYDoubleSpinBox">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="decimals">
-                 <number>6</number>
-                </property>
-                <property name="singleStep">
-                 <double>0.100000000000000</double>
-                </property>
-                <property name="value">
-                 <double>1.000000000000000</double>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QLabel" name="replaceScalingZLabel">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="text">
-                 <string>z</string>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QDoubleSpinBox" name="replaceScalingZDoubleSpinBox">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="decimals">
-                 <number>6</number>
-                </property>
-                <property name="singleStep">
-                 <double>0.010000000000000</double>
-                </property>
-                <property name="stepType">
-                 <enum>QAbstractSpinBox::AdaptiveDecimalStepType</enum>
-                </property>
-                <property name="value">
-                 <double>1.000000000000000</double>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QPushButton" name="replaceScalingResetPushButton">
-                <property name="text">
-                 <string>Reset</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <spacer name="horizontalSpacer">
-                <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>40</width>
-                  <height>20</height>
-                 </size>
-                </property>
-               </spacer>
+                <item>
+                 <widget class="QLabel" name="replaceScalingLabel">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Scaling</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignCenter</set>
+                  </property>
+                 </widget>
+                </item>
+                <item alignment="Qt::AlignVCenter">
+                 <widget class="QLabel" name="replaceScalingXLabel">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>R:</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                  </property>
+                 </widget>
+                </item>
+                <item alignment="Qt::AlignVCenter">
+                 <widget class="QDoubleSpinBox" name="replaceScalingXDoubleSpinBox">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="prefix">
+                   <string/>
+                  </property>
+                  <property name="decimals">
+                   <number>6</number>
+                  </property>
+                  <property name="singleStep">
+                   <double>0.100000000000000</double>
+                  </property>
+                  <property name="value">
+                   <double>1.000000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item alignment="Qt::AlignVCenter">
+                 <widget class="QLabel" name="replaceScalingYLabel">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>G:</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                  </property>
+                 </widget>
+                </item>
+                <item alignment="Qt::AlignVCenter">
+                 <widget class="QDoubleSpinBox" name="replaceScalingYDoubleSpinBox">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="decimals">
+                   <number>6</number>
+                  </property>
+                  <property name="singleStep">
+                   <double>0.100000000000000</double>
+                  </property>
+                  <property name="value">
+                   <double>1.000000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item alignment="Qt::AlignVCenter">
+                 <widget class="QLabel" name="replaceScalingZLabel">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>B:</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                  </property>
+                 </widget>
+                </item>
+                <item alignment="Qt::AlignVCenter">
+                 <widget class="QDoubleSpinBox" name="replaceScalingZDoubleSpinBox">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="decimals">
+                   <number>6</number>
+                  </property>
+                  <property name="singleStep">
+                   <double>0.010000000000000</double>
+                  </property>
+                  <property name="stepType">
+                   <enum>QAbstractSpinBox::AdaptiveDecimalStepType</enum>
+                  </property>
+                  <property name="value">
+                   <double>1.000000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item alignment="Qt::AlignVCenter">
+                 <widget class="QPushButton" name="replaceScalingResetPushButton">
+                  <property name="text">
+                   <string>Reset</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <spacer name="replaceScalingHorizontalSpacer">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+               </layout>
               </item>
              </layout>
-            </item>
-            <item row="0" column="1">
-             <widget class="QPushButton" name="replacePushButton">
-              <property name="maximumSize">
-               <size>
-                <width>90</width>
-                <height>16777215</height>
-               </size>
-              </property>
-              <property name="toolTip">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Replaces a prefab with another in all selected instances (by default: in all nodes).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-              </property>
-              <property name="text">
-               <string>Replace</string>
-              </property>
-              <property name="icon">
-               <iconset resource="icons.qrc">
-                <normaloff>:/icons/replace</normaloff>:/icons/replace</iconset>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </widget>
-          <widget class="QWidget" name="tab_2">
-           <attribute name="title">
-            <string>Find</string>
-           </attribute>
-           <widget class="QPushButton" name="geoGenTestPushButton">
-            <property name="geometry">
-             <rect>
-              <x>20</x>
-              <y>10</y>
-              <width>80</width>
-              <height>21</height>
-             </rect>
-            </property>
-            <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This button will create a new track called &amp;quot;Geodome-Test&amp;quot; on Empy Scene Day, which shows you the current state of the geodesic sphere generator.&lt;br/&gt;Keep in mind that each time you press this button, a new track will get created.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-            </property>
-            <property name="text">
-             <string>GeodesicTest</string>
-            </property>
+            </widget>
+            <widget class="QWidget" name="resizeTab">
+             <attribute name="title">
+              <string>Resize</string>
+             </attribute>
+             <layout class="QVBoxLayout" name="resizeTabLayout">
+              <item>
+               <layout class="QHBoxLayout" name="resizeHorizontalLayout">
+                <item>
+                 <widget class="QLabel" name="resizeResizeLabel">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Resize</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QComboBox" name="resizeTypeComboBox"/>
+                </item>
+                <item>
+                 <widget class="QComboBox" name="resizePrefabComboBox"/>
+                </item>
+                <item>
+                 <widget class="QLabel" name="resizeInLabel">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>in</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignCenter</set>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QComboBox" name="resizeInComboBox">
+                  <item>
+                   <property name="text">
+                    <string>All Nodes</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>Barriers</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>Gates</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>Selected Node</string>
+                   </property>
+                  </item>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="resizeByLabel">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>by</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QComboBox" name="resizeByComboBox">
+                  <item>
+                   <property name="text">
+                    <string>%</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>RGB</string>
+                   </property>
+                  </item>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QSpinBox" name="resizePercentSpinBox">
+                  <property name="suffix">
+                   <string>%</string>
+                  </property>
+                  <property name="prefix">
+                   <string/>
+                  </property>
+                  <property name="minimum">
+                   <number>1</number>
+                  </property>
+                  <property name="maximum">
+                   <number>100</number>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="resizeRLabel">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>R:</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QDoubleSpinBox" name="resizeRDoubleSpinBox">
+                  <property name="decimals">
+                   <number>5</number>
+                  </property>
+                  <property name="minimum">
+                   <double>0.000010000000000</double>
+                  </property>
+                  <property name="maximum">
+                   <double>99.999989999999997</double>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="resizeGLabel">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>G:</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QDoubleSpinBox" name="resizeGDoubleSpinBox">
+                  <property name="decimals">
+                   <number>5</number>
+                  </property>
+                  <property name="minimum">
+                   <double>0.000010000000000</double>
+                  </property>
+                  <property name="maximum">
+                   <double>99999.999989999996615</double>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="resizeBLabel">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>B:</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QDoubleSpinBox" name="resizeBDoubleSpinBox">
+                  <property name="decimals">
+                   <number>5</number>
+                  </property>
+                  <property name="minimum">
+                   <double>0.000010000000000</double>
+                  </property>
+                  <property name="maximum">
+                   <double>99999.999989999996615</double>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+             </layout>
+            </widget>
            </widget>
-          </widget>
-         </widget>
+          </item>
+         </layout>
+        </item>
+        <item row="1" column="3">
+         <spacer name="nodeEditorTopButtonHSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
         </item>
        </layout>
       </widget>
       <widget class="QWidget" name="mergePage">
-       <layout class="QGridLayout" name="gridLayout_5">
+       <layout class="QGridLayout" name="mergePageLayout">
         <item row="0" column="0">
          <widget class="QGroupBox" name="mergeTrack1GroupBox">
           <property name="sizePolicy">
@@ -653,7 +1159,7 @@
           <property name="title">
            <string>Track</string>
           </property>
-          <layout class="QVBoxLayout" name="verticalLayout">
+          <layout class="QVBoxLayout" name="mergeTrack1GroupBoxLayout">
            <item>
             <layout class="QHBoxLayout" name="mergeTrack1NameLayout">
              <item>
@@ -747,9 +1253,9 @@
           <property name="title">
            <string>New Track</string>
           </property>
-          <layout class="QVBoxLayout" name="verticalLayout_3">
+          <layout class="QVBoxLayout" name="mergeTrackNewTrackGroupBoxLayout">
            <item>
-            <layout class="QHBoxLayout" name="horizontalLayout">
+            <layout class="QHBoxLayout" name="mergeTrackNewTrackNameLayout">
              <item alignment="Qt::AlignTop">
               <widget class="QLabel" name="mergeTrackNewTrackNameLabel">
                <property name="sizePolicy">
@@ -806,7 +1312,7 @@
           <property name="title">
            <string>Track</string>
           </property>
-          <layout class="QVBoxLayout" name="verticalLayout_2">
+          <layout class="QVBoxLayout" name="mergeTrack2GroupBoxLayout">
            <item>
             <layout class="QHBoxLayout" name="mergeTrack2NameLayout">
              <item>
@@ -936,7 +1442,7 @@
          </widget>
         </item>
         <item row="1" column="2">
-         <spacer name="verticalSpacer_2">
+         <spacer name="mergeTrackVerticalSpacer">
           <property name="orientation">
            <enum>Qt::Vertical</enum>
           </property>
@@ -951,7 +1457,7 @@
        </layout>
       </widget>
       <widget class="QWidget" name="archivePage">
-       <layout class="QGridLayout" name="gridLayout_6">
+       <layout class="QGridLayout" name="archivePageLayout">
         <item row="0" column="2">
          <widget class="QLabel" name="archiveLabel">
           <property name="text">
@@ -1075,13 +1581,13 @@
        </layout>
       </widget>
       <widget class="QWidget" name="optionsPage">
-       <layout class="QGridLayout" name="gridLayout_2">
+       <layout class="QGridLayout" name="optionsPageLayout">
         <item row="3" column="0" colspan="2">
          <widget class="QGroupBox" name="trackArchiveSettingsGroupBox">
           <property name="title">
            <string>Track Archive</string>
           </property>
-          <layout class="QGridLayout" name="gridLayout_7">
+          <layout class="QGridLayout" name="trackArchiveSettingsGroupBoxLayout">
            <item row="1" column="0">
             <widget class="QLabel" name="trackArchiveSettingsFilepathLabel">
              <property name="text">
@@ -1139,7 +1645,7 @@
           <property name="title">
            <string>Database Files</string>
           </property>
-          <layout class="QGridLayout" name="gridLayout_3">
+          <layout class="QGridLayout" name="databaseSettingsGroupBoxLayout">
            <item row="3" column="3">
             <layout class="QHBoxLayout" name="browseSettingsDbLayout">
              <item>
@@ -1708,7 +2214,7 @@
             </layout>
            </item>
            <item row="1" column="0" colspan="4">
-            <widget class="Line" name="line">
+            <widget class="Line" name="databaseSettingsLine">
              <property name="orientation">
               <enum>Qt::Horizontal</enum>
              </property>
@@ -1722,7 +2228,7 @@
           <property name="title">
            <string>Node Editor</string>
           </property>
-          <layout class="QVBoxLayout" name="verticalLayout_5">
+          <layout class="QVBoxLayout" name="generalSettingsGroupBoxLayout">
            <item>
             <widget class="QCheckBox" name="saveAsNewCheckbox">
              <property name="toolTip">
@@ -1752,13 +2258,13 @@
        </layout>
       </widget>
       <widget class="QWidget" name="aboutPage">
-       <layout class="QHBoxLayout" name="horizontalLayout_3">
+       <layout class="QHBoxLayout" name="aboutPageLayout">
         <item>
          <widget class="QGroupBox" name="aboutGroupBox">
           <property name="title">
            <string>About</string>
           </property>
-          <layout class="QVBoxLayout" name="verticalLayout_4">
+          <layout class="QVBoxLayout" name="aboutGroupBoxLayout">
            <property name="spacing">
             <number>0</number>
            </property>
@@ -1777,10 +2283,10 @@
            <item>
             <widget class="QStackedWidget" name="aboutStackedWidget">
              <property name="currentIndex">
-              <number>0</number>
+              <number>2</number>
              </property>
              <widget class="QWidget" name="aboutStackedWidgetAboutPage">
-              <layout class="QVBoxLayout" name="verticalLayout_6">
+              <layout class="QVBoxLayout" name="aboutStackedWidgetAboutPageLayout">
                <item>
                 <widget class="QTextEdit" name="aboutTextEdit">
                  <property name="frameShadow">
@@ -1824,7 +2330,7 @@ p, li { white-space: pre-wrap; }
               </layout>
              </widget>
              <widget class="QWidget" name="aboutStackedWidgetPathLogPage">
-              <layout class="QVBoxLayout" name="verticalLayout_7">
+              <layout class="QVBoxLayout" name="aboutStackedWidgetPathLogPageLayout">
                <item>
                 <widget class="QTextEdit" name="aboutPatchLogTextEdit">
                  <property name="html">
@@ -1832,6 +2338,13 @@ p, li { white-space: pre-wrap; }
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Version Beta 0.9 (RC1)&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;- This is a release candidate. If no further bugs are found, this version is going to be released as 1.0&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;- Added searching&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;- Added rescaling&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;- Renamed x,y,z to R,G,B&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;- Made the node controls (search, resize,..) change size according to its content&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Version Beta 0.53:&lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;- Added rescaling on replace&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;- Fixed &amp;quot;Move tracks to archive&amp;quot; still doing a copy&lt;/p&gt;
@@ -1865,7 +2378,7 @@ p, li { white-space: pre-wrap; }
               </layout>
              </widget>
              <widget class="QWidget" name="aboutStackedWidgetLicensePage">
-              <layout class="QVBoxLayout" name="verticalLayout_8">
+              <layout class="QVBoxLayout" name="aboutStackedWidgetLicensePageLayout">
                <item>
                 <widget class="QTextEdit" name="aboutLicenseTextEdit">
                  <property name="toolTip">
