@@ -5,6 +5,7 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QList>
 #include <QObject>
 #include <QStandardItem>
 #include <QString>
@@ -12,13 +13,13 @@
 
 #include "exceptions.h"
 #include "velodb.h"
-#include "velotrack.h"
+#include "nodeeditor.h"
 
 class VeloDataParser : public QObject
 {
   Q_OBJECT
 public:
-  explicit VeloDataParser(QObject* parent = nullptr, QVector<PrefabData>* prefabs = new QVector<PrefabData>(), QStandardItemModel* model = new QStandardItemModel());
+  explicit VeloDataParser(QObject* parent = nullptr, QVector<PrefabData> *prefabs = new QVector<PrefabData>(), QStandardItemModel* model = new QStandardItemModel());
 
   QByteArray* exportToJson();
 
@@ -47,7 +48,7 @@ private:
 
   uint getGatesInModelCount() const;
 
-  PrefabData getPrefab(const uint id) const;
+  PrefabData getPrefabData(const uint id) const;
 
   void importJsonArray(QStandardItem *parentItem,
                        const QJsonArray &dataArray,

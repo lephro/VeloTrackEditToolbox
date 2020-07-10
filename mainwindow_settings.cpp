@@ -57,7 +57,7 @@ void MainWindow::setDatabaseOptionsDatabaseFilenames(const DatabaseType database
 
 void MainWindow::setDatabaseOptionsSettingsDb(const QString& settingsDbFilename)
 {
-  QSettings* settings = new QSettings("settings.ini", QSettings::IniFormat);
+  QSettings settings("settings.ini", QSettings::IniFormat);
 
   switch (databaseOptionsSelectedDbType) {
   case DatabaseType::Production:
@@ -66,7 +66,7 @@ void MainWindow::setDatabaseOptionsSettingsDb(const QString& settingsDbFilename)
         setDatabaseOptionsDatabaseFilenames(databaseOptionsSelectedDbType);
       } else {
         productionSettingsDbFilename = settingsDbFilename;
-        settings->setValue("database/productionSettingsDbFilename", settingsDbFilename);
+        settings.setValue("database/productionSettingsDbFilename", settingsDbFilename);
 
         updateDatabaseOptionsDatabaseStatus();
 
@@ -81,7 +81,7 @@ void MainWindow::setDatabaseOptionsSettingsDb(const QString& settingsDbFilename)
         setDatabaseOptionsDatabaseFilenames(databaseOptionsSelectedDbType);
       } else {
         betaSettingsDbFilename = settingsDbFilename;
-        settings->setValue("database/betaSettingsDbFilename", settingsDbFilename);
+        settings.setValue("database/betaSettingsDbFilename", settingsDbFilename);
 
         updateDatabaseOptionsDatabaseStatus();
 
@@ -96,7 +96,7 @@ void MainWindow::setDatabaseOptionsSettingsDb(const QString& settingsDbFilename)
         setDatabaseOptionsDatabaseFilenames(databaseOptionsSelectedDbType);
       } else {
         customSettingsDbFilename = settingsDbFilename;
-        settings->setValue("database/customSettingsDbFilename", settingsDbFilename);
+        settings.setValue("database/customSettingsDbFilename", settingsDbFilename);
 
         updateDatabaseOptionsDatabaseStatus();
 
@@ -109,13 +109,11 @@ void MainWindow::setDatabaseOptionsSettingsDb(const QString& settingsDbFilename)
   }
 
   getDatabase(databaseOptionsSelectedDbType)->setSettingsDbFilename(settingsDbFilename);
-
-  delete settings;
 }
 
 void MainWindow::setDatabaseOptionsUserDb(const QString& userDbFilename)
 {
-  QSettings* settings = new QSettings("settings.ini", QSettings::IniFormat);
+  QSettings settings("settings.ini", QSettings::IniFormat);
 
   switch (databaseOptionsSelectedDbType)
   {
@@ -125,7 +123,7 @@ void MainWindow::setDatabaseOptionsUserDb(const QString& userDbFilename)
         setDatabaseOptionsDatabaseFilenames(databaseOptionsSelectedDbType);
       } else {
         productionUserDbFilename = userDbFilename;
-        settings->setValue("database/productionUserDbFilename", userDbFilename);
+        settings.setValue("database/productionUserDbFilename", userDbFilename);
 
         updateDatabaseOptionsDatabaseStatus();
 
@@ -140,7 +138,7 @@ void MainWindow::setDatabaseOptionsUserDb(const QString& userDbFilename)
         setDatabaseOptionsDatabaseFilenames(databaseOptionsSelectedDbType);
       } else {
         betaUserDbFilename = userDbFilename;
-        settings->setValue("database/betaUserDbFilename", userDbFilename);
+        settings.setValue("database/betaUserDbFilename", userDbFilename);
 
         updateDatabaseOptionsDatabaseStatus();
 
@@ -155,7 +153,7 @@ void MainWindow::setDatabaseOptionsUserDb(const QString& userDbFilename)
         setDatabaseOptionsDatabaseFilenames(databaseOptionsSelectedDbType);
       } else {
         customUserDbFilename = userDbFilename;
-        settings->setValue("database/customUserDbFilename", userDbFilename);
+        settings.setValue("database/customUserDbFilename", userDbFilename);
 
         updateDatabaseOptionsDatabaseStatus();
 
@@ -168,8 +166,6 @@ void MainWindow::setDatabaseOptionsUserDb(const QString& userDbFilename)
   }
 
   getDatabase(databaseOptionsSelectedDbType)->setUserDbFilename(userDbFilename);
-
-  delete settings;
 }
 
 void MainWindow::updateDatabaseOptionsDatabaseStatus()
@@ -224,8 +220,8 @@ void MainWindow::on_archiveMoveToArchiveCheckBox_stateChanged(int arg1)
   settingMoveToArchive = bool(arg1);
 
   // Write into config
-  QSettings *settings = new QSettings("settings.ini", QSettings::IniFormat);
-  settings->setValue("archive/moveToArchive", settingSaveAsNew);
+  QSettings settings("settings.ini", QSettings::IniFormat);
+  settings.setValue("archive/moveToArchive", settingSaveAsNew);
 }
 
 void MainWindow::on_browseUserDbToolButton_released()
@@ -256,13 +252,14 @@ void MainWindow::on_buildTypeComboBox_currentIndexChanged(int index)
 
 void MainWindow::on_saveAsNewCheckbox_stateChanged(int arg1)
 {
+  qDebug() << "SaveAsNew: " << arg1;
   if (arg1 && !maybeDontBecauseItsBeta())
     return;
 
   settingSaveAsNew = bool(arg1);
 
-  QSettings *settings = new QSettings("settings.ini", QSettings::IniFormat);
-  settings->setValue("database/saveTrackAsNew", settingSaveAsNew);
+  QSettings settings("settings.ini", QSettings::IniFormat);
+  settings.setValue("database/saveTrackAsNew", settingSaveAsNew);
 }
 
 void MainWindow::on_settingsDbLineEdit_textChanged(const QString &arg1)
@@ -280,8 +277,11 @@ void MainWindow::on_viewNodeTypeColumn_stateChanged(int arg1)
   // Show or hide the type column, depending on the selected item
   settingViewTypeColumn = bool(arg1);
   if (settingViewTypeColumn) {
-    ui->treeView->showColumn(NodeTreeColumns::TypeColumn);
+    ui->nodeTreeView->showColumn(NodeTreeColumns::TypeColumn);
   } else {
-    ui->treeView->hideColumn(NodeTreeColumns::TypeColumn);
+    ui->nodeTreeView->hideColumn(NodeTreeColumns::TypeColumn);
   }
+
+  QSettings settings("settings.ini", QSettings::IniFormat);
+  settings.setValue("database/viewTypeColumn", settingViewTypeColumn);
 }

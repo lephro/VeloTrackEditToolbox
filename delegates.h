@@ -10,14 +10,14 @@
 #include <QStyledItemDelegate>
 
 #include "velodb.h"
-#include "velotrack.h"
+#include "nodeeditor.h"
 
 class JsonTreeViewItemDelegate  : public QStyledItemDelegate
 {
   Q_OBJECT
 
 public:
-  JsonTreeViewItemDelegate(QObject* parent = nullptr, VeloTrack* dataParser = nullptr);
+  JsonTreeViewItemDelegate(QObject* parent = nullptr, NodeEditor* dataParser = nullptr);
 
   QWidget* createEditor(QWidget* parent, const QStyleOptionViewItem &option, const QModelIndex &index) const override;
 
@@ -28,7 +28,7 @@ public:
   void updateEditorGeometry(QWidget* editor, const QStyleOptionViewItem &option, const QModelIndex &valueIndex) const override;
 
 private:
-  VeloTrack* dataParser;
+  NodeEditor* dataParser;
 };
 
 class NoEditDelegate: public QStyledItemDelegate {

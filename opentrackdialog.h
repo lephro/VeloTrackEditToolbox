@@ -2,6 +2,7 @@
 #define OPENTRACKDIALOG_H
 
 #include <QDialog>
+#include <QDebug>
 #include <QSettings>
 #include <QTreeWidget>
 

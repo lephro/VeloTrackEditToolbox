@@ -18,27 +18,32 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
     delegates.cpp \
     exceptions.cpp \
+    filterproxymodel.cpp \
     geodesicdome.cpp \
     main.cpp \
     mainwindow.cpp \
     mainwindow_archive.cpp \
     mainwindow_merge.cpp \
     mainwindow_nodeeditor.cpp \
+    mainwindow_search.cpp \
     mainwindow_settings.cpp \
+    mainwindow_transform.cpp \
+    nodeeditor.cpp \
     nodefilter.cpp \
     opentrackdialog.cpp \
     prefabitem.cpp \
     searchfilterlayout.cpp \
     trackarchive.cpp \
     velodataparser.cpp \
-    velodb.cpp \
-    velotrack.cpp
+    velodb.cpp
 
 HEADERS += \
     delegates.h \
     exceptions.h \
+    filterproxymodel.h \
     geodesicdome.h \
     mainwindow.h \
+    nodeeditor.h \
     nodefilter.h \
     opentrackdialog.h \
     prefabitem.h \
@@ -46,8 +51,7 @@ HEADERS += \
     sqlite3.h \
     trackarchive.h \
     velodataparser.h \
-    velodb.h \
-    velotrack.h
+    velodb.h
 
 FORMS += \
     mainwindow.ui \

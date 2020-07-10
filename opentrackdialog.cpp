@@ -11,17 +11,23 @@ OpenTrackDialog::OpenTrackDialog(QWidget *parent, VeloDb* productionDb, VeloDb* 
 
   ui->setupUi(this);
 
-  if (productionDb->isValid())
+  if (productionDb != nullptr && productionDb->isValid()) {
     ui->databaseComboBox->insertItem(0, tr("Production"));
+  }
 
-  if (betaDb->isValid())
+  if (betaDb != nullptr && betaDb->isValid())
     ui->databaseComboBox->insertItem(1, tr("Beta"));
 
-  if (customDb->isValid())
+  if (customDb != nullptr && customDb->isValid())
     ui->databaseComboBox->insertItem(2, tr("Custom"));
 
   if (ui->databaseComboBox->count() == 0)
     throw NoValidDatabasesFoundException();
+
+  QSettings settings("settings.ini", QSettings::IniFormat);
+  int lastDbIndex = settings.value("general/lastDatabaseIndex").toInt();
+  if (lastDbIndex >= 0 && lastDbIndex < ui->databaseComboBox->count())
+    ui->databaseComboBox->setCurrentIndex(lastDbIndex);
 
   ui->databaseLabel->setVisible(ui->databaseComboBox->count() > 1);
   ui->databaseComboBox->setVisible(ui->databaseComboBox->count() > 1);
@@ -45,6 +51,9 @@ void OpenTrackDialog::on_databaseComboBox_currentIndexChanged(const QString &arg
     selectedDb = customDb;
   }
 
+  QSettings settings("settings.ini", QSettings::IniFormat);
+  settings.setValue("general/lastDatabaseIndex", ui->databaseComboBox->currentIndex());
+
   loadDatabase(selectedDb);
 }
 
@@ -67,12 +76,13 @@ void OpenTrackDialog::loadDatabase(VeloDb* database)
 
   int row = 0;
   foreach(TrackData track, database->getTracks()) {
+    //qDebug() << "......... track:" << track;
     QTreeWidgetItem* trackItem = new QTreeWidgetItem();
     trackItem->setText(0, track.name);
 
-    for (QVector<SceneData>::iterator i = database->getScenes().begin(); i != database->getScenes().end(); ++i) {
-      if (i->id == track.sceneId) {
-        trackItem->setText(TrackTreeColumns::SceneColumn, i->title);
+    foreach(SceneData scene, database->getScenes()) {
+      if (scene.id == track.sceneId) {
+        trackItem->setText(TrackTreeColumns::SceneColumn, scene.title);
         break;
       }
     }

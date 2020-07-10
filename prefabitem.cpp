@@ -1,138 +1,174 @@
 #include "prefabitem.h"
 
-PrefabItem::PrefabItem()
+PrefabItem::PrefabItem(NodeEditor *parentEditor, const QModelIndex& prefabIndex)
+  : editor(parentEditor)
 {
+  // Get the model from the editor, if set
+  if (editor == nullptr)
+    return;
+
+  model = &editor->getStandardModel();
+
+  parseIndex(prefabIndex);
 }
 
-void PrefabItem::parseIndex(QStandardItemModel* model, const QModelIndex &index)
+void PrefabItem::applyScaling(const QVector3D values)
 {
-  // Check for valid parameters
-  if (model == nullptr)
+  if (values == QVector3D(1, 1, 1))
     return;
 
+  setScaling(0, int(std::round(scalingR * values.x())));
+  setScaling(1, int(std::round(scalingG * values.y())));
+  setScaling(2, int(std::round(scalingB * values.z())));
+}
+
+bool PrefabItem::parseIndex(const QModelIndex& index, NodeEditor* editor)
+{  
+  // Check for valid parameters
+  if (this->editor == nullptr && editor == nullptr)
+    return false;
+
   if (!index.isValid())
-    return;
+    return false;
+
+  this->index = QModelIndex();
+  gate = false;
+
+  if (this->editor == nullptr) {
+    this->editor = editor;
+    this->model = &editor->getStandardModel();
+  }
 
   // Search for the prefab key, to use as our entry point
   // Only look for siblings and traverse up
   QModelIndex searchIndex = index;
   bool found = false;
-  while (!found) {
-    const QStandardItem* typeItem = model->itemFromIndex(searchIndex.sibling(searchIndex.row(), NodeTreeColumns::TypeColumn));    
-    if (typeItem == nullptr)
-      return;
+  QModelIndex typeItem;
+  do {
+    typeItem = searchIndex.siblingAtColumn(NodeTreeColumns::TypeColumn);
+    // If our typeItem is invalid, we reached the top  without finding the entry point
+    if (!typeItem.isValid()) {
+      this->editor = nullptr;
+      this->model = nullptr;
+      return false;
+    }
 
-    if (typeItem->text() == "Array" || typeItem->text() == "Double") {
-      searchIndex = searchIndex.parent();
-      continue;
-    } else if (typeItem->text() == "Object") {
-      const QStandardItem* searchKeyItem = model->itemFromIndex(searchIndex.sibling(searchIndex.row(), NodeTreeColumns::KeyColumn));
-      qDebug() << typeItem << typeItem->text() << searchKeyItem << searchKeyItem->text();
-      for(int i = 0; i < searchKeyItem->rowCount(); ++i) {
-        const QStandardItem* rowKeyItem = searchKeyItem->child(i, NodeTreeColumns::KeyColumn);
-
-        if (rowKeyItem->text() != "prefab")
+    if (typeItem.data(Qt::DisplayRole) == "Object") {
+      //qDebug() << typeItem << typeItem.data(Qt::DisplayRole) << searchIndex << searchIndex.data(Qt::DisplayRole);
+      for(int i = 0; i < this->model->rowCount(searchIndex); ++i) {
+        if (this->model->index(i, NodeTreeColumns::KeyColumn, searchIndex).data(Qt::DisplayRole) != "prefab")
           continue;
 
         // Bingo
         found = true;
+        this->index = searchIndex;
         break;
-      }
+      }            
     }
-  }
 
-  // We found something if we got a valid index
-  if (!found || !searchIndex.isValid()) {
-    // ToDo: Exception
-    return;
-  }
+    searchIndex = searchIndex.parent();
+  } while (!found);
 
-  // Let the parsing begin!
-  this->model = model;
-  this->index = searchIndex;
-  const QStandardItem* keyItem = model->itemFromIndex(searchIndex.sibling(searchIndex.row(), NodeTreeColumns::KeyColumn));
-  for(int i = 0; i < keyItem->rowCount(); ++i) {
-    const QModelIndex rowKeyIndex = model->index(i, NodeTreeColumns::KeyColumn, keyItem->index());
-    const QStandardItem* rowKeyItem = keyItem->child(rowKeyIndex.row(), NodeTreeColumns::KeyColumn);
-    const QStandardItem* rowValueItem = keyItem->child(rowKeyIndex.row(), NodeTreeColumns::ValueColumn);
+  // Let the parsing begin!  
+  //const QStandardItem* keyItem = model->itemFromIndex(this->index.siblingAtColumn(NodeTreeColumns::KeyColumn));
+  const QModelIndex keyIndex = this->index.siblingAtColumn(NodeTreeColumns::KeyColumn);
+  for(int i = 0; i < this->model->rowCount(keyIndex); ++i) {
+    const QModelIndex rowKeyIndex = this->model->index(i, NodeTreeColumns::KeyColumn, keyIndex);
+    const QModelIndex rowValueIndex = this->model->index(i, NodeTreeColumns::ValueColumn, keyIndex);
 
-    if (rowKeyItem->text() == "prefab") {
-      this->data = rowValueItem->data(Qt::UserRole).value<PrefabData>();
-      if (data != nullptr && data.id > 0)
-        this->id = data.id;
-    } else if(rowKeyItem->text() == "gate") {
-      this->gateNo = rowValueItem->data(Qt::EditRole).toUInt();
-    } else if(rowKeyItem->text() == "finish") {
-      this->finish = rowValueItem->data(Qt::EditRole).toBool();
-    } else if(rowKeyItem->text() == "start") {
-      this->start = rowValueItem->data(Qt::EditRole).toBool();
-    } else if(rowKeyItem->text() == "gate") {
-      this->gateNo = rowValueItem->data(Qt::EditRole).toUInt();
-    } else if(rowKeyItem->text() == "curve") {
-      this->curveIndex = rowKeyItem->index();
-    } else if(rowKeyItem->text() == "trans") {
-      for(int transRow = 0; transRow < rowKeyItem->rowCount(); ++transRow) {
-        const QModelIndex transRowKeyIndex = model->index(transRow, NodeTreeColumns::KeyColumn, rowKeyItem->index());
-        const QStandardItem* transRowKeyItem = rowKeyItem->child(transRowKeyIndex.row(), NodeTreeColumns::KeyColumn);
-        if (transRowKeyItem->text() == "pos") {
-          positionIndex = transRowKeyIndex;
-          for(int posRow = 0; posRow < transRowKeyItem->rowCount(); ++posRow) {
-            const QModelIndex posRowKeyIndex = model->index(transRow, NodeTreeColumns::KeyColumn, rowKeyItem->index());
-            const QStandardItem* posRowValueItem = transRowKeyItem->child(posRowKeyIndex.row(), NodeTreeColumns::ValueColumn);
+    if (rowKeyIndex.data(Qt::DisplayRole) == "prefab") {
+      this->data = rowValueIndex.data(Qt::UserRole).value<PrefabData>();
+    } else if(rowKeyIndex.data(Qt::DisplayRole) == "gate") {
+      gate = true;
+      this->gateNo = rowValueIndex.data(Qt::EditRole).toInt();
+    } else if(rowKeyIndex.data(Qt::DisplayRole) == "finish") {
+      this->finish = rowValueIndex.data(Qt::EditRole).toString() == "true" ? true : false;
+    } else if(rowKeyIndex.data(Qt::DisplayRole) == "start") {
+      this->start = rowValueIndex.data(Qt::EditRole).toString() == "true" ? true : false;
+    } else if(rowKeyIndex.data(Qt::DisplayRole) == "curve") {
+      this->curveIndex = rowKeyIndex;
+    } else if(rowKeyIndex.data(Qt::DisplayRole) == "trans") {
+      for(int transRow = 0; transRow < this->model->rowCount(rowKeyIndex); ++transRow) {
+        const QModelIndex transRowKeyItem = this->model->index(transRow, NodeTreeColumns::KeyColumn, rowKeyIndex);
+        if (transRowKeyItem.data(Qt::DisplayRole) == "pos") {
+          positionIndex = transRowKeyItem;
+          for(int posRow = 0; posRow < this->model->rowCount(transRowKeyItem); ++posRow) {
+            const QModelIndex posRowValueItem = this->model->index(posRow, NodeTreeColumns::ValueColumn, transRowKeyItem);
             switch (posRow) {
-            case 0: this->positionR = posRowValueItem->data(Qt::EditRole).toInt(); break;
-            case 1: this->positionG = posRowValueItem->data(Qt::EditRole).toInt(); break;
-            case 2: this->positionB = posRowValueItem->data(Qt::EditRole).toInt(); break;
+            case 0: this->positionR = posRowValueItem.data(Qt::EditRole).toInt(); break;
+            case 1: this->positionG = posRowValueItem.data(Qt::EditRole).toInt(); break;
+            case 2: this->positionB = posRowValueItem.data(Qt::EditRole).toInt(); break;
             }
           }
-        } else if (transRowKeyItem->text() == "rot") {
-          rotationIndex = transRowKeyIndex;
-          for(int rotRow = 0; rotRow < transRowKeyItem->rowCount(); ++rotRow) {
-            const QModelIndex rotRowKeyIndex = model->index(transRow, NodeTreeColumns::KeyColumn, rowKeyItem->index());
-            const QStandardItem* rotRowValueItem = transRowKeyItem->child(rotRowKeyIndex.row(), NodeTreeColumns::ValueColumn);
+        } else if (transRowKeyItem.data(Qt::DisplayRole) == "rot") {
+          rotationIndex = transRowKeyItem;
+          for(int rotRow = 0; rotRow < this->model->rowCount(transRowKeyItem); ++rotRow) {
+            const QModelIndex rotRowValueItem = this->model->index(rotRow, NodeTreeColumns::ValueColumn, rotationIndex);
             switch (rotRow) {
-            case 0: this->rotationL = rotRowValueItem->data(Qt::EditRole).toInt(); break;
-            case 1: this->rotationI = rotRowValueItem->data(Qt::EditRole).toInt(); break;
-            case 2: this->rotationJ = rotRowValueItem->data(Qt::EditRole).toInt(); break;
-            case 3: this->rotationK = rotRowValueItem->data(Qt::EditRole).toInt(); break;
+            case 0: this->rotationW = rotRowValueItem.data(Qt::EditRole).toInt(); break;
+            case 1: this->rotationX = rotRowValueItem.data(Qt::EditRole).toInt(); break;
+            case 2: this->rotationY = rotRowValueItem.data(Qt::EditRole).toInt(); break;
+            case 3: this->rotationZ = rotRowValueItem.data(Qt::EditRole).toInt(); break;
             }
           }
-        } else if (transRowKeyItem->text() == "scale") {
-          scaleIndex = transRowKeyIndex;
-          for(int scaleRow = 0; scaleRow < transRowKeyItem->rowCount(); ++scaleRow) {
-            const QModelIndex scaleRowKeyIndex = model->index(transRow, NodeTreeColumns::KeyColumn, rowKeyItem->index());
-            const QStandardItem* scaleRowValueItem = transRowKeyItem->child(scaleRowKeyIndex.row(), NodeTreeColumns::ValueColumn);
+        } else if (transRowKeyItem.data(Qt::DisplayRole) == "scale") {
+          scaleIndex = transRowKeyItem;
+          for(int scaleRow = 0; scaleRow < this->model->rowCount(transRowKeyItem); ++scaleRow) {
+            const QModelIndex scaleRowValueItem = this->model->index(scaleRow, NodeTreeColumns::ValueColumn, scaleIndex);
             switch (scaleRow) {
-            case 0: this->scalingR = scaleRowValueItem->data(Qt::EditRole).toInt(); break;
-            case 1: this->scalingG = scaleRowValueItem->data(Qt::EditRole).toInt(); break;
-            case 2: this->scalingB = scaleRowValueItem->data(Qt::EditRole).toInt(); break;
+            case 0: this->scalingR = scaleRowValueItem.data(Qt::EditRole).toInt(); break;
+            case 1: this->scalingG = scaleRowValueItem.data(Qt::EditRole).toInt(); break;
+            case 2: this->scalingB = scaleRowValueItem.data(Qt::EditRole).toInt(); break;
             }
           }
         }
       }
     }
-  }
+  }  
+
+  return true;
 }
 
-unsigned int PrefabItem::getId() const
-{
-  return id;
-}
-
-void PrefabItem::setId(unsigned int value)
-{
-  id = value;
-
-}
 
 PrefabData PrefabItem::getData() const
 {
   return data;
 }
 
+unsigned int PrefabItem::getId() const
+{
+  return data.id;
+}
+
+QModelIndex PrefabItem::getIndex() const
+{
+  return index;
+}
+
 void PrefabItem::setData(const PrefabData &value)
 {
+  if (!dataEditable())
+    return;
+
   data = value;
+
+  // Update the model if set
+  if (!hasValidEditor())
+    return;
+
+  setModified();
+
+  QModelIndex propertyIndex = getPropertyValueIndex("prefab");
+  if (!propertyIndex.isValid())
+    return;
+
+  model->setData(propertyIndex, data.name);
+  QVariant var;
+  var.setValue(data);
+  model->setData(propertyIndex, var, Qt::UserRole);
+
+  // Update parent description
+  model->setData(propertyIndex.parent(), data.name + " " + QString("(%1)").arg(data.id, 0, 10));
 }
 
 int PrefabItem::getPosition(const int row) const
@@ -147,51 +183,104 @@ int PrefabItem::getPosition(const int row) const
 
 void PrefabItem::setPosition(const int row, const int value)
 {
+  if (isSpline())
+    return;
+
   switch (row) {
   case 0: positionR = value; break;
   case 1: positionG = value; break;
   case 2: positionB = value; break;
   }
 
-
   // Update the model if set
-  if (!positionIndex.isValid())
+  if (!hasValidEditor(positionIndex))
     return;
 
-  if (model == nullptr)
-    return;
+  setModified();
 
-  model->itemFromIndex(model->index(row, NodeTreeColumns::KeyColumn, positionIndex))->setData(Qt::EditRole, value);
+  setValueInModel(row, positionIndex, value);
 }
 
-int PrefabItem::getRotation(const int row) const
+void PrefabItem::setPosition(const int r, const int g, const int b)
+{
+  if (isSpline())
+    return;
+
+  positionR = r;
+  positionG = g;
+  positionB = b;
+
+  // Update the model if set
+  if (!hasValidEditor(positionIndex))
+    return;
+
+  setModified();
+
+  setValueInModel(0, positionIndex, r);
+  setValueInModel(1, positionIndex, g);
+  setValueInModel(2, positionIndex, b);
+}
+
+int PrefabItem::getRotationVector(const int row) const
 {
   switch (row) {
-  case 0: return rotationL;
-  case 1: return rotationI;
-  case 2: return rotationJ;
-  case 3: return rotationK;
+  case 0: return rotationW;
+  case 1: return rotationX;
+  case 2: return rotationY;
+  case 3: return rotationZ;
   }
   return 0;
 }
 
 void PrefabItem::setRotation(const int row, const int value)
 {
+  if (isSpline())
+    return;
+
   switch (row) {
-  case 0: rotationL = value; break;
-  case 1: rotationI = value; break;
-  case 2: rotationJ = value; break;
-  case 3: rotationK = value; break;
+  case 0: rotationW = value; break;
+  case 1: rotationX = value; break;
+  case 2: rotationY = value; break;
+  case 3: rotationZ = value; break;
   }
 
   // Update the model if set
-  if (!rotationIndex.isValid())
+  if (!hasValidEditor(rotationIndex))
     return;
 
-  if (model == nullptr)
+  setModified();
+
+  setValueInModel(row, rotationIndex, value);
+}
+
+void PrefabItem::setRotation(const int w, const int x, const int y, const int z)
+{
+  if (isSpline())
     return;
 
-  model->itemFromIndex(model->index(row, NodeTreeColumns::KeyColumn, rotationIndex))->setData(Qt::EditRole, value);
+  rotationW = w;
+  rotationX = x;
+  rotationY = y;
+  rotationZ = z;
+
+  // Update the model if set
+  if (!hasValidEditor(rotationIndex))
+    return;
+
+  setModified();
+
+  setValueInModel(0, rotationIndex, w);
+  setValueInModel(1, rotationIndex, x);
+  setValueInModel(2, rotationIndex, y);
+  setValueInModel(3, rotationIndex, z);
+}
+
+void PrefabItem::setRotation(const QQuaternion rotation)
+{
+  setRotation(int(std::round(rotation.scalar() * 1000)),
+              int(std::round(rotation.x() * 1000)),
+              int(std::round(rotation.y() * 1000)),
+              int(std::round(rotation.z() * 1000)));
 }
 
 int PrefabItem::getScaling(const int row) const
@@ -201,10 +290,14 @@ int PrefabItem::getScaling(const int row) const
   case 1: return scalingG;
   case 2: return scalingB;
   }
+  return 1;
 }
 
 void PrefabItem::setScaling(const int row, const int value)
 {
+  if (isSpline())
+    return;
+
   switch (row) {
   case 0: scalingR = value; break;
   case 1: scalingG = value; break;
@@ -212,13 +305,32 @@ void PrefabItem::setScaling(const int row, const int value)
   }
 
   // Update the model if set
-  if (!scaleIndex.isValid())
+  if (!hasValidEditor(scaleIndex))
     return;
 
-  if (model == nullptr)
+  setModified();
+
+  setValueInModel(row, scaleIndex, value);
+}
+
+void PrefabItem::setScaling(const int r, const int g, const int b)
+{
+  if (isSpline())
     return;
 
-  model->itemFromIndex(model->index(row, NodeTreeColumns::KeyColumn, scaleIndex))->setData(Qt::EditRole, value);
+  scalingR = r;
+  scalingG = g;
+  scalingB = b;
+
+  // Update the model if set
+  if (!hasValidEditor(scaleIndex))
+    return;
+
+  setModified();
+
+  setValueInModel(0, scaleIndex, r);
+  setValueInModel(1, scaleIndex, g);
+  setValueInModel(2, scaleIndex, b);
 }
 
 int PrefabItem::getPositionR() const
@@ -251,44 +363,77 @@ void PrefabItem::setPositionB(const int value)
   setPosition(2, value);
 }
 
-int PrefabItem::getRotationL() const
+QVector3D PrefabItem::getPositionVector() const
 {
-  return rotationL;
+  return QVector3D(positionR, positionG, positionB);
 }
 
-void PrefabItem::setRotationL(const int value)
+void PrefabItem::setPosition(const QVector3D position)
+{
+  setPosition(0, int(std::round(position.x())));
+  setPosition(1, int(std::round(position.y())));
+  setPosition(2, int(std::round(position.z())));
+}
+
+int PrefabItem::getRotationW() const
+{
+  return rotationW;
+}
+
+void PrefabItem::setRotationW(const int value)
 {
   setRotation(0, value);
 }
 
-int PrefabItem::getRotationI() const
+int PrefabItem::getRotationX() const
 {
-  return rotationI;
+  return rotationX;
 }
 
-void PrefabItem::setRotationI(const int value)
+void PrefabItem::setRotationX(const int value)
 {
   setRotation(1, value);
 }
 
-int PrefabItem::getRotationJ() const
+int PrefabItem::getRotationY() const
 {
-  return rotationJ;
+  return rotationY;
 }
 
-void PrefabItem::setRotationJ(const int value)
+void PrefabItem::setRotationY(const int value)
 {
   setRotation(2, value);
 }
 
-int PrefabItem::getRotationK() const
+int PrefabItem::getRotationZ() const
 {
-  return rotationK;
+  return rotationZ;
 }
 
-void PrefabItem::setRotationK(const int value)
+void PrefabItem::setRotationZ(const int value)
 {
   setRotation(3, value);
+}
+
+QQuaternion PrefabItem::getRotationQuaterion() const
+{
+  return QQuaternion(float(rotationW) / 1000,
+                     float(rotationX) / 1000,
+                     float(rotationY) / 1000,
+                     float(rotationZ) / 1000);
+}
+
+QVector4D PrefabItem::getRotationVector() const
+{
+  return QVector4D(rotationW, rotationX, rotationY, rotationZ);
+}
+
+void PrefabItem::setRotation(const QVector4D& rotation)
+{
+  setRotation(0, int(std::round(rotation.w())));
+  setRotation(1, int(std::round(rotation.w())));
+  setRotation(2, int(std::round(rotation.w())));
+  setRotation(3, int(std::round(rotation.w())));
 }
 
 int PrefabItem::getScalingR() const
@@ -321,15 +466,42 @@ void PrefabItem::setScalingB(const int value)
   setScaling(2, value);
 }
 
-unsigned int PrefabItem::getGateNo() const
+QVector3D PrefabItem::getScalingVector() const
+{
+  return QVector3D(int(std::round(scalingR)), int(std::round(scalingB)), int(std::round(scalingG)));
+}
+
+void PrefabItem::setScaling(const QVector3D values)
+{
+  setScaling(0, int(values.x()));
+  setScaling(1, int(values.y()));
+  setScaling(2, int(values.z()));
+}
+
+bool PrefabItem::isGate() const
+{
+  return gate;
+}
+
+int PrefabItem::getGateNo() const
 {
   return gateNo;
 }
 
-void PrefabItem::setGateNo(const unsigned int value)
+void PrefabItem::setGateNo(const int value, const bool updateGateOrder)
 {
+  // Update gate order
+  const uint oldGateNo = uint(gateNo);
+
   gateNo = value;
-  setValue("gate", value);
+  gate = true;  
+
+  // Update the model if set
+  setModified();
+
+  if (updateGateOrder && hasValidEditor()) {
+    editor->changeGateOrder(uint(oldGateNo), uint(value));
+  }
 }
 
 bool PrefabItem::getFinish() const
@@ -339,7 +511,15 @@ bool PrefabItem::getFinish() const
 
 void PrefabItem::setFinish(const bool value)
 {
+  // Prevent disabling a finish
+  if (finish && !value)
+    return;
+
   finish = value;
+
+  if (hasValidEditor() && value)
+    editor->resetFinishGates();
+
   setValue("finish", value);
 }
 
@@ -351,38 +531,161 @@ bool PrefabItem::getStart() const
 void PrefabItem::setStart(const bool value)
 {
   start = value;
+
+  if (hasValidEditor() && value)
+    editor->resetStartGates();
+
   setValue("start", value);
 }
 
 bool PrefabItem::operator==(PrefabItem &b) {
-  return (index == b.index) &&
+  return (data.id == b.data.id) &&
          (gateNo == b.gateNo) &&
          (start == b.start) &&
          (finish == b.finish) &&
          (positionR == b.positionR) &&
          (positionG == b.positionG) &&
          (positionB == b.positionB) &&
-         (rotationL == b.rotationL) &&
-         (rotationI == b.rotationI) &&
-         (rotationJ == b.rotationJ) &&
-         (rotationK == b.rotationK) &&
+         (rotationW == b.rotationW) &&
+         (rotationX == b.rotationX) &&
+         (rotationY == b.rotationY) &&
+         (rotationZ == b.rotationZ) &&
          (scalingR == b.scalingR) &&
          (scalingG == b.scalingG) &&
          (scalingB == b.scalingB);
 }
 
-void PrefabItem::setValue(QString propertyName, QVariant value) {
-  if (model == nullptr)
+void PrefabItem::setModified(const bool value)
+{
+  if (!hasValidEditor())
     return;
 
-  // Search for a property with the given name and update it
-  const QStandardItem* rootItem = model->itemFromIndex(index);
-  for(int i = 0; i < rootItem->rowCount(); ++i) {
-    const QModelIndex valueIndex = model->index(i, NodeTreeColumns::ValueColumn, rootItem->index());
-    const QStandardItem* keyItem = rootItem->child(model->index(i, NodeTreeColumns::KeyColumn, rootItem->index()).row(), NodeTreeColumns::KeyColumn);
-    if (keyItem->text() == propertyName) {
-      model->itemFromIndex(valueIndex)->setData(value, Qt::EditRole);
-    }
+  model->setData(index, value, modifiedRole);
+}
+
+bool PrefabItem::dataEditable() const
+{
+  if (data.name == "CtrlParent" ||
+      data.name == "ControlCurve" ||
+      data.name == "ControlPoint" ||
+      data.name == "DefaultStartGrid" ||
+      data.name == "DefaultKDRAStartGrid" ||
+      data.name == "DR1StartGrid" ||
+      data.name == "PolyStartGrid" ||
+      data.name == "MicroStartGrid")
+    return false;
+
+  return true;
+}
+
+bool PrefabItem::isModified() const
+{
+  if (!hasValidEditor(index))
+    return false;
+
+  return model->data(index, modifiedRole).toBool();
+}
+
+bool PrefabItem::isOnSpline() const
+{
+  if (!hasValidEditor())
+    return false;
+
+  return (this->index.data(Qt::DisplayRole) == "jo");
+}
+
+bool PrefabItem::isSplineControl() const
+{
+  return (data.id == 345);
+}
+
+void PrefabItem::setFilterMark(const bool found)
+{
+  if (!hasValidEditor())
+    return;
+
+  QStandardItem* item = model->itemFromIndex(index);
+  if (item == nullptr)
+    return;
+
+  item->setData(found, USERROLE_FILTER);
+  item->setForeground(found ? filterFontColor : defaultFontColor);
+  item->setBackground(found ? filterBackgroundColor : defaultBackgroundColor);
+  model->itemFromIndex(item->index().siblingAtColumn(NodeTreeColumns::TypeColumn))->setBackground(found ? filterBackgroundColor : defaultBackgroundColor);
+  model->itemFromIndex(item->index().siblingAtColumn(NodeTreeColumns::ValueColumn))->setBackground(found ? filterBackgroundColor : defaultBackgroundColor);
+
+  QStandardItem* parent = model->itemFromIndex(item->index().parent());
+  while(parent != nullptr) {
+    if (parent->data(USERROLE_FILTER).toBool())
+      break;
+
+    parent->setForeground(found ? filterFontColor : defaultFontColor);
+    parent->setBackground(found ? filterContentBackgroundColor : defaultBackgroundColor);
+    model->itemFromIndex(parent->index().siblingAtColumn(NodeTreeColumns::TypeColumn))->setBackground(found ? filterContentBackgroundColor : defaultBackgroundColor);
+    model->itemFromIndex(parent->index().siblingAtColumn(NodeTreeColumns::ValueColumn))->setBackground(found ? filterContentBackgroundColor : defaultBackgroundColor);
+    parent = parent->parent();
   }
+}
+
+bool PrefabItem::isFilterMarked() const
+{
+  if (!hasValidEditor())
+    return false;
+
+  return index.data(USERROLE_FILTER).toBool();
+}
+
+bool PrefabItem::isSpline() const
+{
+  return (curveIndex.isValid() ||
+          data.name == "ControlCurve");
+}
+
+bool PrefabItem::hasValidEditor() const
+{
+  return (editor != nullptr &&
+          model != nullptr &&
+          index.isValid());
+}
+
+bool PrefabItem::hasValidEditor(const QModelIndex index) const
+{
+  return (editor != nullptr &&
+          model != nullptr &&
+          index.isValid());
+}
+
+QModelIndex PrefabItem::getPropertyValueIndex(const QString propertyName) const
+{
+  if (!hasValidEditor())
+    return QModelIndex();
+
+  // Search for a property with the given name and return its value index
+  for(int i = 0; i < model->rowCount(index); ++i) {
+    const QModelIndex keyIndex = model->index(i, NodeTreeColumns::KeyColumn, index);
+    if (keyIndex.isValid() && keyIndex.data(Qt::DisplayRole) == propertyName)
+      return keyIndex.siblingAtColumn(NodeTreeColumns::ValueColumn);
+  }
+
+  return QModelIndex();
+}
+
+void PrefabItem::setValue(const QString propertyName, const QVariant value) {
+  if (!hasValidEditor())
+    return;
+
+  setModified();
+
+  // Search for a property with the given name and update it
+  QModelIndex propertyIndex = getPropertyValueIndex(propertyName);
+  if (propertyIndex.isValid())
+    model->setData(propertyIndex, value);
+}
+
+void PrefabItem::setValueInModel(const int row, const QModelIndex index, QVariant value)
+{
+  QModelIndex item = model->index(row, NodeTreeColumns::ValueColumn, index);
+  if (item.isValid())
+    model->setData(item, value);
 }
 

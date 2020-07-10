@@ -20,21 +20,27 @@ class SearchFilterLayout : public QVBoxLayout
 public:
   SearchFilterLayout(QWidget *parent = nullptr);
 
-  void addFilter(const FilterTypes filterType, int value, const QString displayValue = "");
+  void addFilter(const QModelIndex& index);
+  void addFilter(const FilterTypes filterType, const FilterMethods filterMethod, int value, const QString displayValue = "", const QModelIndex &customIndex = QModelIndex());
 
-  void Clear();
+  void clear();
 
-  QList<NodeFilter *> getFilterList() const;
+  QVector<NodeFilter *> getFilterList() const;
+
+  void removeCustomIndex(const QModelIndex& customIndex);
 
   void setGeometry(const QRect &rect) override;
+
+signals:
+  void filterChanged();
 
 private slots:
   void removeFilter_released(NodeFilter *sender);
 
 private:
   int maxWidth = 1;
-  QList<NodeFilter*> filterList;
-  QList<QHBoxLayout*> rowList;
+  QVector<NodeFilter*> filterList;
+  QVector<QHBoxLayout*> rowList;
 
   void doLayout(const QRect &rect);
   void doLayout(const int maxWidth);

@@ -5,6 +5,7 @@
 #include <QDebug>
 #include <QLabel>
 #include <QMessageBox>
+#include <QModelIndexList>
 #include <QObject>
 #include <QPushButton>
 #include <QString>
@@ -13,13 +14,31 @@
 #include <QWidget>
 
 enum FilterTypes {
-  Object = 0,
-  Position = 1,
-  Rotation = 2,
-  Scaling = 3,
-  GateNo = 4,
-  IsDublicate = 5,
-  IsOnSpline = 6
+  Object      = 0,
+  AnyPosition = 1,
+  PositionR   = 2,
+  PositionG   = 3,
+  PositionB   = 4,
+  AnyRotation = 5,
+  RotationW   = 6,
+  RotationX   = 7,
+  RotationY   = 8,
+  RotationZ   = 9,
+  AnyScaling  = 10,
+  ScalingR    = 11,
+  ScalingG    = 12,
+  ScalingB    = 13,
+  GateNo      = 14,
+  IsDublicate = 15,
+  IsOnSpline  = 16,
+  CustomIndex = 255
+};
+
+enum FilterMethods {
+  Contains = 0,
+  Is = 1,
+  SmallerThan = 2,
+  BiggerThan = 3,
 };
 
 class NodeFilter : public QHBoxLayout
@@ -27,15 +46,34 @@ class NodeFilter : public QHBoxLayout
   Q_OBJECT
 
 public:
-  explicit NodeFilter(QObject *parent = nullptr, const FilterTypes filterType = FilterTypes::Object, int value = 0, const QString displayValue = "");
+  explicit NodeFilter(const QModelIndex& customIndex, QObject *parent = nullptr);
+  explicit NodeFilter(const FilterTypes filterType, const FilterMethods filterMethod, const int filterValue, const QString filterDisplayValue = "", QObject *parent = nullptr);
+  explicit NodeFilter(const FilterTypes filterType, const FilterMethods filterMethod, const int filterValue, const QString filterDisplayValue, const QModelIndex customIndex, QObject *parent = nullptr);
 
-  void destroy();
+  void addCustomIndex(const QModelIndex& index);
 
+  bool containsCustomIndex(const QModelIndex& index);
+
+  void destroy();    
+
+  QModelIndexList getCustomIndexList() const;
   FilterTypes getFilterType() const;
+  FilterMethods getFilterMethod() const;
   int getFilterValue() const;
+  QString getFilterDisplayValue() const;
 
-  QSize sizeHint() const override;
+  QSize sizeHint() const override;    
 
+  void setFilterType(const FilterTypes &value);
+  void setFilterMethod(const FilterMethods &value);
+  void setFilterValue(const int value);
+  void setFilterDisplayValue(const QString);
+
+  static QString getFilterMethodDescription(const FilterMethods method);
+  static FilterTypes getFilterTypeByDescription(const QString descrption);
+  static QString getDescriptionFromFilterType(const FilterTypes type);
+
+  void removeCustomIndex(const QModelIndex &index);
 signals:
   void removeReleased(NodeFilter*);
 
@@ -44,12 +82,16 @@ private slots:
 
 private:
   FilterTypes filterType;
+  FilterMethods filterMethod;
   QPushButton* removeFilterButton;
   QLabel* filterLabel;
   int filterValue;
+  QString filterDisplayValue;
+  QModelIndexList customIndexList;
 
-  void createFilterLabel(const FilterTypes filterType, const QString value);
+  void createFilterLabel();
   void createRemoveButton();
+  void updateFilterLabel();
 };
 
 #endif // FILTERNODEWIDGET_H

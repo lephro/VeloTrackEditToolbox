@@ -1,6 +1,6 @@
 #include "velodataparser.h"
 
-VeloDataParser::VeloDataParser(QObject* parent, QVector<PrefabData>* prefabs, QStandardItemModel* model) : QObject(parent)
+VeloDataParser::VeloDataParser(QObject* parent, QVector<PrefabData> *prefabs, QStandardItemModel* model) : QObject(parent)
 {
   this->prefabs = prefabs;
   this->model = model;
@@ -54,15 +54,6 @@ uint VeloDataParser::getNodeCount() const
   return nodeCount;
 }
 
-PrefabData VeloDataParser::getPrefab(const uint id) const
-{
-  for (QVector<PrefabData>::iterator i = prefabs->begin(); i != prefabs->end(); ++i)
-    if (i->id == id)
-      return *i;
-
-  return PrefabData();
-}
-
 uint VeloDataParser::getPrefabCount() const
 {
   return prefabCount;
@@ -72,6 +63,15 @@ uint VeloDataParser::getPrefabCount() const
 uint VeloDataParser::getSplineCount() const
 {
   return splineCount;
+}
+
+PrefabData VeloDataParser::getPrefabData(const uint id) const
+{
+  foreach(PrefabData prefab, *prefabs)
+    if (prefab.id == id)
+      return prefab;
+
+  return PrefabData();
 }
 
 void VeloDataParser::importJson(const QByteArray* jsonData)
@@ -121,7 +121,7 @@ void VeloDataParser::mergeJson(const QByteArray* jsonData,
     if (!addBarriers && (keyList.at(i) == "barriers"))
       continue;
 
-    QList<QStandardItem*> foundItems = model->findItems(keyList.at(i));
+    QList<QStandardItem*> foundItems = model->findItems(keyList.at(i), Qt::MatchRecursive, NodeTreeColumns::KeyColumn);
     if (foundItems.count() > 0) {
       if (foundItems.first()->text() == "weather")
         continue;
@@ -144,7 +144,7 @@ void VeloDataParser::mergeJson(const QByteArray* jsonData,
       if (keyList.at(i) == "prefab") {
         uint prefabId = jsonValue.toVariant().toUInt();
         if (prefabId > 0 ) {
-          PrefabData prefab = getPrefab(jsonValue.toVariant().toUInt());
+          PrefabData prefab = getPrefabData(jsonValue.toVariant().toUInt());
           itemValue->setData(prefab.name, Qt::DisplayRole);
           QVariant var;
           var.setValue(prefab);
@@ -266,7 +266,12 @@ void VeloDataParser::importJsonArray(QStandardItem* parentItem, const QJsonArray
     QStandardItem* itemValue = new QStandardItem();
     QStandardItem* itemType = new QStandardItem();
 
-    itemKey->setText(QString("[%1]").arg(i, 0, 10));
+    if (parentItem->text() == "pos" || parentItem->text() == "scale")
+      itemKey->setText(i == 0 ? "R" : (i == 1 ? "G" : (i == 2 ? "B" : QString("[%1]").arg(i))));
+    else if (parentItem->text() == "rot")
+      itemKey->setText(i == 0 ? "L" : (i == 1 ? "I" : (i == 2 ? "J" : (i == 3 ? "K" : QString("[%1]").arg(i)))));
+    else
+      itemKey->setText(QString("[%1]").arg(i));
     itemValue->setData(jsonValue.toVariant(), Qt::EditRole);
     itemType->setText(getJsonValueTypeAsString(jsonValue.type()));
 
@@ -314,9 +319,9 @@ void VeloDataParser::importJsonObject(QStandardItem* parentItem, const QJsonObje
 
       const uint prefabId = jsonValue.toVariant().toUInt();
       if (prefabId > 0 ) {
-        const PrefabData prefab = getPrefab(jsonValue.toVariant().toUInt());
+        const PrefabData prefab = getPrefabData(jsonValue.toVariant().toUInt());
 
-        if (skipStartgrid && VeloTrack::isStartGrid(prefab)) {
+        if (skipStartgrid && NodeEditor::isStartGrid(prefab)) {
           model->removeRows(parentItem->row(), 1, parentItem->parent()->index());
           return;
         }

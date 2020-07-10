@@ -16,5 +16,12 @@
         <file>VeloTrackEditToolbox.ico</file>
         <file alias="double_arrow_left">icons/icons8-double-left-100.png</file>
         <file alias="double_arrow_right">icons/icons8-double-right-100.png</file>
+        <file alias="cancel">icons/icons8-cancel-100.png</file>
+        <file alias="copy-add">icons/icons8-copy-add-100.png</file>
+        <file alias="delete">icons/icons8-delete-100.png</file>
+        <file alias="add-filter">icons/icons8-add-filter-100.png</file>
+        <file alias="filter">icons/icons8-filter-100.png</file>
+        <file alias="resize">icons/icons8-resize-100.png</file>
+        <file alias="checkmark">icons/icons8-checkmark-16.png</file>
     </qresource>
 </RCC>

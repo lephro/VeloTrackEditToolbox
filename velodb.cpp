@@ -125,8 +125,8 @@ void VeloDb::queryTracks()
   if (resultCode != SQLITE_OK)
     throw SQLErrorException(resultCode, zErrMsg);
 
-  for(QVector<TrackData>::iterator i = tracks.begin(); i != tracks.end(); ++i)
-    i->assignedDatabase = databaseType;
+  for(int i = 0; i < tracks.count(); ++i)
+    tracks[i].assignedDatabase = databaseType;
 
   std::sort(tracks.begin(), tracks.end());
 }
@@ -211,7 +211,7 @@ int VeloDb::queryPrefabsCallback(void *data, int argc, char **argv, char **azCol
     }
   }
 
-  prefabs->push_back(prefab);
+  prefabs->append(prefab);
 
   return 0;
 }
@@ -241,7 +241,7 @@ int VeloDb::queryScenesCallback(void* data, int argc, char* *argv, char* *azColN
 
   if (scene.enabled && (scene.type != "system"))
   {
-    scenes->push_back(scene);
+    scenes->append(scene);
   }
 
   return 0;

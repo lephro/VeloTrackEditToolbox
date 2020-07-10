@@ -59,7 +59,7 @@ void MainWindow::on_mergeTrackPushButton_released()
   }
 
   // Create a new velo track manager
-  VeloTrack newVeloTrack;
+  NodeEditor newVeloTrack;
   try {
     // Set the prefabs
     newVeloTrack.setPrefabs(getDatabase(mergeTrack1.assignedDatabase)->getPrefabs());

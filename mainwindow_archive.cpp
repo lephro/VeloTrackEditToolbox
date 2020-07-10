@@ -20,9 +20,9 @@ void MainWindow::loadArchive()
 
     // Get the scene of the track if we got a database
     if (database != nullptr) {
-      for (QVector<SceneData>::iterator i = database->getScenes().begin(); i != database->getScenes().end(); ++i) {
-        if (i->id == track.sceneId) {
-          trackItem->setText(TrackTreeColumns::SceneColumn, i->title);
+      foreach(SceneData scene, database->getScenes()) {
+        if (scene.id == track.sceneId) {
+          trackItem->setText(TrackTreeColumns::SceneColumn, scene.title);
           break;
         }
       }
@@ -113,7 +113,7 @@ bool MainWindow::maybeCreateOrSelectArchive()
   QString result = "";
 
   switch (ret) {
-  case QMessageBox::Yes:
+  case QMessageBox::Yes: {
     result = QFileDialog::getSaveFileName(this,
                                           tr("Choose or create an archive"),
                                           QStandardPaths::standardLocations(QStandardPaths::HomeLocation).first(),
@@ -126,8 +126,10 @@ bool MainWindow::maybeCreateOrSelectArchive()
 
     ui->trackArchiveSettingsFilepathLineEdit->setText(result);
     archiveDbFileName = result;
-    writeSettings();
+    QSettings settings("settings.ini", QSettings::IniFormat);
+    settings.setValue("archive/filename", archiveDbFileName);
     return true;
+  }
   case QMessageBox::No:
     return false;
   default:
@@ -284,12 +286,14 @@ void MainWindow::on_trackArchiveSettingsBrowseToolButton_released()
 
 void MainWindow::on_trackArchiveSettingsFilepathLineEdit_textChanged(const QString &arg1)
 {
+  // Write config and reload
+  archiveDbFileName = arg1;
+  QSettings settings("settings.ini", QSettings::IniFormat);
+  settings.setValue("archive/filename", arg1);
+
   try {
-    // Write config and reload
-    archiveDbFileName = arg1;
     archive->setFileName(arg1);
     loadArchive();
-    writeSettings();
   } catch (VeloToolkitException& e) {
     // Catch weird shit
     e.Message();

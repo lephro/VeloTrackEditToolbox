@@ -1,35 +1,46 @@
 #ifndef PREFAB_H
 #define PREFAB_H
 
+#include <cmath>
 #include <QModelIndex>
 #include <QObject>
-#include <QStandardItem>
 #include <QVector>
 
+#include "nodeeditor.h"
 #include "velodb.h"
-#include "velotrack.h"
+
+class NodeEditor;
 
 class PrefabItem
 {
 public:
-  PrefabItem();
+  PrefabItem(NodeEditor* parentEditor = nullptr, const QModelIndex& prefabIndex = QModelIndex());
 
-  void parseIndex(QStandardItemModel *model, const QModelIndex &index);
+  void applyScaling(const QVector3D values);
 
-  unsigned int getId() const;
-  void setId(unsigned int value);
+  bool parseIndex(const QModelIndex& index, NodeEditor* editor = nullptr);
 
   PrefabData getData() const;
-  void setData(const PrefabData &value);
+  void setData(const PrefabData& value);
 
-  int getPosition(const int row) const;
-  void setPosition(const int row, const  int value);
+  unsigned int getId() const;
 
-  int getRotation(const int row) const;
+  QModelIndex getIndex() const;
+
+  int getPosition(const int row) const;  
+  void setPosition(const int row, const int value);
+  void setPosition(const int r, const int g, const int b);
+  void setPosition(const QVector3D position);
+
+  int getRotationVector(const int row) const;
   void setRotation(const int row,  const int value);
+  void setRotation(const int w, const int x, const int y, const int z);
+  void setRotation(const QQuaternion rotation);
+  void setRotation(const QVector4D &rotation);
 
   int getScaling(const int row) const;
-  void setScaling(const int row, const int value);
+  void setScaling(const int row, const int value);  
+  void setScaling(const int r, const int g, const int b);
 
   int getPositionR() const;
   void setPositionR(const int value);
@@ -40,17 +51,22 @@ public:
   int getPositionB() const;
   void setPositionB(const int value);
 
-  int getRotationL() const;
-  void setRotationL(const int value);
+  QVector3D getPositionVector() const;
 
-  int getRotationI() const;
-  void setRotationI(const int value);
+  int getRotationW() const;
+  void setRotationW(const int value);
 
-  int getRotationJ() const;
-  void setRotationJ(const int value);
+  int getRotationX() const;
+  void setRotationX(const int value);
 
-  int getRotationK() const;
-  void setRotationK(const int value);
+  int getRotationY() const;
+  void setRotationY(const int value);
+
+  int getRotationZ() const;
+  void setRotationZ(const int value);
+
+  QQuaternion getRotationQuaterion() const;
+  QVector4D getRotationVector() const;
 
   int getScalingR() const;
   void setScalingR(const int value);
@@ -61,8 +77,12 @@ public:
   int getScalingB() const;
   void setScalingB(const int value);
 
-  unsigned int getGateNo() const;
-  void setGateNo(const unsigned int value);
+  QVector3D getScalingVector() const;
+  void setScaling(const QVector3D values);
+
+  bool isGate() const;
+  int getGateNo() const;
+  void setGateNo(const int value, const bool updateGateOrder = true);
 
   bool getFinish() const;
   void setFinish(const bool value);
@@ -70,38 +90,68 @@ public:
   bool getStart() const;
   void setStart(const bool value);
 
+  bool isModified() const;
+  void setModified(const bool value = true);
+
+  bool dataEditable() const;
+
+  bool isSpline() const;
+  bool isOnSpline() const;
+  bool isSplineControl() const;
+
+  void setFilterMark(const bool found = true);
+  bool isFilterMarked() const;
+
   bool operator ==(PrefabItem &b);
 
 private:
+  const QBrush filterFontColor = QBrush(QColor(Qt::black));
+  const QBrush filterBackgroundColor = QBrush(QColor(254, 203, 137));
+  const QBrush filterContentBackgroundColor = QBrush(QColor(192, 192, 192));
+
+  const int modifiedRole = 20000;
+
   PrefabData data = PrefabData();
 
+  NodeEditor* editor = nullptr;
   QStandardItemModel* model = nullptr;
   QModelIndex index;
-  QModelIndex positionIndex = QModelIndex();
-  QModelIndex rotationIndex = QModelIndex();
-  QModelIndex scaleIndex = QModelIndex();
-  QModelIndex curveIndex = QModelIndex();
+  QModelIndex positionIndex;
+  QModelIndex rotationIndex;
+  QModelIndex scaleIndex;
+  QModelIndex curveIndex;
 
-  unsigned int id = 0;
+  QBrush defaultFontColor = QBrush(Qt::white);
+  QBrush defaultBackgroundColor = QBrush(QColor(255, 255, 255, 0));
 
   int positionR = 0;
   int positionG = 0;
   int positionB = 0;
 
-  int rotationL = 0;
-  int rotationI = 0;
-  int rotationJ = 0;
-  int rotationK = 0;
+  int rotationW = 0;
+  int rotationX = 0;
+  int rotationY = 0;
+  int rotationZ = 0;
 
   int scalingR = 0;
   int scalingG = 0;
   int scalingB = 0;
 
-  unsigned int gateNo = 0;
+  bool gate = false;
+  bool onSpline = false;
+
+  int gateNo = -1;
   bool finish = false;
   bool start = false;
 
-  void setValue(QString propertyName, QVariant value);
+  bool hasValidEditor() const;
+  bool hasValidEditor(const QModelIndex index) const;
+
+  QModelIndex getPropertyValueIndex(const QString propertyName) const;
+  QModelIndex getPropertyValueItem(const QString propertyName) const;
+
+  void setValue(const QString propertyName, const QVariant value);
+  void setValueInModel(const int row, const QModelIndex index, QVariant value);
 };
 
 #endif // PREFAB_H

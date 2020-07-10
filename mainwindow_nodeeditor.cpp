@@ -1,28 +1,70 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+void MainWindow::beginNodeEdit()
+{
+  // Everytime we start to do a lot of changes to the tree, we memorize if the root node was expanded
+  // and collapse it for performance reasons (so any redraw / update call is processed way faster)
+  if (nodeEditStarted)
+    return;
+
+  nodeEditStarted = true;
+
+  if (ui->nodeTreeView->verticalScrollBar() != nullptr && ui->nodeTreeView->verticalScrollBar()->maximum() > 0)
+    nodeEditLastScrollbarPos = float(ui->nodeTreeView->verticalScrollBar()->value()) / float(ui->nodeTreeView->verticalScrollBar()->maximum());
+
+  QModelIndex index;
+  for (int i = 0; i < nodeEditor.getStandardModel().invisibleRootItem()->rowCount(); ++i) {
+    index = nodeEditor.getFilteredModel().mapFromSource(nodeEditor.getStandardModel().invisibleRootItem()->child(i, NodeTreeColumns::KeyColumn)->index());
+    nodeEditTreeExpansionStates.append(index.isValid() && ui->nodeTreeView->isExpanded(index));
+    ui->nodeTreeView->collapse(index);
+  }
+}
+
 void MainWindow::closeTrack()
 {
   // Set the default window title
   setWindowTitle(defaultWindowTitle);
 
-  // Reset the node counter and upadte the status bar
-  nodeCount = 0;
-  prefabCount = 0;
-  splineCount = 0;
-  gateCount = 0;
-  updateStatusBar();
-
   // Load an empty track as a placeholder
   loadedTrack = TrackData();
 
   // Clear all track related controls
-  veloTrack.getStandardItemModel().clear();
+  nodeEditor.getStandardModel().clear();
   ui->searchValueComboBox->clear();
   ui->sceneComboBox->clear();
   ui->replacePrefabComboBox->clear();
   ui->replacePrefabWithComboBox->clear();
 
+  // Clear the last search result
+  lastSearchResult.clear();
+
+  // Reset the node counter and upadte the status bar
+  updateStatusBar();
+}
+
+void MainWindow::endNodeEdit()
+{
+  // Once we have finished our changes we restore the original view and move the scrollbar to its previous location
+  if (!nodeEditStarted)
+    return;
+
+  nodeEditStarted = false;
+
+  QModelIndex index;
+  for (int i = 0; i < nodeEditor.getStandardModel().invisibleRootItem()->rowCount(); ++i) {
+    if (i >= nodeEditTreeExpansionStates.count())
+      break;
+
+    index = nodeEditor.getFilteredModel().mapFromSource(nodeEditor.getStandardModel().invisibleRootItem()->child(i, NodeTreeColumns::KeyColumn)->index());
+    if (nodeEditTreeExpansionStates[i])
+      ui->nodeTreeView->expand(index);
+  }
+
+  if (ui->nodeTreeView->verticalScrollBar() != nullptr && ui->nodeTreeView->verticalScrollBar()->maximum() > 0)
+    ui->nodeTreeView->verticalScrollBar()->setValue(int(std::round(nodeEditLastScrollbarPos * ui->nodeTreeView->verticalScrollBar()->maximum())));
+
+  nodeEditTreeExpansionStates.clear();
 }
 
 void MainWindow::loadTrack(const TrackData& track)
@@ -37,9 +79,11 @@ void MainWindow::loadTrack(const TrackData& track)
   updateWindowTitle();
 
   // Load the prefabs from the database to the track
-  veloTrack.setPrefabs(veloDb->getPrefabs());
+  nodeEditor.setPrefabs(veloDb->getPrefabs());
+
+  // Import the json from the loaded track
   try {
-    veloTrack.importJsonData(&loadedTrack.value);
+    nodeEditor.importJsonData(&loadedTrack.value);
   } catch (VeloToolkitException& e) {
     e.Message();
   }
@@ -47,10 +91,10 @@ void MainWindow::loadTrack(const TrackData& track)
   // Pass the model/items from the velo track to the tree view
   // and tell it to resize its columns to its content
   // and hide its type column if the setting is enabled
-  ui->treeView->setModel(&veloTrack.getStandardItemModel());
-  ui->treeView->header()->setSectionResizeMode(NodeTreeColumns::KeyColumn, QHeaderView::ResizeToContents);
+  ui->nodeTreeView->setModel(&nodeEditor.getFilteredModel());
+  ui->nodeTreeView->header()->setSectionResizeMode(NodeTreeColumns::KeyColumn, QHeaderView::ResizeToContents);
   if (!settingViewTypeColumn)
-    ui->treeView->hideColumn(NodeTreeColumns::TypeColumn);
+    ui->nodeTreeView->hideColumn(NodeTreeColumns::TypeColumn);
 
   // Load the scenes into the combo box
   foreach(SceneData scene, veloDb->getScenes()) {
@@ -60,83 +104,57 @@ void MainWindow::loadTrack(const TrackData& track)
   }
 
   // Update the prefab controls so only the prefabs of the track are shown
-  updateReplacePrefabComboBox();
+  updatePrefabComboBoxes();  
 
-  // Gather the status bar information and update the status bar
-  gateCount = veloTrack.getGateCount();
-  prefabCount = veloTrack.getPrefabCount();
-  nodeCount = veloTrack.getNodeCount();
-  splineCount = veloTrack.getSplineCount();
+  // Update filter if any set
+  updateSearchFilter();
+
+  // Update the status bar
   updateStatusBar();
+
+  // Expand the root nodes
+  for (int i = 0; i < nodeEditor.getStandardModel().invisibleRootItem()->rowCount(); ++i) {
+    ui->nodeTreeView->expand(nodeEditor.getFilteredModel().mapFromSource(nodeEditor.getStandardModel().invisibleRootItem()->child(i, NodeTreeColumns::KeyColumn)->index()));
+  }
 
   statusBar()->showMessage(tr("Track loaded successfully."), 2000);
 }
 
-void MainWindow::openTrack()
-{
-  try {
-    // Show the open track dialog and get the user selection,
-    // check for unwritten changes and eventually load the new track
-    OpenTrackDialog openTrackDialog(this, productionDb, betaDb, customDb);
-    if (openTrackDialog.exec()) {
-      if (maybeSave()) {
-        TrackData selectedTrack = openTrackDialog.getSelectedTrack();
-        if (selectedTrack.id > 0) {
-          loadTrack(selectedTrack);
-        }
-      }
-    }
-  } catch (VeloToolkitException& e) {
-    // Something weird happend. Close the track and give the user some info
-    closeTrack();
-    e.Message();    
-  }
-}
+void MainWindow::toolsReplaceObject() {
+  // Do we got a valid track loaded?
+  if (loadedTrack.id == 0)
+    return;
 
-void MainWindow::replacePrefab()
-{
+  uint changedPrefabCount = 0;
+
   // Get the starting index for the search according to the user selection
-  QModelIndex searchIndex;
-  switch (ui->replacePrefabWhereComboBox->currentIndex()) {
-
+  // Call the velo track replace function with the search index or prefabs and scaling
+  switch (ui->toolsTargetComboBox->currentIndex()) {
   case 0: // All nodes
-    searchIndex = veloTrack.getRootIndex();
-    break;
-
-  case 1: // Barriers
-    searchIndex = veloTrack.getRootIndex();
-    for (int i = 0; i < veloTrack.getStandardItemModel().rowCount(searchIndex); ++i) {
-      QModelIndex childIndex = veloTrack.getStandardItemModel().index(i, 0, searchIndex);
-      if (childIndex.data(Qt::DisplayRole).toString() ==  "barriers")
-        searchIndex = childIndex;
-    }
-    break;
-
-  case 2: // Gates
-    searchIndex = veloTrack.getRootIndex();
-    for (int i = 0; i < veloTrack.getStandardItemModel().rowCount(searchIndex); ++i) {
-      QModelIndex childIndex = veloTrack.getStandardItemModel().index(i, 0, searchIndex);
-      if (childIndex.data(Qt::DisplayRole).toString() ==  "gates")
-        searchIndex = childIndex;
-    }
-    break;
-
-  case 3: // Selected Node
-    searchIndex = ui->treeView->currentIndex();
+  case 1: { // Selected Node
+    beginNodeEdit();
+    changedPrefabCount = nodeEditor.replacePrefabs(ui->toolsTargetComboBox->currentIndex() == 0 ?
+                                                     nodeEditor.getRootIndex() :
+                                                     ui->nodeTreeView->currentIndex(),
+                                                   ui->replacePrefabComboBox->currentData().toUInt(),
+                                                   ui->replacePrefabWithComboBox->currentData().toUInt());
+    endNodeEdit();
     break;
   }
+  case 2: // Filtered Nodes
+    beginNodeEdit();
+    changedPrefabCount = nodeEditor.replacePrefabs(lastSearchResult,
+                                                   ui->replacePrefabComboBox->currentData().toUInt(),
+                                                   ui->replacePrefabWithComboBox->currentData().toUInt());
+    endNodeEdit();
+    break;
 
-  // Call the velo track replace function with the search index, the prefabs and scaling
-  // This is where the replacing really happens
-  uint changedPrefabCount = veloTrack.replacePrefab(searchIndex,
-                                                     ui->replacePrefabComboBox->currentData().toUInt(),
-                                                     ui->replacePrefabWithComboBox->currentData().toUInt(),
-                                                     QVector3D(float(ui->replaceScalingXDoubleSpinBox->value()),
-                                                               float(ui->replaceScalingYDoubleSpinBox->value()),
-                                                               float(ui->replaceScalingZDoubleSpinBox->value())));
+  default:
+    return;
+  }
 
   // Update the prefab combo boxes, because we may have added new prefab or removed one completely
-  updateReplacePrefabComboBox();
+  updatePrefabComboBoxes();
 
   QString changedPrefabInfo = tr("%1 occurence(s) replaced");
   QMessageBox::information(this, tr("Replace successfull"), changedPrefabInfo.arg(changedPrefabCount, 0, 10));
@@ -151,7 +169,7 @@ void MainWindow::saveTrackToDb()
 
   // Write the selected scene and any node changes to the currently loaded track
   loadedTrack.sceneId = ui->sceneComboBox->currentData().toUInt();
-  loadedTrack.value = *veloTrack.exportAsJsonData();
+  loadedTrack.value = *nodeEditor.exportAsJsonData();
 
   // Message for later output
   QString message = tr("The track was saved successfully to the database!");
@@ -170,7 +188,9 @@ void MainWindow::saveTrackToDb()
     loadedTrack.id = getDatabase()->saveTrack(loadedTrack, settingSaveAsNew);
 
     // Reset the modified flat
-    veloTrack.resetModified();
+    beginNodeEdit();
+    nodeEditor.resetModifiedFlags();
+    endNodeEdit();
 
     // Inform the user about the success
     QMessageBox::information(nullptr, tr("Save Track"), message);
@@ -192,7 +212,7 @@ void MainWindow::saveTrackToFile()
   QFile *file = new QFile("track.json");
   file->remove();
   file->open(QFile::ReadWrite);
-  file->write(*veloTrack.exportAsJsonData());
+  file->write(*nodeEditor.exportAsJsonData());
   file->close();
 }
 
@@ -210,15 +230,15 @@ void MainWindow::updateDynamicTabControlSize(int index)
   ui->nodeEditorToolsTabWidget->widget(index)->adjustSize();
 }
 
-void MainWindow::updateReplacePrefabComboBox()
+void MainWindow::updatePrefabComboBoxes()
 {
   // Clear the combobox and insert all prefabs from the velo track
   ui->replacePrefabComboBox->clear();
-  QVector<PrefabData> prefabsInUse = veloTrack.getPrefabsInUse();
-  for (QVector<PrefabData>::iterator i = prefabsInUse.begin(); i != prefabsInUse.end(); ++i)
+  QVector<PrefabData> prefabsInUse = nodeEditor.getPrefabsInUse(true);
+  foreach(PrefabData prefab, prefabsInUse)
   {
-    ui->replacePrefabComboBox->addItem(i->name, i->id);
-    ui->searchValueComboBox->addItem(i->name, i->id);
+    ui->replacePrefabComboBox->addItem(prefab.name, prefab.id);
+    ui->searchValueComboBox->addItem(prefab.name, prefab.id);
   }
 }
 
@@ -274,7 +294,23 @@ void MainWindow::on_geoGenTestPushButton_released()
 
 void MainWindow::on_openTrackPushButton_released()
 {
-  openTrack();
+  try {
+    // Show the open track dialog and get the user selection,
+    // check for unwritten changes and eventually load the new track
+    OpenTrackDialog openTrackDialog(this, productionDb, betaDb, customDb);
+    if (openTrackDialog.exec()) {
+      if (maybeSave()) {
+        TrackData selectedTrack = openTrackDialog.getSelectedTrack();
+        if (selectedTrack.id > 0) {
+          loadTrack(selectedTrack);
+        }
+      }
+    }
+  } catch (VeloToolkitException& e) {
+    // Something weird happend. Close the track and give the user some info
+    closeTrack();
+    e.Message();
+  }
 }
 
 
@@ -283,38 +319,161 @@ void MainWindow::on_replacePrefabComboBox_currentIndexChanged(int index)
   Q_UNUSED(index)
 
   // Get the selected Prefab
-  PrefabData selectedPrefab = veloTrack.getPrefab(ui->replacePrefabComboBox->currentData().toUInt());
+  PrefabData selectedPrefab = nodeEditor.getPrefab(ui->replacePrefabComboBox->currentData().toUInt());
 
   // Clear the replacePrefabWithComboBox
   ui->replacePrefabWithComboBox->clear();
 
   // Load all prefabs into replacePrefabWithComboBox...
-  for (QVector<PrefabData>::const_iterator i = veloTrack.getPrefabs()->begin(); i != veloTrack.getPrefabs()->end(); ++i) {
+  foreach(PrefabData prefab, *nodeEditor.getPrefabData()) {
     // ... but only if its the same type, so you cant replace a gate with a barrier aso, which would probably break the track
-    if (i->gate == selectedPrefab.gate) {
-      ui->replacePrefabWithComboBox->addItem(i->name, i->id);
+    if (prefab.gate == selectedPrefab.gate) {
+      ui->replacePrefabWithComboBox->addItem(prefab.name, prefab.id);
 
       // Preselect the with combo box with this prefab if its the same as the prefab we want to replace
-      if (i->id == selectedPrefab.id) {
+      if (prefab.id == selectedPrefab.id) {
         ui->replacePrefabWithComboBox->setCurrentIndex(ui->replacePrefabWithComboBox->count() - 1);
       }
     }
   }
 }
 
-void MainWindow::on_replacePushButton_released()
+void MainWindow::on_toolsApplyPushButton_released()
 {
-  // Fire the replace prefab function if we have a track loaded
-  if (loadedTrack.id > 0)
-    replacePrefab();
+  bool byPercent = ui->transformByComboBox->currentIndex() == 0;
+
+  int toolTypeIndex = ui->toolsTypeComboBox->currentIndex();
+  if (toolTypeIndex == 1) // Move
+    toolTypeIndex = ToolTypes::Move + ui->toolsSubtypeComboBox->currentIndex();
+  else if (toolTypeIndex == 2) // Rotate
+    toolTypeIndex = ToolTypes::AddRotation + ui->toolsSubtypeComboBox->currentIndex();
+  else if (toolTypeIndex == 3) // Scale
+    toolTypeIndex = ToolTypes::Scale + ui->toolsSubtypeComboBox->currentIndex();
+  else if (toolTypeIndex == 4) // Mirror
+    toolTypeIndex = ToolTypes::Mirror;
+
+  qDebug() << "toolsTypeComboBox->currentIndex:" << ui->toolsTypeComboBox->currentIndex();
+  qDebug() << "toolsSubtypeComboBox->currentIndex:" << ui->toolsSubtypeComboBox->currentIndex();
+  qDebug() << "transformByComboBox->currentIndex:" << ui->transformByComboBox->currentIndex();
+  qDebug() << "Transform Method Index: " << toolTypeIndex;
+
+  QVariant value;
+  switch (toolTypeIndex) {
+  case ToolTypes::Replace:
+    toolsReplaceObject();
+    return;
+  case ToolTypes::Move:
+  case ToolTypes::IncreasingPosition:
+  case ToolTypes::ReplacePosition:
+  case ToolTypes::Scale:
+  case ToolTypes::IncreasingScale:
+  case ToolTypes::ReplaceScaling:
+    value = QVector3D(float(ui->transformRDoubleSpinBox->value()),
+                      float(ui->transformGDoubleSpinBox->value()),
+                      float(ui->transformBDoubleSpinBox->value()));
+    break;
+  case ToolTypes::AddRotation:
+  case ToolTypes::IncreasingRotation:
+    value = QQuaternion::fromEulerAngles(ui->transformRotationRValueSpinBox->value(),
+                                         ui->transformRotationGValueSpinBox->value(),
+                                         ui->transformRotationBValueSpinBox->value());
+    qDebug() << "Rotation from euler :" << ui->transformRotationRValueSpinBox->value() <<
+        ui->transformRotationGValueSpinBox->value() <<
+        ui->transformRotationBValueSpinBox->value() << "Quat:" << value;
+    break;
+  case ToolTypes::ReplaceRotation:
+    value = QVector4D(float(ui->transformRotationWValueSpinBox->value()),
+                      float(ui->transformRotationXValueSpinBox->value()),
+                      float(ui->transformRotationYValueSpinBox->value()),
+                      float(ui->transformRotationZValueSpinBox->value()));
+    break;
+  case ToolTypes::Mirror:
+    break;
+  default:
+    return;    
+  }
+
+  uint changedNodeCount = 0;
+  switch (ui->toolsTargetComboBox->currentIndex()) {
+  case 0: // All nodes
+    beginNodeEdit();
+    changedNodeCount = nodeEditor.transformPrefab(nodeEditor.getRootIndex(), ToolTypes(toolTypeIndex), value, byPercent);
+    endNodeEdit();
+    break;
+
+  case 1: // Selected Nodes
+    beginNodeEdit();
+    changedNodeCount = nodeEditor.transformPrefab(ui->nodeTreeView->selectionModel()->selectedIndexes(), ToolTypes(toolTypeIndex), value, byPercent);
+    endNodeEdit();
+    break;
+
+  case 2: // Filtered Nodes
+    beginNodeEdit();
+    changedNodeCount = nodeEditor.transformPrefab(lastSearchResult, ToolTypes(toolTypeIndex), value, byPercent);
+    endNodeEdit();
+    break;
+
+  default:
+    return;
+  }
+
+  QString changedPrefabInfo = tr("%1 occurence(s) transformed");
+  QMessageBox::information(this, tr("Transformation successfull"), changedPrefabInfo.arg(changedNodeCount, 0, 10));
 }
 
-void MainWindow::on_replaceScalingResetPushButton_released()
+void MainWindow::on_toolsSubtypeComboBox_currentIndexChanged(int index)
 {
-  // Set the X, Y, Z values to 1
-  ui->replaceScalingXDoubleSpinBox->setValue(1.0);
-  ui->replaceScalingYDoubleSpinBox->setValue(1.0);
-  ui->replaceScalingZDoubleSpinBox->setValue(1.0);
+  switch(index) {
+  case 0: // Add
+  case 1: // Replace
+    ui->transformByComboBox->show();
+    ui->transformByComboBox->setCurrentIndex(1);
+    break;
+  case 2: // Increment
+    ui->transformByComboBox->hide();
+    ui->transformByComboBox->setCurrentIndex(1);
+    break;
+  default:
+    return;
+  }
+}
+
+void MainWindow::on_toolsTypeComboBox_currentIndexChanged(int index)
+{
+  switch(index) {
+  case 0: // Replace
+    ui->toolsValuesStackedWidget->setCurrentIndex(0);
+    ui->toolsSubtypeLabel->hide();
+    ui->toolsSubtypeComboBox->hide();
+    ui->transformByComboBox->setCurrentIndex(1);
+    break;
+  case 1: // Move
+    ui->toolsValuesStackedWidget->setCurrentIndex(1);
+    ui->toolsSubtypeLabel->show();
+    ui->toolsSubtypeComboBox->show();
+    ui->transformByComboBox->setCurrentIndex(1);
+    break;
+  case 2: // Rotate
+    ui->toolsValuesStackedWidget->setCurrentIndex(2);
+    ui->toolsSubtypeLabel->show();
+    ui->toolsSubtypeComboBox->show();
+    ui->transformByComboBox->setCurrentIndex(1);
+    break;
+  case 3: // Scale
+    ui->toolsValuesStackedWidget->setCurrentIndex(1);
+    ui->toolsSubtypeLabel->show();
+    ui->toolsSubtypeComboBox->show();
+    ui->transformByComboBox->setCurrentIndex(1);
+    break;
+  case 4: // Mirror
+    ui->toolsValuesStackedWidget->setCurrentIndex(3);
+    ui->toolsSubtypeLabel->hide();
+    ui->toolsSubtypeComboBox->hide();
+    ui->transformByComboBox->setCurrentIndex(1);
+    break;
+  default:
+    return;
+  }
 }
 
 void MainWindow::on_savePushButton_released()
@@ -322,96 +481,133 @@ void MainWindow::on_savePushButton_released()
   saveTrackToDb();
 }
 
-void MainWindow::on_searchAddFilterPushButton_released()
+void MainWindow::onNodeEditorContextMenu(const QPoint &point)
 {
-  QString displayValue;
-  int value = 0;
+  // Check if we can get a index on the click point
+  QModelIndex index = ui->nodeTreeView->indexAt(point);
+  if (!index.isValid())
+    return;
 
-  // Get the display-value and value for the filter from the controls
-  // depending on the filter type
-  switch (FilterTypes(ui->searchTypeComboBox->currentIndex())) {
-  case FilterTypes::Object:
-    displayValue = ui->searchValueComboBox->currentText();
-    value = int(ui->searchValueComboBox->currentData().toUInt());
-    break;
-  case FilterTypes::Position:
-  case FilterTypes::Rotation:
-  case FilterTypes::Scaling:
-  case FilterTypes::GateNo:
-    displayValue = QString("%1").arg(ui->searchValueSpinBox->value());
-    value = ui->searchValueSpinBox->value();
-    break;
-  default:
-    break;
+  // Map the point to global space and open the context menu at that point
+  nodeEditorContextMenu.exec(ui->nodeTreeView->viewport()->mapToGlobal(point));
+}
+
+void MainWindow::onNodeEditorContextMenuAddToFilterAction()
+{
+  // We delete from last to first, cause every deletion causes the underlying rows to shift,
+  // which renders the selected indexes that point to those invalid.
+  QModelIndexList selectedIndexes = ui->nodeTreeView->selectionModel()->selectedIndexes();
+
+  if (selectedIndexes.count() == 0)
+    return;
+
+  while(selectedIndexes.count() > 0) {
+    // Take the last index and check if its valid
+    QModelIndex index = selectedIndexes.takeLast();
+    if (index.column() == NodeTreeColumns::TypeColumn || index.column() ==  NodeTreeColumns::ValueColumn)
+      continue;
+
+    // Get the prefab that corresponds to that index
+    PrefabItem prefab(&nodeEditor);
+    if (!prefab.parseIndex(nodeEditor.getFilteredModel().mapToSource(index)))
+      continue;
+
+    // Create a new filter and add it to the layout
+    searchFilterLayout->addFilter(prefab.getIndex());    
   }
 
-  // Create the filter widget and add it to the layout
-  searchFilterLayout->addFilter(FilterTypes(ui->searchTypeComboBox->currentIndex()), value, displayValue);
-  searchFilterLayout->update();
+  updateSearchFilter();
+  updateStatusBar();
 }
 
-void MainWindow::on_searchClearFilterPushButton_released()
+void MainWindow::onNodeEditorContextMenuDeleteAction()
 {
-  searchFilterLayout->Clear();
+  // We delete from last to first, cause every deletion causes the underlying rows to shift,
+  // which renders the selected indexes that point to those invalid.
+  QModelIndexList selectedIndexes = ui->nodeTreeView->selectionModel()->selectedIndexes();
+  while(selectedIndexes.count() > 0) {
+    // Take the last index and check if its valid
+    QModelIndex index = selectedIndexes.takeLast();
+    if (index.column() == NodeTreeColumns::TypeColumn || index.column() ==  NodeTreeColumns::ValueColumn)
+      continue;
+
+    // Get the prefab that corresponds to that index
+    PrefabItem prefab(&nodeEditor);
+    if (!prefab.parseIndex(nodeEditor.getFilteredModel().mapToSource(index)))
+      continue;
+
+    // Delete the root node of the prefab
+    nodeEditor.deleteNode(prefab.getIndex());
+  }
+
+  updateSearchFilter();
+  updateStatusBar();
 }
 
-void MainWindow::on_searchPushButton_released()
+void MainWindow::onNodeEditorContextMenuDublicateAction()
 {
-  // Get the starting index for the search according to the user selection
-  QModelIndex searchIndex;
-  switch (ui->replacePrefabWhereComboBox->currentIndex()) {
+  // Go through each user selection, determinate the corresponding prefab and dublicate it
+  foreach(QModelIndex index, ui->nodeTreeView->selectionModel()->selectedIndexes()) {
+    if (index.column() == NodeTreeColumns::TypeColumn || index.column() ==  NodeTreeColumns::ValueColumn)
+      continue;
 
-  case 0: // All nodes
-    searchIndex = veloTrack.getRootIndex();
-    break;
+    // The index refeers to the filtered model, so we need to map it to the source and
+    // create a new prefab from it
+    PrefabItem prefab(&nodeEditor);
+    if (!prefab.parseIndex(nodeEditor.getFilteredModel().mapToSource(index)))
+      continue;
 
-  case 1: // Barriers
-    searchIndex = veloTrack.getRootIndex();
-    for (int i = 0; i < veloTrack.getStandardItemModel().rowCount(searchIndex); ++i) {
-      QModelIndex childIndex = veloTrack.getStandardItemModel().index(i, 0, searchIndex);
-      if (childIndex.data(Qt::DisplayRole).toString() ==  "barriers")
-        searchIndex = childIndex;
+    nodeEditor.dublicatePrefab(&prefab);
+  }
+
+  // Update the status bar and filter markings, cause they could have changed
+  updateSearchFilter();
+  updateStatusBar();
+
+  // In case we duplicated a gate, the gate count has increased,
+  // which means we also have to re-evaluate the add-gate-filter spinbox
+  // in case its type is currently selected. Otherwise you couldn't select the
+  // new gate as a filter.
+  on_searchTypeComboBox_currentIndexChanged(ui->searchTypeComboBox->currentText());
+}
+
+void MainWindow::onNodeEditorContextMenuMassDublicateAction()
+{
+  // Get the amount of dublicates we want to create
+  bool ok;
+  int amount = QInputDialog::getInt(this, tr("Mass dublicate"), tr("Dublicates"), 1, 1, 1000, 1, &ok);
+  if (!ok)
+    return;
+
+  // Go through each user selection, determinate the corresponding prefab and dublicate it
+  foreach(QModelIndex index, ui->nodeTreeView->selectionModel()->selectedIndexes()) {
+    if (index.column() == NodeTreeColumns::TypeColumn || index.column() ==  NodeTreeColumns::ValueColumn)
+      continue;
+
+    // The index refeers to the filtered model, so we need to map it to the source and
+    // create a new prefab from it
+    PrefabItem prefab(&nodeEditor);
+    if (!prefab.parseIndex(nodeEditor.getFilteredModel().mapToSource(index)))
+      continue;
+
+    for (int i = 0; i < amount; ++i) {
+     nodeEditor.dublicatePrefab(&prefab);
     }
-    break;
-
-  case 2: // Gates
-    searchIndex = veloTrack.getRootIndex();
-    for (int i = 0; i < veloTrack.getStandardItemModel().rowCount(searchIndex); ++i) {
-      QModelIndex childIndex = veloTrack.getStandardItemModel().index(i, 0, searchIndex);
-      if (childIndex.data(Qt::DisplayRole).toString() ==  "gates")
-        searchIndex = childIndex;
-    }
-    break;
-
-  case 3: // Selected Node
-    searchIndex = ui->treeView->currentIndex();
-    break;
   }
 
-  veloTrack.search(searchIndex, searchFilterLayout->getFilterList());
+  // Update the status bar and filter markings, cause they could have changed
+  updateSearchFilter();
+  updateStatusBar();
+
+  // In case we duplicated a gate, the gate count has increased,
+  // which means we also have to re-evaluate the add-gate-filter spinbox
+  // in case its type is currently selected. Otherwise you couldn't select the
+  // new gate as a filter.
+  on_searchTypeComboBox_currentIndexChanged(ui->searchTypeComboBox->currentText());
 }
 
-void MainWindow::on_searchTypeComboBox_currentIndexChanged(int index)
-{
-  // Switch the visibilty of the filter-value controls according to the filter-type selected
-  switch (index) {
-  case FilterTypes::Object:
-    ui->searchValueComboBox->show();
-    ui->searchValueSpinBox->hide();
-    break;
-  case FilterTypes::Position:
-  case FilterTypes::Rotation:
-  case FilterTypes::Scaling:    
-  case FilterTypes::GateNo:
-    ui->searchValueSpinBox->setMinimum(index == FilterTypes::GateNo ? 1 : -99999);
-    ui->searchValueComboBox->hide();
-    ui->searchValueSpinBox->show();
-    break;
-  case FilterTypes::IsOnSpline:
-  case FilterTypes::IsDublicate:
-    ui->searchValueComboBox->setVisible(false);
-    ui->searchValueSpinBox->setVisible(false);
-    break;
-  }
-}
+
+
+
+
 

@@ -4,13 +4,16 @@
 #include <QAction>
 #include <QComboBox>
 #include <QFileDialog>
+#include <QInputDialog>
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QJsonValue>
 #include <QListView>
 #include <QMainWindow>
 #include <QMessageBox>
+#include <QMenu>
 #include <QRegularExpressionValidator>
+#include <QScrollBar>
 #include <QSettings>
 #include <QStandardPaths>
 #include <QStringList>
@@ -25,7 +28,7 @@
 #include "searchfilterlayout.h"
 #include "trackarchive.h"
 #include "velodb.h"
-#include "velotrack.h"
+#include "nodeeditor.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -69,14 +72,22 @@ private slots:
   void on_mergeTrack1SelectPushButton_released();
   void on_mergeTrack2SelectPushButton_released();
   void on_navListWidget_currentRowChanged(int currentRow);
-  void on_replacePushButton_released();
   void on_replacePrefabComboBox_currentIndexChanged(int index);
-  void on_replaceScalingResetPushButton_released();
   void on_saveAsNewCheckbox_stateChanged(int arg1);
   void on_savePushButton_released();
   void on_searchAddFilterPushButton_released();
   void on_searchClearFilterPushButton_released();
-  void on_searchTypeComboBox_currentIndexChanged(int index);
+  void on_searchFilterGroupBox_toggled(bool newState);
+  void on_searchOptionsShowOnlyFilteredCheckBox_stateChanged(int checked);
+  void on_searchSubtypeComboBox_currentIndexChanged(const QString &subtypeDesc);
+  void on_searchTypeComboBox_currentIndexChanged(const QString &filterDesc);
+  void on_searchTypeRotationWValueSpinBox_valueChanged(int value);
+  void on_searchTypeRotationXValueSpinBox_valueChanged(int value);
+  void on_searchTypeRotationYValueSpinBox_valueChanged(int value);
+  void on_searchTypeRotationZValueSpinBox_valueChanged(int value);
+  void on_searchTypeRotationRValueSpinBox_valueChanged(int value);
+  void on_searchTypeRotationGValueSpinBox_valueChanged(int value);
+  void on_searchTypeRotationBValueSpinBox_valueChanged(int value);
   void on_settingsDbLineEdit_textChanged(const QString &arg1);  
   void on_trackArchiveSettingsBrowseToolButton_released();
   void on_trackArchiveSettingsFilepathLineEdit_textChanged(const QString &arg1);
@@ -84,9 +95,45 @@ private slots:
   void on_viewNodeTypeColumn_stateChanged(int arg1);
   void on_geoGenTestPushButton_released();
 
-  void updateDynamicTabControlSize(int index);
+  void onNodeEditorContextMenu(const QPoint &point);
+  void onNodeEditorContextMenuDeleteAction();
+  void onNodeEditorContextMenuDublicateAction();
+  void onNodeEditorContextMenuMassDublicateAction();
 
-  void on_searchPushButton_released();
+  void onSearchFilterChanged();
+  void updateDynamicTabControlSize(int index);    
+
+
+
+  void on_toolsApplyPushButton_released();
+
+  void on_toolsTypeComboBox_currentIndexChanged(int index);
+
+  void on_transformByComboBox_currentTextChanged(const QString &transformBy);
+
+  void on_toolsSubtypeComboBox_currentIndexChanged(int index);
+
+  void on_transformRDoubleResetPushButton_released();
+
+  void on_transformGDoubleResetPushButton_released();
+
+  void on_transformBDoubleResetPushButton_released();
+
+  void on_transformRotationRValueSpinBox_valueChanged(int value);
+
+  void on_transformRotationGValueSpinBox_valueChanged(int value);
+
+  void on_transformRotationBValueSpinBox_valueChanged(int value);
+
+  void on_transformRotationWValueSpinBox_valueChanged(int value);
+
+  void on_transformRotationXValueSpinBox_valueChanged(int value);
+
+  void on_transformRotationYValueSpinBox_valueChanged(int value);
+
+  void on_transformRotationZValueSpinBox_valueChanged(int value);
+
+  void onNodeEditorContextMenuAddToFilterAction();
 
 protected:
   void closeEvent(QCloseEvent* e) override;
@@ -100,18 +147,15 @@ private:
   const QString prefabCountLabelText = tr("Prefabs: %1");
   const QString gateCountLabelText = tr("Gates: %1");
   const QString splineCountLabelText = tr("Splines: %1");
+  const QString filterCountLabelText = tr("Filtered: %1");
 
   QString defaultWindowTitle;
 
   QLabel nodeCountLabel;
-  QLabel prefabCountLabel;
+  QLabel prefabCountLabel;  
   QLabel gateCountLabel;
   QLabel splineCountLabel;
-
-  uint nodeCount = 0;
-  uint prefabCount = 0;
-  uint splineCount = 0;
-  uint gateCount = 0;
+  QLabel filterCountLabel;
 
   bool settingMoveToArchive = false;
   bool settingSaveAsNew = true;
@@ -131,23 +175,27 @@ private:
 
   Ui::MainWindow* ui;
   SearchFilterLayout* searchFilterLayout;
+  QVector<PrefabItem*> lastSearchResult;
+  QMenu nodeEditorContextMenu;
 
-  VeloTrack veloTrack;
   VeloDb* selectedDb;
   VeloDb* productionDb;
   VeloDb* betaDb;
   VeloDb* customDb;
+  NodeEditor nodeEditor;
 
   TrackArchive* archive;
 
   TrackData mergeTrack1;
   TrackData mergeTrack2;
 
-  void writeDefaultSettings();
-  void readSettings();
-  void writeSettings();
+  bool nodeEditStarted = false;
+  QVector<bool> nodeEditTreeExpansionStates;
+  float nodeEditLastScrollbarPos;
 
-  void updateReplacePrefabComboBox();
+  void readSettings();
+
+  void updatePrefabComboBoxes();
 
   QString browseDatabaseFile() const;
   VeloDb* getDatabase();
@@ -162,11 +210,8 @@ private:
   void closeTrack();
   void loadTrack(const TrackData& track);
   bool maybeSave();
-  void openTrack();
   void saveTrackToDb();
   void saveTrackToFile();  
-
-  void replacePrefab();
 
   QString getDefaultPath();
   bool maybeCreateOrSelectArchive();
@@ -174,5 +219,18 @@ private:
   void loadDatabaseForArchive(VeloDb *database);
 
   bool maybeDontBecauseItsBeta();
+
+  void updateSearchFilter();
+  void updateSearchFilter(bool filterEnabled);
+  void updateSearchFilterMarks();
+  void resetFilterMarks(bool setNodeEdit = true);
+  void updateSearchFromAngleValues();
+  void updateSearchFromQuaternionValues();
+  void addFilter(const FilterTypes filterType);
+  void toolsReplaceObject();
+  void updateTransformFromQuaternionValues();
+  void updateTransformFromAngleValues();
+  void beginNodeEdit();
+  void endNodeEdit();
 };
 #endif // MAINWINDOW_H

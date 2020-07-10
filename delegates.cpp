@@ -1,6 +1,6 @@
 #include "delegates.h"
 
-JsonTreeViewItemDelegate::JsonTreeViewItemDelegate(QObject *parent, VeloTrack* dataParser)
+JsonTreeViewItemDelegate::JsonTreeViewItemDelegate(QObject *parent, NodeEditor* dataParser)
   : QStyledItemDelegate(parent)
 {
   this->dataParser = dataParser;
@@ -17,7 +17,7 @@ QWidget *JsonTreeViewItemDelegate::createEditor(QWidget *parent, const QStyleOpt
   if (!keyIndex.isValid() || !valueIndex.isValid() || !typeIndex.isValid())
     return nullptr;
 
-  if (VeloTrack::isNotEditableNode(keyIndex))
+  if (!NodeEditor::isEditableNode(keyIndex))
     return nullptr;
 
   QWidget* editor = nullptr;
@@ -60,7 +60,7 @@ QWidget *JsonTreeViewItemDelegate::createEditor(QWidget *parent, const QStyleOpt
       spinBox->setMinimumWidth(120);
       spinBox->setMaximumWidth(200);
       spinBox->setDecimals(15);
-      spinBox->setRange(-99999, 99999);
+      spinBox->setRange(-999999, 999999);
     } else {
       editor = new QSpinBox(parent);
       QSpinBox* spinBox = static_cast<QSpinBox*>(editor);
@@ -68,7 +68,7 @@ QWidget *JsonTreeViewItemDelegate::createEditor(QWidget *parent, const QStyleOpt
       spinBox->setMinimumWidth(60);
       spinBox->setMaximumWidth(100);
       if (parentKeyItemIndex.isValid() && parentKeyItemIndex.data() != "Object") {
-        spinBox->setRange(-99999, 99999);
+        spinBox->setRange(-999999, 999999);
       }
       if (keyIndex.data() == "gate") {
         spinBox->setRange(0, int(dataParser->getGateCount()) - 1);
@@ -95,10 +95,10 @@ void JsonTreeViewItemDelegate::setEditorData(QWidget *editor, const QModelIndex 
   PrefabData selectedPrefab = valueIndex.data(Qt::UserRole).value<PrefabData>();
   if (selectedPrefab.id > 0) {
     QComboBox* comboBox = static_cast<QComboBox*>(editor);
-    if (dataParser->getPrefabs() != nullptr) {
+    if (dataParser->getPrefabData() != nullptr) {
       int index = 0;
-      for (int i = 0; i < dataParser->getPrefabs()->size(); ++i) {
-        PrefabData prefab = dataParser->getPrefabs()->value(i);
+      for (int i = 0; i < dataParser->getPrefabData()->size(); ++i) {
+        PrefabData prefab = dataParser->getPrefabData()->value(i);
         if (prefab.gate == selectedPrefab.gate) {
           QVariant var;
           var.setValue(prefab);

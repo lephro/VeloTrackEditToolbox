@@ -3,11 +3,9 @@
 
 #include <QObject>
 #include <QFile>
-#include <QList>
 #include <QString>
 #include <QUrl>
 #include <QVariant>
-#include <QVector>
 
 #include "exceptions.h"
 #include "sqlite3.h"

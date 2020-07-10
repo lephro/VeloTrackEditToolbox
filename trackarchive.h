@@ -20,13 +20,13 @@ public:
   QString getFileName() const;
   void setFileName(const QString &value);
 
-  QList<TrackData> getTracks() const;
-  void setTracks(const QList<TrackData> &value);
+  QVector<TrackData> getTracks() const;
+  void setTracks(const QVector<TrackData> &value);
 
 private:
   QString fileName;
   VeloDb* archiveDb;
-  QList<TrackData> tracks;
+  QVector<TrackData> tracks;
 
   void queryTracks();
 };

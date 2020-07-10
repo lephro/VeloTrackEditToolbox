@@ -50,12 +50,12 @@ void TrackArchive::setFileName(const QString &value)
   queryTracks();
 }
 
-QList<TrackData> TrackArchive::getTracks() const
+QVector<TrackData> TrackArchive::getTracks() const
 {
   return tracks;
 }
 
-void TrackArchive::setTracks(const QList<TrackData> &value)
+void TrackArchive::setTracks(const QVector<TrackData> &value)
 {
   tracks = value;
 }
@@ -70,7 +70,7 @@ void TrackArchive::queryTracks()
     Q_UNUSED(e)
   }
 
-  tracks = archiveDb->getTracks().toList();
+  tracks = archiveDb->getTracks();
 }
 
 
