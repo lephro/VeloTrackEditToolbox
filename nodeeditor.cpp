@@ -258,13 +258,17 @@ QModelIndex NodeEditor::dublicatePrefab(PrefabItem* sourcePrefab)
   // Prevent invalid gate data
   PrefabItem prefab(this);
   if (prefab.parseIndex(newItemKey->index())) {
-    if (prefab.getGateNo() > -1) {
+    if (prefab.isGate()) {
       prefab.setGateNo(int(gateCount));
       gateCount++;
     }
     prefab.setFinish(false);
     prefab.setStart(false);
+    if (prefab.isSpline())
+      splineCount++;
   }
+
+  prefabCount++;
 
   return sourceItemKey->index();
 }

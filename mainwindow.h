@@ -61,7 +61,7 @@ private slots:
   void on_aboutLicensePushButton_released();
   void on_archiveAddTrackPushButton_released();
   void on_archiveDatabaseSelectionComboBox_currentIndexChanged(const QString &arg1);
-  void on_archiveMoveToArchiveCheckBox_stateChanged(int arg1);
+  void on_archiveMoveToArchiveCheckBox_stateChanged(int moveToArchiveState);
   void on_archiveRestoreTrackPushButton_released();
   void on_buildTypeComboBox_currentIndexChanged(int index);
   void on_browseUserDbToolButton_released();
@@ -73,7 +73,7 @@ private slots:
   void on_mergeTrack2SelectPushButton_released();
   void on_navListWidget_currentRowChanged(int currentRow);
   void on_replacePrefabComboBox_currentIndexChanged(int index);
-  void on_saveAsNewCheckbox_stateChanged(int arg1);
+  void on_saveAsNewCheckbox_stateChanged(int saveAsNewState);
   void on_savePushButton_released();
   void on_searchAddFilterPushButton_released();
   void on_searchClearFilterPushButton_released();
@@ -88,11 +88,11 @@ private slots:
   void on_searchTypeRotationRValueSpinBox_valueChanged(int value);
   void on_searchTypeRotationGValueSpinBox_valueChanged(int value);
   void on_searchTypeRotationBValueSpinBox_valueChanged(int value);
-  void on_settingsDbLineEdit_textChanged(const QString &arg1);  
-  void on_trackArchiveSettingsBrowseToolButton_released();
-  void on_trackArchiveSettingsFilepathLineEdit_textChanged(const QString &arg1);
-  void on_userDbLineEdit_textChanged(const QString &arg1);
-  void on_viewNodeTypeColumn_stateChanged(int arg1);
+  void on_settingsDbLineEdit_textChanged(const QString &settingsDbFilename);
+  void on_archiveSettingsBrowseToolButton_released();
+  void on_archiveSettingsFilepathLineEdit_textChanged(const QString &archiveSettingsFilepath);
+  void on_userDbLineEdit_textChanged(const QString &userDbFilename);
+  void on_viewNodeTypeColumn_stateChanged(int viewNodeTypeColumnState);
   void on_geoGenTestPushButton_released();
 
   void onNodeEditorContextMenu(const QPoint &point);
@@ -103,34 +103,19 @@ private slots:
   void onSearchFilterChanged();
   void updateDynamicTabControlSize(int index);    
 
-
-
   void on_toolsApplyPushButton_released();
-
   void on_toolsTypeComboBox_currentIndexChanged(int index);
-
   void on_transformByComboBox_currentTextChanged(const QString &transformBy);
-
   void on_toolsSubtypeComboBox_currentIndexChanged(int index);
-
   void on_transformRDoubleResetPushButton_released();
-
   void on_transformGDoubleResetPushButton_released();
-
   void on_transformBDoubleResetPushButton_released();
-
   void on_transformRotationRValueSpinBox_valueChanged(int value);
-
   void on_transformRotationGValueSpinBox_valueChanged(int value);
-
   void on_transformRotationBValueSpinBox_valueChanged(int value);
-
   void on_transformRotationWValueSpinBox_valueChanged(int value);
-
   void on_transformRotationXValueSpinBox_valueChanged(int value);
-
   void on_transformRotationYValueSpinBox_valueChanged(int value);
-
   void on_transformRotationZValueSpinBox_valueChanged(int value);
 
   void onNodeEditorContextMenuAddToFilterAction();
@@ -138,18 +123,18 @@ private slots:
 protected:
   void closeEvent(QCloseEvent* e) override;
 
-private:  
-  const QString defaultProductionUserDbFilename = "C:/Users/<USER>/AppData/LocalLow/VelociDrone/VelociDrone/user11.db";
-  const QString defaultBetaUserDbFilename = "C:/Users/<USER>/AppData/LocalLow/VelociDrone/VelociDroneBeta/user11.db";
-  const QString defaultProductionSettingsDbFilename = "C:/Users/<USER>/AppData/LocalLow/VelociDrone/VelociDrone/settings.db";
-  const QString defaultBetaSettingsDbFilename = "C:/Users/<USER>/AppData/LocalLow/VelociDrone/VelociDroneBeta/settings.db";
+private:    
   const QString nodeCountLabelText = tr("Nodes: %1");
   const QString prefabCountLabelText = tr("Prefabs: %1");
   const QString gateCountLabelText = tr("Gates: %1");
   const QString splineCountLabelText = tr("Splines: %1");
   const QString filterCountLabelText = tr("Filtered: %1");
 
-  QString defaultWindowTitle;
+  QString defaultWindowTitle;  
+  QString defaultProductionUserDbFilename = "C:/Users/<USER>/AppData/LocalLow/VelociDrone/VelociDrone/user11.db";
+  QString defaultBetaUserDbFilename = "C:/Users/<USER>/AppData/LocalLow/VelociDrone/VelociDroneBeta/user11.db";
+  QString defaultProductionSettingsDbFilename = "C:/Users/<USER>/AppData/LocalLow/VelociDrone/VelociDrone/settings.db";
+  QString defaultBetaSettingsDbFilename = "C:/Users/<USER>/AppData/LocalLow/VelociDrone/VelociDroneBeta/settings.db";
 
   QLabel nodeCountLabel;
   QLabel prefabCountLabel;  
@@ -157,19 +142,7 @@ private:
   QLabel splineCountLabel;
   QLabel filterCountLabel;
 
-  bool settingMoveToArchive = false;
-  bool settingSaveAsNew = true;
-  bool settingViewTypeColumn = false;
-
   DatabaseType databaseOptionsSelectedDbType = DatabaseType::Production;
-
-  QString productionUserDbFilename = "";
-  QString betaUserDbFilename = "";
-  QString productionSettingsDbFilename = "";
-  QString betaSettingsDbFilename = "";
-  QString customUserDbFilename = "";
-  QString customSettingsDbFilename = "";
-  QString archiveDbFileName = "";
 
   TrackData loadedTrack;
 

@@ -32,140 +32,103 @@ bool MainWindow::maybeDontBecauseItsBeta()
 }
 
 void MainWindow::setDatabaseOptionsDatabaseFilenames(const DatabaseType databaseType)
-{
+{  
   databaseOptionsSelectedDbType = databaseType;
 
+  QSettings settings("settings.ini", QSettings::IniFormat);
+
+  QString userDbFilename = "";
+  QString settingsDbFilename = "";
   switch (databaseType) {
   case DatabaseType::Production:
-    ui->userDbLineEdit->setText(productionUserDbFilename);
-    ui->settingsDbLineEdit->setText(productionSettingsDbFilename);
+    userDbFilename = settings.value("productionSettingsDbFilename", defaultProductionSettingsDbFilename).toString();
+    settingsDbFilename = settings.value("productionUserDbFilename", defaultProductionUserDbFilename).toString();
     break;
 
   case DatabaseType::Beta:
-    ui->userDbLineEdit->setText(betaUserDbFilename);
-    ui->settingsDbLineEdit->setText(betaSettingsDbFilename);
+    userDbFilename = settings.value("betaSettingsDbFilename", defaultBetaSettingsDbFilename).toString();
+    settingsDbFilename = settings.value("betaUserDbFilename", defaultBetaUserDbFilename).toString();
     break;
 
   case DatabaseType::Custom:
-    ui->userDbLineEdit->setText(customUserDbFilename);
-    ui->settingsDbLineEdit->setText(customSettingsDbFilename);
+    userDbFilename = settings.value("customSettingsDbFilename", "").toString();
+    settingsDbFilename = settings.value("customUserDbFilename", "").toString();
     break;
   default:
     return;
   }
+
+  ui->userDbLineEdit->setText(userDbFilename);
+  ui->settingsDbLineEdit->setText(settingsDbFilename);
 }
 
 void MainWindow::setDatabaseOptionsSettingsDb(const QString& settingsDbFilename)
 {
   QSettings settings("settings.ini", QSettings::IniFormat);
 
+  QString currentDbFilename;
   switch (databaseOptionsSelectedDbType) {
   case DatabaseType::Production:
-    if (settingsDbFilename != productionSettingsDbFilename) {
-      if ((loadedTrack.assignedDatabase == databaseOptionsSelectedDbType) && (!maybeSave())) {
-        setDatabaseOptionsDatabaseFilenames(databaseOptionsSelectedDbType);
-      } else {
-        productionSettingsDbFilename = settingsDbFilename;
-        settings.setValue("database/productionSettingsDbFilename", settingsDbFilename);
-
-        updateDatabaseOptionsDatabaseStatus();
-
-        closeTrack();
-      }
-    }
+    currentDbFilename = settings.value("productionUserDbFilename", defaultProductionUserDbFilename).toString();
     break;
 
   case DatabaseType::Beta:
-    if (settingsDbFilename != betaSettingsDbFilename) {
-      if ((loadedTrack.assignedDatabase == databaseOptionsSelectedDbType) && (!maybeSave())) {
-        setDatabaseOptionsDatabaseFilenames(databaseOptionsSelectedDbType);
-      } else {
-        betaSettingsDbFilename = settingsDbFilename;
-        settings.setValue("database/betaSettingsDbFilename", settingsDbFilename);
-
-        updateDatabaseOptionsDatabaseStatus();
-
-        closeTrack();
-      }
-    }
+    currentDbFilename = settings.value("betaUserDbFilename", defaultBetaUserDbFilename).toString();
     break;
 
   case DatabaseType::Custom:
-    if (settingsDbFilename != customSettingsDbFilename) {
-      if ((loadedTrack.assignedDatabase == databaseOptionsSelectedDbType) && (!maybeSave())) {
-        setDatabaseOptionsDatabaseFilenames(databaseOptionsSelectedDbType);
-      } else {
-        customSettingsDbFilename = settingsDbFilename;
-        settings.setValue("database/customSettingsDbFilename", settingsDbFilename);
-
-        updateDatabaseOptionsDatabaseStatus();
-
-        closeTrack();
-      }
-    }
+    currentDbFilename = settings.value("customUserDbFilename", "").toString();
     break;
   default:
     return;
   }
 
-  getDatabase(databaseOptionsSelectedDbType)->setSettingsDbFilename(settingsDbFilename);
+  if (settingsDbFilename != currentDbFilename) {
+    if ((loadedTrack.assignedDatabase == databaseOptionsSelectedDbType) && (!maybeSave())) {
+      setDatabaseOptionsDatabaseFilenames(databaseOptionsSelectedDbType);
+    } else {
+      settings.setValue("database/productionSettingsDbFilename", settingsDbFilename);
+
+      updateDatabaseOptionsDatabaseStatus();
+
+      closeTrack();
+    }
+  }
 }
 
 void MainWindow::setDatabaseOptionsUserDb(const QString& userDbFilename)
 {
   QSettings settings("settings.ini", QSettings::IniFormat);
 
-  switch (databaseOptionsSelectedDbType)
-  {
+  QString currentDbFilename = "";
+  switch (databaseOptionsSelectedDbType) {
   case DatabaseType::Production:
-    if (userDbFilename != productionUserDbFilename) {
-      if ((loadedTrack.assignedDatabase == databaseOptionsSelectedDbType) && (!maybeSave())) {
-        setDatabaseOptionsDatabaseFilenames(databaseOptionsSelectedDbType);
-      } else {
-        productionUserDbFilename = userDbFilename;
-        settings.setValue("database/productionUserDbFilename", userDbFilename);
-
-        updateDatabaseOptionsDatabaseStatus();
-
-        closeTrack();
-      }
-    }
+    currentDbFilename = settings.value("productionSettingsDbFilename", defaultProductionSettingsDbFilename).toString();
     break;
 
   case DatabaseType::Beta:
-    if (userDbFilename != betaUserDbFilename) {
-      if ((loadedTrack.assignedDatabase == databaseOptionsSelectedDbType) && (!maybeSave())) {
-        setDatabaseOptionsDatabaseFilenames(databaseOptionsSelectedDbType);
-      } else {
-        betaUserDbFilename = userDbFilename;
-        settings.setValue("database/betaUserDbFilename", userDbFilename);
-
-        updateDatabaseOptionsDatabaseStatus();
-
-        closeTrack();
-      }
-    }
+    currentDbFilename = settings.value("betaSettingsDbFilename", defaultBetaSettingsDbFilename).toString();
     break;
 
   case DatabaseType::Custom:
-    if (userDbFilename != customUserDbFilename) {
-      if ((loadedTrack.assignedDatabase == databaseOptionsSelectedDbType) && (!maybeSave())) {
-        setDatabaseOptionsDatabaseFilenames(databaseOptionsSelectedDbType);
-      } else {
-        customUserDbFilename = userDbFilename;
-        settings.setValue("database/customUserDbFilename", userDbFilename);
-
-        updateDatabaseOptionsDatabaseStatus();
-
-        closeTrack();
-      }
-    }
+    currentDbFilename = settings.value("customSettingsDbFilename", "").toString();
     break;
   default:
     return;
   }
 
-  getDatabase(databaseOptionsSelectedDbType)->setUserDbFilename(userDbFilename);
+  if (userDbFilename != currentDbFilename) {
+    if ((loadedTrack.assignedDatabase == databaseOptionsSelectedDbType) && (!maybeSave())) {
+      setDatabaseOptionsDatabaseFilenames(databaseOptionsSelectedDbType);
+    } else {
+      currentDbFilename = userDbFilename;
+      settings.setValue("database/productionUserDbFilename", userDbFilename);
+
+      updateDatabaseOptionsDatabaseStatus();
+
+      closeTrack();
+    }
+  }
 }
 
 void MainWindow::updateDatabaseOptionsDatabaseStatus()
@@ -214,14 +177,41 @@ void MainWindow::on_aboutLicensePushButton_released()
   ui->aboutStackedWidget->setCurrentIndex(AboutStackedWidgetPages::LicensePage);
 }
 
-void MainWindow::on_archiveMoveToArchiveCheckBox_stateChanged(int arg1)
+void MainWindow::on_archiveMoveToArchiveCheckBox_stateChanged(int moveToArchiveState)
 {
-  // Set the setting
-  settingMoveToArchive = bool(arg1);
-
   // Write into config
   QSettings settings("settings.ini", QSettings::IniFormat);
-  settings.setValue("archive/moveToArchive", settingSaveAsNew);
+  settings.setValue("archive/moveToArchive", bool(moveToArchiveState));
+}
+void MainWindow::on_archiveSettingsBrowseToolButton_released()
+{
+  // Open a save file dialog
+  QString result = QFileDialog::getSaveFileName(this,
+                                                tr("Choose or create an archive"),
+                                                QStandardPaths::standardLocations(QStandardPaths::HomeLocation).first(),
+                                                tr("Database Files (*.db)"),
+                                                nullptr,
+                                                QFileDialog::Option::DontConfirmOverwrite);
+  if (result == "")
+    return;
+
+  // Write the new filepath into the filepath control
+  ui->archiveSettingsFilepathLineEdit->setText(result);
+}
+
+void MainWindow::on_archiveSettingsFilepathLineEdit_textChanged(const QString& archiveSettingsFilepath)
+{
+  // Write config and reload
+  QSettings settings("settings.ini", QSettings::IniFormat);
+  settings.setValue("archive/filename", archiveSettingsFilepath);
+
+  try {
+    archive->setFileName(archiveSettingsFilepath);
+    loadArchive();
+  } catch (VeloToolkitException& e) {
+    // Catch weird shit
+    e.Message();
+  }
 }
 
 void MainWindow::on_browseUserDbToolButton_released()
@@ -250,38 +240,36 @@ void MainWindow::on_buildTypeComboBox_currentIndexChanged(int index)
   updateDatabaseOptionsDatabaseStatus();
 }
 
-void MainWindow::on_saveAsNewCheckbox_stateChanged(int arg1)
+void MainWindow::on_saveAsNewCheckbox_stateChanged(int saveAsNewState)
 {
-  qDebug() << "SaveAsNew: " << arg1;
-  if (arg1 && !maybeDontBecauseItsBeta())
+  qDebug() << "SaveAsNew: " << saveAsNewState;
+  if (saveAsNewState == 0 && !maybeDontBecauseItsBeta())
     return;
 
-  settingSaveAsNew = bool(arg1);
-
   QSettings settings("settings.ini", QSettings::IniFormat);
-  settings.setValue("database/saveTrackAsNew", settingSaveAsNew);
+  settings.setValue("general/saveTrackAsNew", bool(saveAsNewState));
 }
 
-void MainWindow::on_settingsDbLineEdit_textChanged(const QString &arg1)
+void MainWindow::on_settingsDbLineEdit_textChanged(const QString &settingsDbFilename)
 {
-  setDatabaseOptionsSettingsDb(arg1);
+  setDatabaseOptionsSettingsDb(settingsDbFilename);
 }
 
-void MainWindow::on_userDbLineEdit_textChanged(const QString &arg1)
+void MainWindow::on_userDbLineEdit_textChanged(const QString &userDbFilename)
 {
-  setDatabaseOptionsUserDb(arg1);
+  setDatabaseOptionsUserDb(userDbFilename);
 }
 
-void MainWindow::on_viewNodeTypeColumn_stateChanged(int arg1)
+void MainWindow::on_viewNodeTypeColumn_stateChanged(int viewNodeTypeColumnState)
 {
+  const bool viewNodeTypeColumn = bool(viewNodeTypeColumnState);
   // Show or hide the type column, depending on the selected item
-  settingViewTypeColumn = bool(arg1);
-  if (settingViewTypeColumn) {
+  if (viewNodeTypeColumn) {
     ui->nodeTreeView->showColumn(NodeTreeColumns::TypeColumn);
   } else {
     ui->nodeTreeView->hideColumn(NodeTreeColumns::TypeColumn);
   }
 
   QSettings settings("settings.ini", QSettings::IniFormat);
-  settings.setValue("database/viewTypeColumn", settingViewTypeColumn);
+  settings.setValue("general/viewTypeColumn", viewNodeTypeColumn);
 }

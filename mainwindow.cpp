@@ -6,6 +6,8 @@ MainWindow::MainWindow(QWidget *parent)
   , ui(new Ui::MainWindow)
 {
   ui->setupUi(this);
+  // Set the default window title
+  defaultWindowTitle = QString(windowTitle());
 
   // Create and connect the context menu of the node edito
   nodeEditorContextMenu.addAction(QIcon(":/icons/add-filter"), tr("Add to filter"), this, SLOT(onNodeEditorContextMenuAddToFilterAction()));
@@ -14,19 +16,6 @@ MainWindow::MainWindow(QWidget *parent)
   nodeEditorContextMenu.addAction(QIcon(":/icons/delete"), tr("&Delete"), this, SLOT(onNodeEditorContextMenuDeleteAction()));
   connect(ui->nodeTreeView, SIGNAL(customContextMenuRequested(const QPoint&)), this, SLOT(onNodeEditorContextMenu(const QPoint&)));
 
-  // Create the flow layout for the search filter
-  searchFilterLayout = new SearchFilterLayout();
-  ui->searchFilterGroupBox->setLayout(searchFilterLayout);  
-  connect(searchFilterLayout, SIGNAL(filterChanged()), this, SLOT(onSearchFilterChanged()));
-  ui->searchFilterGroupBox->hide();
-  ui->searchClearFilterPushButton->hide();
-
-  // Set the default window title
-  defaultWindowTitle = QString(windowTitle());
-
-  // Hook up the dynamic tab control height update function to the tab change event
-  //connect(ui->nodeEditorToolsTabWidget, SIGNAL(currentChanged(int)), this, SLOT(updateDynamicTabControlSize(int)));
-
   // Create the labels for the status bar and add them to it
   updateStatusBar();
   statusBar()->addPermanentWidget(&filterCountLabel);
@@ -34,6 +23,16 @@ MainWindow::MainWindow(QWidget *parent)
   statusBar()->addPermanentWidget(&gateCountLabel);
   statusBar()->addPermanentWidget(&prefabCountLabel);
   statusBar()->addPermanentWidget(&nodeCountLabel);
+
+  // Create the flow layout for the search filter
+  searchFilterLayout = new SearchFilterLayout();
+  ui->searchFilterGroupBox->setLayout(searchFilterLayout);  
+  connect(searchFilterLayout, SIGNAL(filterChanged()), this, SLOT(onSearchFilterChanged()));
+  ui->searchFilterGroupBox->hide();
+  ui->searchClearFilterPushButton->hide();
+
+  // Hook up the dynamic tab control height update function to the tab change event
+  //connect(ui->nodeEditorToolsTabWidget, SIGNAL(currentChanged(int)), this, SLOT(updateDynamicTabControlSize(int)));
 
   // Setup our initial view for the search tab
   ui->nodeEditorToolsTabWidget->setCurrentIndex(0);
@@ -69,11 +68,6 @@ MainWindow::MainWindow(QWidget *parent)
   // Update our database status indicator in the setup page
   updateDatabaseOptionsDatabaseStatus();
 
-  // Set config values to its according controls
-  ui->archiveMoveToArchiveCheckBox->setChecked(settingMoveToArchive);
-  ui->saveAsNewCheckbox->setChecked(settingSaveAsNew);
-  ui->trackArchiveSettingsFilepathLineEdit->setText(archiveDbFileName);
-
   // Insert every found database into the database selection combo box of the archive
   if (productionDb->isValid())
     ui->archiveDatabaseSelectionComboBox->insertItem(0, tr("Production"));
@@ -92,7 +86,7 @@ MainWindow::MainWindow(QWidget *parent)
     QMessageBox::information(this, tr("No databases found!"), tr("The VeloTrackToolkit could not find any databases.\nPlease go to the options page and select the nescessary database files."));
 
   // Set the node editor as the default page
-  ui->navListWidget->setCurrentRow(NavRows::NodeEditorRow);
+  ui->navListWidget->setCurrentRow(NavRows::NodeEditorRow);  
 }
 
 void MainWindow::closeEvent(QCloseEvent *e)
@@ -160,42 +154,37 @@ bool MainWindow::maybeSave()
 void MainWindow::readSettings()
 {
   QSettings settings("settings.ini", QSettings::IniFormat);
-  //settings->clear();
+  //settings->clear();  
 
   const QString defaultFolder = getDefaultPath();
   if (defaultFolder != "") {
-    productionSettingsDbFilename = defaultFolder + "/VelociDrone/settings.db";
-    productionUserDbFilename = defaultFolder + "/VelociDrone/user11.db";
-    betaSettingsDbFilename = defaultFolder + "/VelociDroneBeta/settings.db";
-    betaUserDbFilename = defaultFolder + "/VelociDroneBeta/user11.db";
+    defaultProductionSettingsDbFilename = defaultFolder + "/VelociDrone/settings.db";
+    defaultProductionUserDbFilename = defaultFolder + "/VelociDrone/user11.db";
+    defaultBetaSettingsDbFilename = defaultFolder + "/VelociDroneBeta/settings.db";
+    defaultBetaUserDbFilename = defaultFolder + "/VelociDroneBeta/user11.db";
   }
 
   // Read the settings from the config file to its according variables
   settings.beginGroup("general");
-  settingSaveAsNew = settings.value("saveTrackAsNew", true).toBool();
-  settingViewTypeColumn = settings.value("viewTypeColumn", false).toBool();
+  ui->saveAsNewCheckbox->setChecked(settings.value("saveTrackAsNew", true).toString().toLower() == "true");
+  ui->viewNodeTypeColumn->setChecked(settings.value("viewTypeColumn").toString().toLower() == "true");
+  if (!ui->viewNodeTypeColumn->isChecked())
+    ui->nodeTreeView->hideColumn(NodeTreeColumns::TypeColumn);
   settings.endGroup();
 
   settings.beginGroup("database");
-  productionSettingsDbFilename = settings.value("productionSettingsDbFilename", productionSettingsDbFilename).toString();
-  productionUserDbFilename = settings.value("productionUserDbFilename", productionUserDbFilename).toString();
-  betaSettingsDbFilename = settings.value("betaSettingsDbFilename", betaSettingsDbFilename).toString();
-  betaUserDbFilename = settings.value("betaUserDbFilename", betaUserDbFilename).toString();
-  customSettingsDbFilename = settings.value("customSettingsDbFilename", "").toString();
-  customUserDbFilename = settings.value("customUserDbFilename", "").toString();
+  productionDb->setSettingsDbFilename(settings.value("productionSettingsDbFilename", defaultProductionSettingsDbFilename).toString());
+  productionDb->setUserDbFilename(settings.value("productionUserDbFilename", defaultProductionUserDbFilename).toString());
+  betaDb->setSettingsDbFilename(settings.value("betaSettingsDbFilename", defaultBetaSettingsDbFilename).toString());
+  betaDb->setUserDbFilename(settings.value("betaUserDbFilename", defaultBetaUserDbFilename).toString());
+  customDb->setSettingsDbFilename(settings.value("customSettingsDbFilename", "").toString());
+  customDb->setUserDbFilename(settings.value("customUserDbFilename", "").toString());
   settings.endGroup();
 
   settings.beginGroup("archive");
-  settingMoveToArchive = settings.value("moveToArchive", false).toBool();
-  archiveDbFileName = settings.value("filename", "").toString();
+  ui->archiveMoveToArchiveCheckBox->setChecked(settings.value("moveToArchive", false).toBool());
+  ui->archiveSettingsFilepathLineEdit->setText(settings.value("filename", "").toString());
   settings.endGroup();
-
-  productionDb->setSettingsDbFilename(productionSettingsDbFilename);
-  productionDb->setUserDbFilename(productionUserDbFilename);
-  betaDb->setSettingsDbFilename(betaSettingsDbFilename);
-  betaDb->setUserDbFilename(betaUserDbFilename);
-  customDb->setSettingsDbFilename(customSettingsDbFilename);
-  customDb->setUserDbFilename(customUserDbFilename);
 
   // Update the database filename settings controls
   setDatabaseOptionsDatabaseFilenames(DatabaseType::Production);

@@ -2,18 +2,19 @@
 #include "ui_opentrackdialog.h"
 
 OpenTrackDialog::OpenTrackDialog(QWidget *parent, VeloDb* productionDb, VeloDb* betaDb, VeloDb* customDb) noexcept(false) :
-  QDialog(parent),
-  ui(new Ui::OpenTrackDialog)
-{
-  this->productionDb = productionDb;
-  this->betaDb = betaDb;
-  this->customDb = customDb;
+  QDialog(parent),  
+  ui(new Ui::OpenTrackDialog),
+  productionDb(productionDb),
+  betaDb(betaDb),
+  customDb(customDb)
+{ 
+  QSettings settings("settings.ini", QSettings::IniFormat);
+  int lastDbIndex = settings.value("general/lastDatabaseIndex").toInt();
 
   ui->setupUi(this);
 
-  if (productionDb != nullptr && productionDb->isValid()) {
+  if (productionDb != nullptr && productionDb->isValid())
     ui->databaseComboBox->insertItem(0, tr("Production"));
-  }
 
   if (betaDb != nullptr && betaDb->isValid())
     ui->databaseComboBox->insertItem(1, tr("Beta"));
@@ -24,9 +25,7 @@ OpenTrackDialog::OpenTrackDialog(QWidget *parent, VeloDb* productionDb, VeloDb* 
   if (ui->databaseComboBox->count() == 0)
     throw NoValidDatabasesFoundException();
 
-  QSettings settings("settings.ini", QSettings::IniFormat);
-  int lastDbIndex = settings.value("general/lastDatabaseIndex").toInt();
-  if (lastDbIndex >= 0 && lastDbIndex < ui->databaseComboBox->count())
+  if (lastDbIndex > -1 && lastDbIndex < ui->databaseComboBox->count())
     ui->databaseComboBox->setCurrentIndex(lastDbIndex);
 
   ui->databaseLabel->setVisible(ui->databaseComboBox->count() > 1);

@@ -124,10 +124,10 @@ bool MainWindow::maybeCreateOrSelectArchive()
     if (result == "")
       return false;
 
-    ui->trackArchiveSettingsFilepathLineEdit->setText(result);
-    archiveDbFileName = result;
+    ui->archiveSettingsFilepathLineEdit->setText(result);
+
     QSettings settings("settings.ini", QSettings::IniFormat);
-    settings.setValue("archive/filename", archiveDbFileName);
+    settings.setValue("archive/filename", result);
     return true;
   }
   case QMessageBox::No:
@@ -153,7 +153,7 @@ void MainWindow::on_archiveAddTrackPushButton_released()
   // Gets the origin database
   QString selectedDbStr = ui->archiveDatabaseSelectionComboBox->currentText();
   VeloDb* selectedDbInArchive = nullptr;
-  if (settingMoveToArchive) {
+  if (ui->archiveMoveToArchiveCheckBox->checkState() == Qt::Checked) {
     if (selectedDbStr == tr("Production")) {
       selectedDbInArchive = productionDb;
     } else if (selectedDbStr == tr("Beta")) {
@@ -171,7 +171,7 @@ void MainWindow::on_archiveAddTrackPushButton_released()
     TrackData track = selectedTrackItem->data(0, Qt::UserRole).value<TrackData>();
     // If we move the track we have to delete it from the origin database
     // Deletes the track from the origin database
-    if (settingMoveToArchive) {
+    if (ui->archiveMoveToArchiveCheckBox->checkState() == Qt::Checked) {
       try {
         selectedDbInArchive->deleteTrack(track);
       } catch (VeloToolkitException& e) {
@@ -266,36 +266,4 @@ void MainWindow::on_archiveRestoreTrackPushButton_released()
 
   // Show a status bar message
   statusBar()->showMessage(tr("Track restored."), 2000);
-}
-
-void MainWindow::on_trackArchiveSettingsBrowseToolButton_released()
-{
-  // Open a save file dialog
-  QString result = QFileDialog::getSaveFileName(this,
-                                                tr("Choose or create an archive"),
-                                                QStandardPaths::standardLocations(QStandardPaths::HomeLocation).first(),
-                                                tr("Database Files (*.db)"),
-                                                nullptr,
-                                                QFileDialog::Option::DontConfirmOverwrite);
-  if (result == "")
-    return;
-
-  // Write the new filepath into the filepath control
-  ui->trackArchiveSettingsFilepathLineEdit->setText(result);
-}
-
-void MainWindow::on_trackArchiveSettingsFilepathLineEdit_textChanged(const QString &arg1)
-{
-  // Write config and reload
-  archiveDbFileName = arg1;
-  QSettings settings("settings.ini", QSettings::IniFormat);
-  settings.setValue("archive/filename", arg1);
-
-  try {
-    archive->setFileName(arg1);
-    loadArchive();
-  } catch (VeloToolkitException& e) {
-    // Catch weird shit
-    e.Message();
-  }
 }

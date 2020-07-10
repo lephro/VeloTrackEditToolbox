@@ -93,7 +93,7 @@ void MainWindow::loadTrack(const TrackData& track)
   // and hide its type column if the setting is enabled
   ui->nodeTreeView->setModel(&nodeEditor.getFilteredModel());
   ui->nodeTreeView->header()->setSectionResizeMode(NodeTreeColumns::KeyColumn, QHeaderView::ResizeToContents);
-  if (!settingViewTypeColumn)
+  if (!ui->viewNodeTypeColumn->isChecked())
     ui->nodeTreeView->hideColumn(NodeTreeColumns::TypeColumn);
 
   // Load the scenes into the combo box
@@ -175,7 +175,8 @@ void MainWindow::saveTrackToDb()
   QString message = tr("The track was saved successfully to the database!");
 
   // Modify the message in case we are saving as a new track
-  if (settingSaveAsNew) {
+  const bool saveAsNew = ui->saveAsNewCheckbox->checkState() == Qt::Checked;
+  if (saveAsNew) {
     loadedTrack.name += "-new";
     message += tr("\n\nNew track name: ") + loadedTrack.name;
 
@@ -185,7 +186,7 @@ void MainWindow::saveTrackToDb()
 
   try {
     // Write the track into the database and retrieves its id
-    loadedTrack.id = getDatabase()->saveTrack(loadedTrack, settingSaveAsNew);
+    loadedTrack.id = getDatabase()->saveTrack(loadedTrack, saveAsNew);
 
     // Reset the modified flat
     beginNodeEdit();
