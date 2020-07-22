@@ -7,7 +7,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>815</width>
+    <width>892</width>
     <height>465</height>
    </rect>
   </property>
@@ -185,7 +185,7 @@
     <item row="0" column="1">
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>4</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="nodeEditorPage">
        <layout class="QGridLayout" name="gridLayout">
@@ -231,6 +231,35 @@
                 <width>24</width>
                 <height>24</height>
                </size>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="refreshTrackPushButton">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>80</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>90</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Refresh</string>
+              </property>
+              <property name="icon">
+               <iconset resource="icons.qrc">
+                <normaloff>:/icons/refresh</normaloff>:/icons/refresh</iconset>
               </property>
              </widget>
             </item>
@@ -360,7 +389,7 @@
           <item>
            <layout class="QHBoxLayout" name="searchFilterHLayout" stretch="1,0">
             <property name="spacing">
-             <number>0</number>
+             <number>4</number>
             </property>
             <item>
              <widget class="QGroupBox" name="searchFilterGroupBox">
@@ -381,75 +410,118 @@
               </property>
              </widget>
             </item>
-            <item alignment="Qt::AlignTop">
-             <widget class="QPushButton" name="searchClearFilterPushButton">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="maximumSize">
-               <size>
-                <width>20</width>
-                <height>20</height>
-               </size>
-              </property>
-              <property name="styleSheet">
-               <string notr="true"/>
-              </property>
-              <property name="text">
-               <string/>
-              </property>
-              <property name="icon">
-               <iconset resource="icons.qrc">
-                <normaloff>:/icons/delete</normaloff>:/icons/delete</iconset>
-              </property>
-              <property name="iconSize">
-               <size>
-                <width>18</width>
-                <height>18</height>
-               </size>
-              </property>
-             </widget>
+            <item>
+             <layout class="QVBoxLayout" name="searchClearVLayout">
+              <item>
+               <spacer name="searchClearSpacer">
+                <property name="orientation">
+                 <enum>Qt::Vertical</enum>
+                </property>
+                <property name="sizeType">
+                 <enum>QSizePolicy::Fixed</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>1</width>
+                  <height>11</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
+               <widget class="QPushButton" name="searchClearFilterPushButton">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>30</width>
+                  <height>30</height>
+                 </size>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true"/>
+                </property>
+                <property name="text">
+                 <string/>
+                </property>
+                <property name="icon">
+                 <iconset resource="icons.qrc">
+                  <normaloff>:/icons/filter-clear</normaloff>:/icons/filter-clear</iconset>
+                </property>
+                <property name="iconSize">
+                 <size>
+                  <width>16</width>
+                  <height>16</height>
+                 </size>
+                </property>
+               </widget>
+              </item>
+             </layout>
             </item>
            </layout>
           </item>
           <item>
-           <widget class="QTreeView" name="nodeTreeView">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
+           <widget class="QTabWidget" name="nodeEditorTabWidget">
+            <property name="currentIndex">
+             <number>0</number>
             </property>
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>0</height>
-             </size>
-            </property>
-            <property name="contextMenuPolicy">
-             <enum>Qt::CustomContextMenu</enum>
-            </property>
-            <property name="showDropIndicator" stdset="0">
-             <bool>false</bool>
-            </property>
-            <property name="selectionMode">
-             <enum>QAbstractItemView::ExtendedSelection</enum>
-            </property>
-            <property name="indentation">
-             <number>15</number>
-            </property>
-            <property name="sortingEnabled">
-             <bool>false</bool>
-            </property>
-            <attribute name="headerCascadingSectionResizes">
+            <property name="tabsClosable">
              <bool>true</bool>
-            </attribute>
-            <attribute name="headerHighlightSections">
+            </property>
+            <property name="movable">
              <bool>true</bool>
-            </attribute>
+            </property>
+            <property name="tabBarAutoHide">
+             <bool>true</bool>
+            </property>
+            <widget class="QWidget" name="defaultTab">
+             <attribute name="title">
+              <string>Track</string>
+             </attribute>
+             <layout class="QVBoxLayout" name="verticalLayout_7">
+              <item>
+               <widget class="QTreeView" name="nodeTreeView">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>0</height>
+                 </size>
+                </property>
+                <property name="contextMenuPolicy">
+                 <enum>Qt::CustomContextMenu</enum>
+                </property>
+                <property name="showDropIndicator" stdset="0">
+                 <bool>false</bool>
+                </property>
+                <property name="selectionMode">
+                 <enum>QAbstractItemView::ExtendedSelection</enum>
+                </property>
+                <property name="indentation">
+                 <number>15</number>
+                </property>
+                <property name="sortingEnabled">
+                 <bool>false</bool>
+                </property>
+                <attribute name="headerCascadingSectionResizes">
+                 <bool>true</bool>
+                </attribute>
+                <attribute name="headerHighlightSections">
+                 <bool>true</bool>
+                </attribute>
+               </widget>
+              </item>
+             </layout>
+            </widget>
            </widget>
           </item>
          </layout>
@@ -478,7 +550,7 @@
            <string notr="true"/>
           </property>
           <property name="currentIndex">
-           <number>0</number>
+           <number>1</number>
           </property>
           <widget class="QWidget" name="searchTab">
            <attribute name="icon">
@@ -522,35 +594,63 @@
                <property name="text">
                 <string>Object</string>
                </property>
+               <property name="icon">
+                <iconset resource="icons.qrc">
+                 <normaloff>:/icons/object</normaloff>:/icons/object</iconset>
+               </property>
               </item>
               <item>
                <property name="text">
                 <string>Position</string>
+               </property>
+               <property name="icon">
+                <iconset resource="icons.qrc">
+                 <normaloff>:/icons/coordinate-system</normaloff>:/icons/coordinate-system</iconset>
                </property>
               </item>
               <item>
                <property name="text">
                 <string>Rotation</string>
                </property>
+               <property name="icon">
+                <iconset resource="icons.qrc">
+                 <normaloff>:/icons/rotation</normaloff>:/icons/rotation</iconset>
+               </property>
               </item>
               <item>
                <property name="text">
                 <string>Scaling</string>
+               </property>
+               <property name="icon">
+                <iconset resource="icons.qrc">
+                 <normaloff>:/icons/resize</normaloff>:/icons/resize</iconset>
                </property>
               </item>
               <item>
                <property name="text">
                 <string>Gate No.</string>
                </property>
+               <property name="icon">
+                <iconset resource="icons.qrc">
+                 <normaloff>:/icons/gate</normaloff>:/icons/gate</iconset>
+               </property>
               </item>
               <item>
                <property name="text">
                 <string>is dublicate</string>
                </property>
+               <property name="icon">
+                <iconset resource="icons.qrc">
+                 <normaloff>:/icons/copy</normaloff>:/icons/copy</iconset>
+               </property>
               </item>
               <item>
                <property name="text">
                 <string>is on spline</string>
+               </property>
+               <property name="icon">
+                <iconset resource="icons.qrc">
+                 <normaloff>:/icons/spline</normaloff>:/icons/spline</iconset>
                </property>
               </item>
              </widget>
@@ -1064,7 +1164,7 @@
               </property>
               <property name="icon">
                <iconset resource="icons.qrc">
-                <normaloff>:/icons/add-filter</normaloff>:/icons/add-filter</iconset>
+                <normaloff>:/icons/filter-add</normaloff>:/icons/filter-add</iconset>
               </property>
              </widget>
             </item>
@@ -1146,7 +1246,7 @@
                 <item>
                  <widget class="QComboBox" name="toolsTypeComboBox">
                   <property name="toolTip">
-                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;These are some of the tools that the toolkit offers.&lt;br/&gt;&lt;br/&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Replace&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Use this function to replace a given prefab with another one.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Move&lt;/span&gt;&lt;br/&gt;Manipulate the position of any object.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Rotate&lt;/span&gt;&lt;br/&gt;Change the rotation of an object.&lt;br/&gt;&lt;br/&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Scale&lt;/span&gt;&lt;br/&gt;Change the size / scale of any object.&lt;br/&gt;&lt;br/&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Mirror (Experimental)&lt;/span&gt;&lt;br/&gt;This function will dublicate the object, place it on the other side of the scenery (reversing its R and G values) and rotate it by 180°. Usefull if you're building CTF maps and reached the limit of objects the velocidrone editor can handle at once.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;These are some of the tools that the toolkit offers.&lt;br/&gt;&lt;br/&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Replace&lt;br/&gt;&lt;/span&gt;Use this function to replace a given prefab with another one.&lt;br/&gt;&lt;br/&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Move&lt;/span&gt;&lt;br/&gt;Manipulate the position of any object.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Rotate&lt;/span&gt;&lt;br/&gt;Change the rotation of an object.&lt;br/&gt;&lt;br/&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Scale&lt;/span&gt;&lt;br/&gt;Change the size / scale of any object.&lt;br/&gt;&lt;br/&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Mirror (Experimental)&lt;/span&gt;&lt;br/&gt;This function will dublicate the object, place it on the other side of the scenery (reversing its R and G values) and rotate it by 180°. Usefull if you're building CTF maps and reached the limit of objects the velocidrone editor can handle at once.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                   </property>
                   <item>
                    <property name="text">
@@ -1240,6 +1340,30 @@
                  </widget>
                 </item>
                 <item>
+                 <widget class="QComboBox" name="toolsSubtypeTargetComboBox">
+                  <item>
+                   <property name="text">
+                    <string>RGB</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>R</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>G</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>B</string>
+                   </property>
+                  </item>
+                 </widget>
+                </item>
+                <item>
                  <spacer name="toolsSubtypeSpacer">
                   <property name="orientation">
                    <enum>Qt::Horizontal</enum>
@@ -1270,7 +1394,7 @@
                  </sizepolicy>
                 </property>
                 <property name="currentIndex">
-                 <number>0</number>
+                 <number>1</number>
                 </property>
                 <widget class="QWidget" name="toolsReplaceObjectPage">
                  <layout class="QVBoxLayout" name="verticalLayout_5">
@@ -1448,7 +1572,7 @@
                       </item>
                       <item>
                        <property name="text">
-                        <string>RGB</string>
+                        <string>Value</string>
                        </property>
                       </item>
                      </widget>
@@ -2675,6 +2799,9 @@
            <string>Track Archive</string>
           </property>
           <layout class="QGridLayout" name="trackArchiveSettingsGroupBoxLayout">
+           <item row="1" column="1">
+            <widget class="QLineEdit" name="archiveSettingsFilepathLineEdit"/>
+           </item>
            <item row="1" column="0">
             <widget class="QLabel" name="trackArchiveSettingsFilepathLabel">
              <property name="text">
@@ -2687,9 +2814,6 @@
               <cstring>userDbLineEdit</cstring>
              </property>
             </widget>
-           </item>
-           <item row="1" column="1">
-            <widget class="QLineEdit" name="archiveSettingsFilepathLineEdit"/>
            </item>
            <item row="1" column="2">
             <widget class="QToolButton" name="archiveSettingsBrowseToolButton">
@@ -3315,8 +3439,100 @@
           <property name="title">
            <string>Node Editor</string>
           </property>
-          <layout class="QVBoxLayout" name="generalSettingsGroupBoxLayout">
-           <item>
+          <layout class="QGridLayout" name="gridLayout_2">
+           <item row="2" column="1">
+            <widget class="QPushButton" name="filterColorPushButton">
+             <property name="maximumSize">
+              <size>
+               <width>20</width>
+               <height>20</height>
+              </size>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0">
+            <widget class="QLabel" name="filterColorLabel">
+             <property name="text">
+              <string>Filter color</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="1">
+            <widget class="QPushButton" name="filterColorParentPushButton">
+             <property name="maximumSize">
+              <size>
+               <width>20</width>
+               <height>20</height>
+              </size>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="0">
+            <widget class="QLabel" name="filterColorParentLabel">
+             <property name="text">
+              <string>Filter parent color:</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="3">
+            <widget class="QCheckBox" name="viewNodeTypeColumn">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Views the Json data type column in the node editor. In about 99.9% of the cases this information will provide no value for you and therefore disabled by default.&lt;br/&gt;&lt;br/&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Default: Disabled&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="text">
+              <string>View &quot;Type&quot; column</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="4">
+            <spacer name="generalSettingsNodeEditorSpacer">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item row="3" column="0">
+            <widget class="QLabel" name="filterColorFontLabel">
+             <property name="text">
+              <string>Filter font color</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="1">
+            <widget class="QPushButton" name="filterColorFontPushButton">
+             <property name="maximumSize">
+              <size>
+               <width>20</width>
+               <height>20</height>
+              </size>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="3">
             <widget class="QCheckBox" name="saveAsNewCheckbox">
              <property name="toolTip">
               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If this option is set the node-editor will always create a new track, rather then overwrite the existing one, when saving. &lt;br/&gt;&lt;br/&gt;This option is enabled by defaullt, so in case that something goes wrong, you still have your precious gem.&lt;br/&gt;&lt;br/&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Default: Enabled&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -3329,13 +3545,39 @@
              </property>
             </widget>
            </item>
-           <item>
-            <widget class="QCheckBox" name="viewNodeTypeColumn">
-             <property name="toolTip">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Views the Json data type column in the node editor. In about 99.9% of the cases this information will provide no value for you and therefore disabled by default.&lt;br/&gt;&lt;br/&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Default: Disabled&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           <item row="5" column="0">
+            <widget class="QLabel" name="filterColorParentFontLabel">
+             <property name="text">
+              <string>Filter parent font color:</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="1">
+            <widget class="QPushButton" name="filterColorParentFontPushButton">
+             <property name="maximumSize">
+              <size>
+               <width>20</width>
+               <height>20</height>
+              </size>
              </property>
              <property name="text">
-              <string>View &quot;Type&quot; column</string>
+              <string/>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="2" rowspan="5">
+            <widget class="Line" name="generalSettingsNodeEditorSeperator">
+             <property name="minimumSize">
+              <size>
+               <width>20</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
              </property>
             </widget>
            </item>
@@ -3425,6 +3667,13 @@ p, li { white-space: pre-wrap; }
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Version Beta 0.8&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;- &lt;/span&gt;Added context menu to set filter on object, position, rotation and scale&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;- Added option to target r, g or b seperatly in the tools&lt;br /&gt;- Added refresh button in node editor to reload the opened track&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;- Added a bunch of new icons&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;- Increased decimal places for % values from 2 to 4&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;- Fixed filter markings not clearing if clear all filter button was pressed&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Version Beta 0.71&lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;- Open track dialog now memorizes the last selected db&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;- &lt;/span&gt;Fixed config file not saving&lt;/p&gt;

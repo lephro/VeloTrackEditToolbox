@@ -10,8 +10,13 @@ MainWindow::MainWindow(QWidget *parent)
   defaultWindowTitle = QString(windowTitle());
 
   // Create and connect the context menu of the node edito
-  nodeEditorContextMenu.addAction(QIcon(":/icons/add-filter"), tr("Add to filter"), this, SLOT(onNodeEditorContextMenuAddToFilterAction()));
-  nodeEditorContextMenu.addAction(QIcon(":/icons/copy-add"), tr("D&ublicate"), this, SLOT(onNodeEditorContextMenuDublicateAction()));
+  nodeEditorContextMenu.addAction(QIcon(":/icons/filter"), tr("Add to filter"), this, SLOT(onNodeEditorContextMenuAddToFilterAction()));
+  QMenu* addFilterSubMenu = nodeEditorContextMenu.addMenu(QIcon(":/icons/filter-add"), tr("Add property as filter"));
+  addFilterSubMenu->addAction(QIcon(":/icons/object"), tr("Object"), this, SLOT(onNodeEditorContextMenuAddObjectAsFilterAction()));
+  addFilterSubMenu->addAction(QIcon(":/icons/coordinate-system"), tr("Position"), this, SLOT(onNodeEditorContextMenuAddPositionAsFilterAction()));
+  addFilterSubMenu->addAction(QIcon(":/icons/rotation"), tr("Rotation"), this, SLOT(onNodeEditorContextMenuAddRotationAsFilterAction()));
+  addFilterSubMenu->addAction(QIcon(":/icons/resize"), tr("Scaling"), this, SLOT(onNodeEditorContextMenuAddScaleAsFilterAction()));
+  nodeEditorContextMenu.addAction(QIcon(":/icons/copy"), tr("D&ublicate"), this, SLOT(onNodeEditorContextMenuDublicateAction()));
   nodeEditorContextMenu.addAction(QIcon(":/icons/copy-add"), tr("&Mass dublicate"), this, SLOT(onNodeEditorContextMenuMassDublicateAction()));
   nodeEditorContextMenu.addAction(QIcon(":/icons/delete"), tr("&Delete"), this, SLOT(onNodeEditorContextMenuDeleteAction()));
   connect(ui->nodeTreeView, SIGNAL(customContextMenuRequested(const QPoint&)), this, SLOT(onNodeEditorContextMenu(const QPoint&)));
@@ -170,6 +175,39 @@ void MainWindow::readSettings()
   ui->viewNodeTypeColumn->setChecked(settings.value("viewTypeColumn").toString().toLower() == "true");
   if (!ui->viewNodeTypeColumn->isChecked())
     ui->nodeTreeView->hideColumn(NodeTreeColumns::TypeColumn);
+
+  const QColor filterColor = QColor(settings.value("general/filterColorR", 254).toInt(),
+                                    settings.value("general/filterColorG", 203).toInt(),
+                                    settings.value("general/filterColorB", 137).toInt());
+  if (filterColor.isValid()) {
+    ui->filterColorPushButton->setStyleSheet("background-color: " + filterColor.name());
+    nodeEditor.setFilterBackgroundColor(filterColor);
+  }
+
+  const QColor filterFontColor = QColor(settings.value("general/filterFontColorR", 0).toInt(),
+                                        settings.value("general/filterFontColorG", 0).toInt(),
+                                        settings.value("general/filterFontColorB", 0).toInt());
+  if (filterFontColor.isValid()) {
+    ui->filterColorFontPushButton->setStyleSheet("background-color: " + filterFontColor.name());
+    nodeEditor.setFilterFontColor(filterFontColor);
+  }
+
+  const QColor filterParentColor = QColor(settings.value("general/filterParentColorR", 192).toInt(),
+                                          settings.value("general/filterParentColorG", 192).toInt(),
+                                          settings.value("general/filterParentColorB", 192).toInt());
+  if (filterParentColor.isValid()) {
+    ui->filterColorParentPushButton->setStyleSheet("background-color: " + filterParentColor.name());
+    nodeEditor.setFilterContentBackgroundColor(filterParentColor);
+  }
+
+  const QColor filterParentFontColor = QColor(settings.value("general/filterParentFontColorR", 0).toInt(),
+                                              settings.value("general/filterParentFontColorG", 0).toInt(),
+                                              settings.value("general/filterParentFontColorB", 0).toInt());
+  if (filterParentFontColor.isValid()) {
+    ui->filterColorParentFontPushButton->setStyleSheet("background-color: " + filterParentFontColor.name());
+    nodeEditor.setFilterContentFontColor(filterParentFontColor);
+  }
+
   settings.endGroup();
 
   settings.beginGroup("database");

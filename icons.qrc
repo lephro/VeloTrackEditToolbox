@@ -19,9 +19,18 @@
         <file alias="cancel">icons/icons8-cancel-100.png</file>
         <file alias="copy-add">icons/icons8-copy-add-100.png</file>
         <file alias="delete">icons/icons8-delete-100.png</file>
-        <file alias="add-filter">icons/icons8-add-filter-100.png</file>
         <file alias="filter">icons/icons8-filter-100.png</file>
         <file alias="resize">icons/icons8-resize-100.png</file>
         <file alias="checkmark">icons/icons8-checkmark-16.png</file>
+        <file alias="refresh">icons/icons8-refresh-16.png</file>
+        <file alias="filter-add">icons/icons8-filter-add-100.png</file>
+        <file alias="filter-clear">icons/icons8-filter-clear-100.png</file>
+        <file alias="rotation">icons/icons8-rotate-48.png</file>
+        <file alias="object">icons/icons8-objekt-48.png</file>
+        <file alias="ruler">icons/icons8-ruler-48.png</file>
+        <file alias="coordinate-system">icons/icons8-coordinate-system-32.png</file>
+        <file alias="gate">icons/icons8-open-garage-door-64.png</file>
+        <file alias="spline">icons/icons8-squiggly-line-64.png</file>
+        <file alias="copy">icons/icons8-copy-100.png</file>
     </qresource>
 </RCC>

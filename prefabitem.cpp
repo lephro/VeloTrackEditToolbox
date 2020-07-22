@@ -609,20 +609,20 @@ void PrefabItem::setFilterMark(const bool found)
     return;
 
   item->setData(found, USERROLE_FILTER);
-  item->setForeground(found ? filterFontColor : defaultFontColor);
-  item->setBackground(found ? filterBackgroundColor : defaultBackgroundColor);
-  model->itemFromIndex(item->index().siblingAtColumn(NodeTreeColumns::TypeColumn))->setBackground(found ? filterBackgroundColor : defaultBackgroundColor);
-  model->itemFromIndex(item->index().siblingAtColumn(NodeTreeColumns::ValueColumn))->setBackground(found ? filterBackgroundColor : defaultBackgroundColor);
+  item->setForeground(found ? editor->getFilterFontColor() : defaultFontColor);
+  item->setBackground(found ? editor->getFilterBackgroundColor() : defaultBackgroundColor);
+  model->itemFromIndex(item->index().siblingAtColumn(NodeTreeColumns::TypeColumn))->setBackground(found ? editor->getFilterFontColor() : defaultBackgroundColor);
+  model->itemFromIndex(item->index().siblingAtColumn(NodeTreeColumns::ValueColumn))->setBackground(found ? editor->getFilterBackgroundColor() : defaultBackgroundColor);
 
   QStandardItem* parent = model->itemFromIndex(item->index().parent());
   while(parent != nullptr) {
     if (parent->data(USERROLE_FILTER).toBool())
       break;
 
-    parent->setForeground(found ? filterFontColor : defaultFontColor);
-    parent->setBackground(found ? filterContentBackgroundColor : defaultBackgroundColor);
-    model->itemFromIndex(parent->index().siblingAtColumn(NodeTreeColumns::TypeColumn))->setBackground(found ? filterContentBackgroundColor : defaultBackgroundColor);
-    model->itemFromIndex(parent->index().siblingAtColumn(NodeTreeColumns::ValueColumn))->setBackground(found ? filterContentBackgroundColor : defaultBackgroundColor);
+    parent->setForeground(found ? editor->getFilterContentFontColor() : defaultFontColor);
+    parent->setBackground(found ? editor->getFilterContentBackgroundColor() : defaultBackgroundColor);
+    model->itemFromIndex(parent->index().siblingAtColumn(NodeTreeColumns::TypeColumn))->setBackground(found ? editor->getFilterContentFontColor() : defaultBackgroundColor);
+    model->itemFromIndex(parent->index().siblingAtColumn(NodeTreeColumns::ValueColumn))->setBackground(found ? editor->getFilterContentBackgroundColor() : defaultBackgroundColor);
     parent = parent->parent();
   }
 }

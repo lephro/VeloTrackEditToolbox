@@ -269,7 +269,7 @@ void VeloDataParser::importJsonArray(QStandardItem* parentItem, const QJsonArray
     if (parentItem->text() == "pos" || parentItem->text() == "scale")
       itemKey->setText(i == 0 ? "R" : (i == 1 ? "G" : (i == 2 ? "B" : QString("[%1]").arg(i))));
     else if (parentItem->text() == "rot")
-      itemKey->setText(i == 0 ? "L" : (i == 1 ? "I" : (i == 2 ? "J" : (i == 3 ? "K" : QString("[%1]").arg(i)))));
+      itemKey->setText(i == 0 ? "W" : (i == 1 ? "X" : (i == 2 ? "Y" : (i == 3 ? "Z" : QString("[%1]").arg(i)))));
     else
       itemKey->setText(QString("[%1]").arg(i));
     itemValue->setData(jsonValue.toVariant(), Qt::EditRole);

@@ -62,8 +62,8 @@ void MainWindow::on_searchClearFilterPushButton_released()
 {
   // Clear the filter and update the markings
   searchFilterLayout->clear();
-  lastSearchResult.clear();
   updateSearchFilter(false);
+  lastSearchResult.clear();
   updateStatusBar();
 
   // Set the toolbox target to selected objects (if its on filtered)

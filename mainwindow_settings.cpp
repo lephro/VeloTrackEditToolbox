@@ -31,6 +31,23 @@ bool MainWindow::maybeDontBecauseItsBeta()
   return true;
 }
 
+QColor MainWindow::pickColor(const QString settingsPath, QColor defaultColor) {
+  QSettings settings("settings.ini", QSettings::IniFormat);
+  const QColor currentColor = QColor(settings.value(settingsPath + "R", defaultColor.red()).toInt(),
+                                     settings.value(settingsPath + "G", defaultColor.green()).toInt(),
+                                     settings.value(settingsPath + "B", defaultColor.blue()).toInt());
+
+  QColor newColor = QColorDialog::getColor(currentColor, this, tr("Choose a color"), QColorDialog::DontUseNativeDialog);
+  if (!newColor.isValid() || newColor == currentColor)
+    return QColor(QColor::Invalid);
+
+  settings.setValue(settingsPath + "R", newColor.red());
+  settings.setValue(settingsPath + "G", newColor.green());
+  settings.setValue(settingsPath + "B", newColor.blue());
+
+  return newColor;
+}
+
 void MainWindow::setDatabaseOptionsDatabaseFilenames(const DatabaseType databaseType)
 {  
   databaseOptionsSelectedDbType = databaseType;
@@ -238,6 +255,50 @@ void MainWindow::on_buildTypeComboBox_currentIndexChanged(int index)
 {
   setDatabaseOptionsDatabaseFilenames(DatabaseType(index));
   updateDatabaseOptionsDatabaseStatus();
+}
+
+void MainWindow::on_filterColorPushButton_released()
+{
+  const QColor pick = pickColor("general/filterColor", QColor(254, 203, 137));
+  if (!pick.isValid())
+    return;
+
+  ui->filterColorPushButton->setStyleSheet("background: " + pick.name());
+  nodeEditor.setFilterBackgroundColor(pick);
+  updateSearchFilter();
+}
+
+void MainWindow::on_filterColorFontPushButton_released()
+{
+  const QColor pick = pickColor("general/filterFontColor", Qt::black);
+  if (!pick.isValid())
+    return;
+
+  ui->filterColorFontPushButton->setStyleSheet("background: " + pick.name());
+  nodeEditor.setFilterFontColor(pick);
+  updateSearchFilter();
+}
+
+void MainWindow::on_filterColorParentPushButton_released()
+{
+  const QColor pick = pickColor("general/filterParentColor", QColor(192, 192, 192));
+  if (!pick.isValid())
+    return;
+
+  ui->filterColorParentPushButton->setStyleSheet("background: " + pick.name());
+  nodeEditor.setFilterContentBackgroundColor(pick);
+  updateSearchFilter();
+}
+
+void MainWindow::on_filterColorParentFontPushButton_released()
+{
+  const QColor pick = pickColor("general/filterParentFontColor", Qt::black);
+  if (!pick.isValid())
+    return;
+
+  ui->filterColorParentFontPushButton->setStyleSheet("background: " + pick.name());
+  nodeEditor.setFilterContentFontColor(pick);
+  updateSearchFilter();
 }
 
 void MainWindow::on_saveAsNewCheckbox_stateChanged(int saveAsNewState)

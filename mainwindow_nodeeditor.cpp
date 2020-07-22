@@ -314,6 +314,41 @@ void MainWindow::on_openTrackPushButton_released()
   }
 }
 
+void MainWindow::on_refreshTrackPushButton_released()
+{
+  if (loadedTrack.id == 0)
+    return;
+
+  VeloDb* veloDb = getDatabase();
+  if (veloDb == nullptr)
+    return;
+
+  try {
+    veloDb->queryTracks();
+  } catch (VeloToolkitException& e) {
+    e.Message();
+    return;
+  }
+
+  QVector<TrackData> tracks = veloDb->getTracks();
+
+  foreach(TrackData track, tracks) {
+    if (track.id != loadedTrack.id)
+      continue;
+
+    beginNodeEdit();
+    try {
+      loadTrack(track);
+    } catch (VeloToolkitException& e) {
+      closeTrack();
+      e.Message();
+      return;
+    }
+    endNodeEdit();
+    return;
+  }
+}
+
 
 void MainWindow::on_replacePrefabComboBox_currentIndexChanged(int index)
 {
@@ -353,14 +388,15 @@ void MainWindow::on_toolsApplyPushButton_released()
   else if (toolTypeIndex == 4) // Mirror
     toolTypeIndex = ToolTypes::Mirror;
 
-  qDebug() << "toolsTypeComboBox->currentIndex:" << ui->toolsTypeComboBox->currentIndex();
-  qDebug() << "toolsSubtypeComboBox->currentIndex:" << ui->toolsSubtypeComboBox->currentIndex();
-  qDebug() << "transformByComboBox->currentIndex:" << ui->transformByComboBox->currentIndex();
-  qDebug() << "Transform Method Index: " << toolTypeIndex;
+  //qDebug() << "toolsTypeComboBox->currentIndex:" << ui->toolsTypeComboBox->currentIndex();
+  //qDebug() << "toolsSubtypeComboBox->currentIndex:" << ui->toolsSubtypeComboBox->currentIndex();
+  //qDebug() << "transformByComboBox->currentIndex:" << ui->transformByComboBox->currentIndex();
+  //qDebug() << "Transform Method Index: " << toolTypeIndex;
 
   QVariant value;
   switch (toolTypeIndex) {
   case ToolTypes::Replace:
+    // We got our own routine to replace objects
     toolsReplaceObject();
     return;
   case ToolTypes::Move:
@@ -378,9 +414,9 @@ void MainWindow::on_toolsApplyPushButton_released()
     value = QQuaternion::fromEulerAngles(ui->transformRotationRValueSpinBox->value(),
                                          ui->transformRotationGValueSpinBox->value(),
                                          ui->transformRotationBValueSpinBox->value());
-    qDebug() << "Rotation from euler :" << ui->transformRotationRValueSpinBox->value() <<
-        ui->transformRotationGValueSpinBox->value() <<
-        ui->transformRotationBValueSpinBox->value() << "Quat:" << value;
+    //qDebug() << "Rotation from euler :" << ui->transformRotationRValueSpinBox->value() <<
+    //    ui->transformRotationGValueSpinBox->value() <<
+    //    ui->transformRotationBValueSpinBox->value() << "Quat:" << value;
     break;
   case ToolTypes::ReplaceRotation:
     value = QVector4D(float(ui->transformRotationWValueSpinBox->value()),
@@ -398,19 +434,33 @@ void MainWindow::on_toolsApplyPushButton_released()
   switch (ui->toolsTargetComboBox->currentIndex()) {
   case 0: // All nodes
     beginNodeEdit();
-    changedNodeCount = nodeEditor.transformPrefab(nodeEditor.getRootIndex(), ToolTypes(toolTypeIndex), value, byPercent);
+    changedNodeCount = nodeEditor.transformPrefab(nodeEditor.getRootIndex(),
+                                                  ToolTypes(toolTypeIndex),
+                                                  value,
+                                                  ToolTypeTargets(ui->toolsSubtypeTargetComboBox->currentIndex()),
+                                                  byPercent);
     endNodeEdit();
     break;
 
   case 1: // Selected Nodes
     beginNodeEdit();
-    changedNodeCount = nodeEditor.transformPrefab(ui->nodeTreeView->selectionModel()->selectedIndexes(), ToolTypes(toolTypeIndex), value, byPercent);
+    changedNodeCount = nodeEditor.transformPrefab(
+          ui->nodeTreeView->selectionModel()->selectedIndexes(),
+          ToolTypes(toolTypeIndex),
+          value,
+          ToolTypeTargets(ui->toolsSubtypeTargetComboBox->currentIndex()),
+          byPercent);
     endNodeEdit();
     break;
 
   case 2: // Filtered Nodes
     beginNodeEdit();
-    changedNodeCount = nodeEditor.transformPrefab(lastSearchResult, ToolTypes(toolTypeIndex), value, byPercent);
+    changedNodeCount = nodeEditor.transformPrefab(
+          lastSearchResult,
+          ToolTypes(toolTypeIndex),
+          value,
+          ToolTypeTargets(ui->toolsSubtypeTargetComboBox->currentIndex()),
+          byPercent);
     endNodeEdit();
     break;
 
@@ -439,6 +489,67 @@ void MainWindow::on_toolsSubtypeComboBox_currentIndexChanged(int index)
   }
 }
 
+void MainWindow::on_toolsSubtypeTargetComboBox_currentIndexChanged(int index)
+{
+  switch(index) {
+  case 1: // R
+    ui->transformRDoubleResetPushButton->show();
+    ui->transformRDoubleSpinBox->show();
+    ui->transformRLabel->show();
+
+    ui->transformGDoubleResetPushButton->hide();
+    ui->transformGDoubleSpinBox->hide();
+    ui->transformGLabel->hide();
+
+    ui->transformBDoubleResetPushButton->hide();
+    ui->transformBDoubleSpinBox->hide();
+    ui->transformBLabel->hide();
+    break;
+
+  case 2: // G
+    ui->transformRDoubleResetPushButton->hide();
+    ui->transformRDoubleSpinBox->hide();
+    ui->transformRLabel->hide();
+
+    ui->transformGDoubleResetPushButton->show();
+    ui->transformGDoubleSpinBox->show();
+    ui->transformGLabel->show();
+
+    ui->transformBDoubleResetPushButton->hide();
+    ui->transformBDoubleSpinBox->hide();
+    ui->transformBLabel->hide();
+    break;
+
+  case 3: // B
+    ui->transformRDoubleResetPushButton->hide();
+    ui->transformRDoubleSpinBox->hide();
+    ui->transformRLabel->hide();
+
+    ui->transformGDoubleResetPushButton->hide();
+    ui->transformGDoubleSpinBox->hide();
+    ui->transformGLabel->hide();
+
+    ui->transformBDoubleResetPushButton->show();
+    ui->transformBDoubleSpinBox->show();
+    ui->transformBLabel->show();
+    break;
+
+  default:
+    ui->transformRDoubleResetPushButton->show();
+    ui->transformRDoubleSpinBox->show();
+    ui->transformRLabel->show();
+
+    ui->transformGDoubleResetPushButton->show();
+    ui->transformGDoubleSpinBox->show();
+    ui->transformGLabel->show();
+
+    ui->transformBDoubleResetPushButton->show();
+    ui->transformBDoubleSpinBox->show();
+    ui->transformBLabel->show();
+    return;
+  }
+}
+
 void MainWindow::on_toolsTypeComboBox_currentIndexChanged(int index)
 {
   switch(index) {
@@ -446,30 +557,35 @@ void MainWindow::on_toolsTypeComboBox_currentIndexChanged(int index)
     ui->toolsValuesStackedWidget->setCurrentIndex(0);
     ui->toolsSubtypeLabel->hide();
     ui->toolsSubtypeComboBox->hide();
+    ui->toolsSubtypeTargetComboBox->hide();
     ui->transformByComboBox->setCurrentIndex(1);
     break;
-  case 1: // Move
+  case 1: // Position
     ui->toolsValuesStackedWidget->setCurrentIndex(1);
     ui->toolsSubtypeLabel->show();
     ui->toolsSubtypeComboBox->show();
+    ui->toolsSubtypeTargetComboBox->show();
     ui->transformByComboBox->setCurrentIndex(1);
     break;
   case 2: // Rotate
     ui->toolsValuesStackedWidget->setCurrentIndex(2);
     ui->toolsSubtypeLabel->show();
     ui->toolsSubtypeComboBox->show();
+    ui->toolsSubtypeTargetComboBox->hide();
     ui->transformByComboBox->setCurrentIndex(1);
     break;
   case 3: // Scale
     ui->toolsValuesStackedWidget->setCurrentIndex(1);
     ui->toolsSubtypeLabel->show();
     ui->toolsSubtypeComboBox->show();
+    ui->toolsSubtypeTargetComboBox->show();
     ui->transformByComboBox->setCurrentIndex(1);
     break;
   case 4: // Mirror
     ui->toolsValuesStackedWidget->setCurrentIndex(3);
     ui->toolsSubtypeLabel->hide();
     ui->toolsSubtypeComboBox->hide();
+    ui->toolsSubtypeTargetComboBox->hide();
     ui->transformByComboBox->setCurrentIndex(1);
     break;
   default:
@@ -491,6 +607,137 @@ void MainWindow::onNodeEditorContextMenu(const QPoint &point)
 
   // Map the point to global space and open the context menu at that point
   nodeEditorContextMenu.exec(ui->nodeTreeView->viewport()->mapToGlobal(point));
+}
+
+void MainWindow::onNodeEditorContextMenuAddObjectAsFilterAction()
+{
+  // We delete from last to first, cause every deletion causes the underlying rows to shift,
+  // which renders the selected indexes that point to those invalid.
+  QModelIndexList selectedIndexes = ui->nodeTreeView->selectionModel()->selectedIndexes();
+
+  if (selectedIndexes.count() == 0)
+    return;
+
+  while(selectedIndexes.count() > 0) {
+    // Take the last index and check if its valid
+    QModelIndex index = selectedIndexes.takeLast();
+    if (index.column() == NodeTreeColumns::TypeColumn || index.column() ==  NodeTreeColumns::ValueColumn)
+      continue;
+
+    // Get the prefab that corresponds to that index
+    PrefabItem prefab(&nodeEditor);
+    if (!prefab.parseIndex(nodeEditor.getFilteredModel().mapToSource(index)))
+      continue;
+
+    // Create a new filter and add it to the layout
+    searchFilterLayout->addFilter(FilterTypes::Object, FilterMethods::Is, int(prefab.getId()), prefab.getData().name);
+
+    updateSearchFilter();
+    updateStatusBar();
+
+    // Jump out since only one filter of that type can be set at a time
+    return;
+  }
+}
+
+void MainWindow::onNodeEditorContextMenuAddPositionAsFilterAction()
+{
+  // We delete from last to first, cause every deletion causes the underlying rows to shift,
+  // which renders the selected indexes that point to those invalid.
+  QModelIndexList selectedIndexes = ui->nodeTreeView->selectionModel()->selectedIndexes();
+
+  if (selectedIndexes.count() == 0)
+    return;
+
+  while(selectedIndexes.count() > 0) {
+    // Take the last index and check if its valid
+    QModelIndex index = selectedIndexes.takeLast();
+    if (index.column() == NodeTreeColumns::TypeColumn || index.column() ==  NodeTreeColumns::ValueColumn)
+      continue;
+
+    // Get the prefab that corresponds to that index
+    PrefabItem prefab(&nodeEditor);
+    if (!prefab.parseIndex(nodeEditor.getFilteredModel().mapToSource(index)))
+      continue;
+
+    // Create a new filter and add it to the layout
+    searchFilterLayout->addFilter(FilterTypes::PositionR, FilterMethods::Is, prefab.getPositionR());
+    searchFilterLayout->addFilter(FilterTypes::PositionG, FilterMethods::Is, prefab.getPositionG());
+    searchFilterLayout->addFilter(FilterTypes::PositionB, FilterMethods::Is, prefab.getPositionB());
+
+    updateSearchFilter();
+    updateStatusBar();
+
+    // Jump out since only one filter of that type can be set at a time
+    return;
+  }
+}
+
+void MainWindow::onNodeEditorContextMenuAddRotationAsFilterAction()
+{
+  // We delete from last to first, cause every deletion causes the underlying rows to shift,
+  // which renders the selected indexes that point to those invalid.
+  QModelIndexList selectedIndexes = ui->nodeTreeView->selectionModel()->selectedIndexes();
+
+  if (selectedIndexes.count() == 0)
+    return;
+
+  while(selectedIndexes.count() > 0) {
+    // Take the last index and check if its valid
+    QModelIndex index = selectedIndexes.takeLast();
+    if (index.column() == NodeTreeColumns::TypeColumn || index.column() ==  NodeTreeColumns::ValueColumn)
+      continue;
+
+    // Get the prefab that corresponds to that index
+    PrefabItem prefab(&nodeEditor);
+    if (!prefab.parseIndex(nodeEditor.getFilteredModel().mapToSource(index)))
+      continue;
+
+    // Create a new filter and add it to the layout
+    searchFilterLayout->addFilter(FilterTypes::RotationW, FilterMethods::Is, prefab.getRotationW());
+    searchFilterLayout->addFilter(FilterTypes::RotationX, FilterMethods::Is, prefab.getRotationX());
+    searchFilterLayout->addFilter(FilterTypes::RotationY, FilterMethods::Is, prefab.getRotationY());
+    searchFilterLayout->addFilter(FilterTypes::RotationZ, FilterMethods::Is, prefab.getRotationZ());
+
+    updateSearchFilter();
+    updateStatusBar();
+
+    // Jump out since only one filter of that type can be set at a time
+    return;
+  }
+}
+
+void MainWindow::onNodeEditorContextMenuAddScaleAsFilterAction()
+{
+  // We delete from last to first, cause every deletion causes the underlying rows to shift,
+  // which renders the selected indexes that point to those invalid.
+  QModelIndexList selectedIndexes = ui->nodeTreeView->selectionModel()->selectedIndexes();
+
+  if (selectedIndexes.count() == 0)
+    return;
+
+  while(selectedIndexes.count() > 0) {
+    // Take the last index and check if its valid
+    QModelIndex index = selectedIndexes.takeLast();
+    if (index.column() == NodeTreeColumns::TypeColumn || index.column() ==  NodeTreeColumns::ValueColumn)
+      continue;
+
+    // Get the prefab that corresponds to that index
+    PrefabItem prefab(&nodeEditor);
+    if (!prefab.parseIndex(nodeEditor.getFilteredModel().mapToSource(index)))
+      continue;
+
+    // Create a new filter and add it to the layout
+    searchFilterLayout->addFilter(FilterTypes::ScalingR, FilterMethods::Is, prefab.getScalingR());
+    searchFilterLayout->addFilter(FilterTypes::ScalingG, FilterMethods::Is, prefab.getScalingG());
+    searchFilterLayout->addFilter(FilterTypes::ScalingB, FilterMethods::Is, prefab.getScalingB());
+
+    updateSearchFilter();
+    updateStatusBar();
+
+    // Jump out since only one filter of that type can be set at a time
+    return;
+  }
 }
 
 void MainWindow::onNodeEditorContextMenuAddToFilterAction()

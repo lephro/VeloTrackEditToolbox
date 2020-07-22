@@ -29,6 +29,7 @@ SOURCES += \
     mainwindow_settings.cpp \
     mainwindow_transform.cpp \
     nodeeditor.cpp \
+    nodeeditormanager.cpp \
     nodefilter.cpp \
     opentrackdialog.cpp \
     prefabitem.cpp \
@@ -44,6 +45,7 @@ HEADERS += \
     geodesicdome.h \
     mainwindow.h \
     nodeeditor.h \
+    nodeeditormanager.h \
     nodefilter.h \
     opentrackdialog.h \
     prefabitem.h \

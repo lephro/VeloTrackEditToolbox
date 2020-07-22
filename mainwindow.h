@@ -3,6 +3,7 @@
 
 #include <QAction>
 #include <QComboBox>
+#include <QColorDialog>
 #include <QFileDialog>
 #include <QInputDialog>
 #include <QJsonArray>
@@ -63,15 +64,22 @@ private slots:
   void on_archiveDatabaseSelectionComboBox_currentIndexChanged(const QString &arg1);
   void on_archiveMoveToArchiveCheckBox_stateChanged(int moveToArchiveState);
   void on_archiveRestoreTrackPushButton_released();
+  void on_archiveSettingsBrowseToolButton_released();
+  void on_archiveSettingsFilepathLineEdit_textChanged(const QString &archiveSettingsFilepath);
   void on_buildTypeComboBox_currentIndexChanged(int index);
   void on_browseUserDbToolButton_released();
   void on_browseSettingsDbToolButton_released();
   void on_deleteTrackPushButton_released();
-  void on_openTrackPushButton_released();
+  void on_filterColorFontPushButton_released();
+  void on_filterColorParentPushButton_released();
+  void on_filterColorParentFontPushButton_released();
+  void on_filterColorPushButton_released();
   void on_mergeTrackPushButton_released();
   void on_mergeTrack1SelectPushButton_released();
   void on_mergeTrack2SelectPushButton_released();
   void on_navListWidget_currentRowChanged(int currentRow);
+  void on_openTrackPushButton_released();
+  void on_refreshTrackPushButton_released();
   void on_replacePrefabComboBox_currentIndexChanged(int index);
   void on_saveAsNewCheckbox_stateChanged(int saveAsNewState);
   void on_savePushButton_released();
@@ -89,27 +97,13 @@ private slots:
   void on_searchTypeRotationGValueSpinBox_valueChanged(int value);
   void on_searchTypeRotationBValueSpinBox_valueChanged(int value);
   void on_settingsDbLineEdit_textChanged(const QString &settingsDbFilename);
-  void on_archiveSettingsBrowseToolButton_released();
-  void on_archiveSettingsFilepathLineEdit_textChanged(const QString &archiveSettingsFilepath);
-  void on_userDbLineEdit_textChanged(const QString &userDbFilename);
-  void on_viewNodeTypeColumn_stateChanged(int viewNodeTypeColumnState);
-  void on_geoGenTestPushButton_released();
-
-  void onNodeEditorContextMenu(const QPoint &point);
-  void onNodeEditorContextMenuDeleteAction();
-  void onNodeEditorContextMenuDublicateAction();
-  void onNodeEditorContextMenuMassDublicateAction();
-
-  void onSearchFilterChanged();
-  void updateDynamicTabControlSize(int index);    
-
   void on_toolsApplyPushButton_released();
-  void on_toolsTypeComboBox_currentIndexChanged(int index);
-  void on_transformByComboBox_currentTextChanged(const QString &transformBy);
   void on_toolsSubtypeComboBox_currentIndexChanged(int index);
-  void on_transformRDoubleResetPushButton_released();
-  void on_transformGDoubleResetPushButton_released();
+  void on_toolsTypeComboBox_currentIndexChanged(int index);
   void on_transformBDoubleResetPushButton_released();
+  void on_transformByComboBox_currentTextChanged(const QString &transformBy);
+  void on_transformGDoubleResetPushButton_released();
+  void on_transformRDoubleResetPushButton_released();
   void on_transformRotationRValueSpinBox_valueChanged(int value);
   void on_transformRotationGValueSpinBox_valueChanged(int value);
   void on_transformRotationBValueSpinBox_valueChanged(int value);
@@ -117,8 +111,25 @@ private slots:
   void on_transformRotationXValueSpinBox_valueChanged(int value);
   void on_transformRotationYValueSpinBox_valueChanged(int value);
   void on_transformRotationZValueSpinBox_valueChanged(int value);
+  void on_userDbLineEdit_textChanged(const QString &userDbFilename);
+  void on_viewNodeTypeColumn_stateChanged(int viewNodeTypeColumnState);
 
+  void on_geoGenTestPushButton_released();
+
+  void onNodeEditorContextMenu(const QPoint &point);
+  void onNodeEditorContextMenuAddObjectAsFilterAction();
+  void onNodeEditorContextMenuAddPositionAsFilterAction();
+  void onNodeEditorContextMenuAddRotationAsFilterAction();
+  void onNodeEditorContextMenuAddScaleAsFilterAction();
   void onNodeEditorContextMenuAddToFilterAction();
+  void onNodeEditorContextMenuDeleteAction();
+  void onNodeEditorContextMenuDublicateAction();
+  void onNodeEditorContextMenuMassDublicateAction();
+
+  void onSearchFilterChanged();
+  void updateDynamicTabControlSize(int index);    
+
+  void on_toolsSubtypeTargetComboBox_currentIndexChanged(int index);
 
 protected:
   void closeEvent(QCloseEvent* e) override;
@@ -173,6 +184,7 @@ private:
   QString browseDatabaseFile() const;
   VeloDb* getDatabase();
   VeloDb* getDatabase(DatabaseType databaseType);
+  QColor pickColor(const QString settingsPath, QColor defaultColor);
   void setDatabaseOptionsDatabaseFilenames(const DatabaseType index);
   void setDatabaseOptionsUserDb(const QString& value);
   void setDatabaseOptionsSettingsDb(const QString& value);

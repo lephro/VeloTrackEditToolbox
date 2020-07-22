@@ -105,10 +105,8 @@ public:
   bool operator ==(PrefabItem &b);
 
 private:
-  const QBrush filterFontColor = QBrush(QColor(Qt::black));
-  const QBrush filterBackgroundColor = QBrush(QColor(254, 203, 137));
-  const QBrush filterContentBackgroundColor = QBrush(QColor(192, 192, 192));
-
+  const QBrush defaultFontColor = QBrush(Qt::white);
+  const QBrush defaultBackgroundColor = QBrush(QColor(255, 255, 255, 0));
   const int modifiedRole = 20000;
 
   PrefabData data = PrefabData();
@@ -119,10 +117,7 @@ private:
   QModelIndex positionIndex;
   QModelIndex rotationIndex;
   QModelIndex scaleIndex;
-  QModelIndex curveIndex;
-
-  QBrush defaultFontColor = QBrush(Qt::white);
-  QBrush defaultBackgroundColor = QBrush(QColor(255, 255, 255, 0));
+  QModelIndex curveIndex; 
 
   int positionR = 0;
   int positionG = 0;

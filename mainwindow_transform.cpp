@@ -14,25 +14,25 @@ void MainWindow::on_transformByComboBox_currentTextChanged(const QString& transf
     if (ui->transformRDoubleSpinBox->suffix() == "%")
       return;
 
-    ui->transformRDoubleSpinBox->setDecimals(2);
-    ui->transformGDoubleSpinBox->setDecimals(2);
-    ui->transformBDoubleSpinBox->setDecimals(2);
-    ui->transformRDoubleSpinBox->setMaximum(999.99);
-    ui->transformGDoubleSpinBox->setMaximum(999.99);
-    ui->transformBDoubleSpinBox->setMaximum(999.99);
-    ui->transformRDoubleSpinBox->setMinimum(0.01);
-    ui->transformGDoubleSpinBox->setMinimum(0.01);
-    ui->transformBDoubleSpinBox->setMinimum(0.01);
-    ui->transformRDoubleSpinBox->setSingleStep(1);
-    ui->transformGDoubleSpinBox->setSingleStep(1);
-    ui->transformBDoubleSpinBox->setSingleStep(1);
+    ui->transformRDoubleSpinBox->setDecimals(4);
+    ui->transformGDoubleSpinBox->setDecimals(4);
+    ui->transformBDoubleSpinBox->setDecimals(4);
+    ui->transformRDoubleSpinBox->setMaximum(9999.9999);
+    ui->transformGDoubleSpinBox->setMaximum(9999.9999);
+    ui->transformBDoubleSpinBox->setMaximum(9999.9999);
+    ui->transformRDoubleSpinBox->setMinimum(0.0001);
+    ui->transformGDoubleSpinBox->setMinimum(0.0001);
+    ui->transformBDoubleSpinBox->setMinimum(0.0001);
+    ui->transformRDoubleSpinBox->setSingleStep(0.1);
+    ui->transformGDoubleSpinBox->setSingleStep(0.1);
+    ui->transformBDoubleSpinBox->setSingleStep(0.1);
     ui->transformRDoubleSpinBox->setSuffix("%");
     ui->transformGDoubleSpinBox->setSuffix("%");
     ui->transformBDoubleSpinBox->setSuffix("%");
     ui->transformRDoubleSpinBox->setValue(ui->transformRDoubleSpinBox->value() * 100);
     ui->transformGDoubleSpinBox->setValue(ui->transformGDoubleSpinBox->value() * 100);
     ui->transformBDoubleSpinBox->setValue(ui->transformBDoubleSpinBox->value() * 100);
-  } else if (transformBy == "RGB") {
+  } else if (transformBy == tr("Value")) {
 
     // If a spin box already has no suffix, that means that we are already in RGB mode
     if (ui->transformRDoubleSpinBox->suffix() == "")

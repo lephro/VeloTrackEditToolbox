@@ -40,6 +40,13 @@ enum ToolTypes {
   Mirror              = 20
 };
 
+enum ToolTypeTargets {
+  RGB = 0,
+  R   = 1,
+  G   = 2,
+  B   = 3
+};
+
 class PrefabItem;
 
 class NodeEditor : QObject
@@ -55,6 +62,10 @@ public:
   QModelIndex                 dublicatePrefab(PrefabItem *sourcePrefab);
   QByteArray*                 exportAsJsonData();
   uint                        getGateCount() const;
+  QBrush                      getFilterContentBackgroundColor() const;
+  QBrush                      getFilterContentFontColor() const;
+  QBrush                      getFilterBackgroundColor() const;
+  QBrush                      getFilterFontColor() const;
   FilterProxyModel&           getFilteredModel();
   uint                        getNodeCount() const;
   const PrefabData            getPrefab(const uint id) const;
@@ -73,9 +84,9 @@ public:
   uint                        replacePrefabs(const QModelIndexList &searchIndexList, const uint fromPrefabId, const uint toPrefabId, const QVector3D scaling = QVector3D(1, 1, 1));
   uint                        replacePrefabs(const QVector<PrefabItem *> &prefabs, const uint fromPrefabId, const uint toPrefabId, const QVector3D scaling = QVector3D(1, 1, 1));
   void                        resetModifiedFlag(const QStandardItem* item);
-  uint                        transformPrefab(const QModelIndex& searchIndex, const ToolTypes toolType, const QVariant &value, const bool byPercent = false);
-  uint                        transformPrefab(const QModelIndexList& searchIndexList, const ToolTypes toolType, const QVariant &value, const bool byPercent = false);
-  uint                        transformPrefab(const QVector<PrefabItem*>& prefabs, const ToolTypes toolType, const QVariant &value, const bool byPercent = false);
+  uint                        transformPrefab(const QModelIndex& searchIndex, const ToolTypes toolType, const QVariant &value, const ToolTypeTargets target = ToolTypeTargets::RGB, const bool byPercent = false);
+  uint                        transformPrefab(const QModelIndexList& searchIndexList, const ToolTypes toolType, const QVariant &value, const ToolTypeTargets target = ToolTypeTargets::RGB, const bool byPercent = false);
+  uint                        transformPrefab(const QVector<PrefabItem*>& prefabs, const ToolTypes toolType, const QVariant &value, const ToolTypeTargets target = ToolTypeTargets::RGB, const bool byPercent = false);
   void                        resetFinishGates();
   void                        resetModifiedFlags();
   void                        resetFilterMarks();
@@ -83,19 +94,23 @@ public:
   QVector<PrefabItem*>        search(const QVector<PrefabItem*>& index, const QVector<NodeFilter *> &filterList);
   QVector<PrefabItem*>        search(QModelIndex& index, QVector<NodeFilter*> filterList);
   QVector<PrefabItem*>        search(QList<QStandardItem*> items, QVector<NodeFilter*> filterList);
+  void                        setFilterBackgroundColor(const QBrush &value);
+  void                        setFilterFontColor(const QBrush &value);
+  void                        setFilterContentBackgroundColor(const QBrush &value);
+  void                        setFilterContentFontColor(const QBrush &value);
   void                        setSceneId(const uint& value);
   void                        setPrefabs(const QVector<PrefabData> value);
 
   static bool isEditableNode(const QModelIndex& keyIndex);
-  static bool isStartGrid(const PrefabData& prefab);
+  static bool isStartGrid(const PrefabData& prefab);  
 
 private:
-  const QBrush filterFontColor = QBrush(QColor(Qt::black));
-  const QBrush filterBackgroundColor = QBrush(QColor(254, 203, 137));
-  const QBrush filterContentBackgroundColor = QBrush(QColor(192, 192, 192));
+  QBrush filterFontColor = QBrush(QColor(Qt::black));
+  QBrush filterBackgroundColor = QBrush(QColor(254, 203, 137));
+  QBrush filterContentBackgroundColor = QBrush(QColor(192, 192, 192));
+  QBrush filterContentFontColor = QBrush(Qt::black);
+
   uint sceneId;
-  QBrush defaultFontColor = QBrush(Qt::white);
-  QBrush defaultBackgroundColor = QBrush(QColor(255, 255, 255, 0));
   QJsonDocument* doc = nullptr;
   QVector<PrefabData> prefabs;
   QStandardItemModel model;

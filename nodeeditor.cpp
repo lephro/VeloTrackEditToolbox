@@ -4,6 +4,20 @@ NodeEditor::NodeEditor()
 {
   filteredModel.setRecursiveFilteringEnabled(true);
   filteredModel.setSourceModel(&model);
+
+  const QSettings settings("settings.ini", QSettings::IniFormat);
+  filterBackgroundColor = QColor(settings.value("general/filterColorR", 226).toInt(),
+                                 settings.value("general/filterColorG", 128).toInt(),
+                                 settings.value("general/filterColorB", 53).toInt());
+  filterFontColor = QColor(settings.value("general/filterFontColorR", 226).toInt(),
+                           settings.value("general/filterFontColorG", 128).toInt(),
+                           settings.value("general/filterFontColorB", 53).toInt());
+  filterContentBackgroundColor = QColor(settings.value("general/filterParentColorR", 226).toInt(),
+                                        settings.value("general/filterParentColorG", 128).toInt(),
+                                        settings.value("general/filterParentColorB", 53).toInt());
+  filterContentFontColor = QColor(settings.value("general/filterParentFontColorR", 226).toInt(),
+                                  settings.value("general/filterParentFontColorG", 128).toInt(),
+                                  settings.value("general/filterParentFontColorB", 53).toInt());
 }
 
 NodeEditor::~NodeEditor()
@@ -379,6 +393,46 @@ bool NodeEditor::isStartGrid(const PrefabData& prefab)
   return false;
 }
 
+QBrush NodeEditor::getFilterFontColor() const
+{
+  return filterFontColor;
+}
+
+void NodeEditor::setFilterFontColor(const QBrush &value)
+{
+  filterFontColor = value;
+}
+
+QBrush NodeEditor::getFilterBackgroundColor() const
+{
+  return filterBackgroundColor;
+}
+
+void NodeEditor::setFilterBackgroundColor(const QBrush &value)
+{
+  filterBackgroundColor = value;
+}
+
+QBrush NodeEditor::getFilterContentBackgroundColor() const
+{
+  return filterContentBackgroundColor;
+}
+
+void NodeEditor::setFilterContentBackgroundColor(const QBrush &value)
+{
+  filterContentBackgroundColor = value;
+}
+
+QBrush NodeEditor::getFilterContentFontColor() const
+{
+  return filterContentFontColor;
+}
+
+void NodeEditor::setFilterContentFontColor(const QBrush &value)
+{
+  filterContentFontColor = value;
+}
+
 FilterProxyModel& NodeEditor::getFilteredModel()
 {
   return filteredModel;
@@ -516,7 +570,7 @@ uint NodeEditor::replacePrefabs(const QVector<PrefabItem*>& prefabs, const uint 
   return prefabCount;
 }
 
-uint NodeEditor::transformPrefab(const QModelIndex& searchIndex, const ToolTypes toolType, const QVariant& value, const bool byPercent)
+uint NodeEditor::transformPrefab(const QModelIndex& searchIndex, const ToolTypes toolType, const QVariant& value, const ToolTypeTargets target, const bool byPercent)
 {
   qDebug() << "=== Transform called with Index";
   // Build a prefab vector from the searchIndex
@@ -528,10 +582,10 @@ uint NodeEditor::transformPrefab(const QModelIndex& searchIndex, const ToolTypes
   }
 
   // Return the amount of prefabs we've modified
-  return transformPrefab(prefabs, toolType, value, byPercent);
+  return transformPrefab(prefabs, toolType, value, target, byPercent);
 }
 
-uint NodeEditor::transformPrefab(const QModelIndexList& searchIndexList, const ToolTypes toolType, const QVariant& value, const bool byPercent)
+uint NodeEditor::transformPrefab(const QModelIndexList& searchIndexList, const ToolTypes toolType, const QVariant& value, const ToolTypeTargets target, const bool byPercent)
 {
   qDebug() << "=== Transform called with IndexList";
   // Build a prefab vector from the searchIndex-List
@@ -543,13 +597,13 @@ uint NodeEditor::transformPrefab(const QModelIndexList& searchIndexList, const T
   }
 
   // Return the amount of prefabs we've modified
-  return transformPrefab(prefabs, toolType, value, byPercent);
+  return transformPrefab(prefabs, toolType, value, target, byPercent);
 }
 
-uint NodeEditor::transformPrefab(const QVector<PrefabItem*>& prefabs, const ToolTypes toolType, const QVariant& value, const bool byPercent)
+uint NodeEditor::transformPrefab(const QVector<PrefabItem*>& prefabs, const ToolTypes toolType, const QVariant& value, const ToolTypeTargets target, const bool byPercent)
 {
   qDebug() << "=== Transform called with Prefabs";
-  qDebug() << "Method:" << toolType << "Value:" << value << "ByPercent:" << byPercent;
+  qDebug() << "Method:" << toolType << "Value:" << value << "Target:" << target << "ByPercent:" << byPercent;
   qDebug() << ">> Prefabs:" << prefabs;
 
   // Check and cast the parameter
@@ -565,7 +619,8 @@ uint NodeEditor::transformPrefab(const QVector<PrefabItem*>& prefabs, const Tool
   case IncreasingScale:
     if (byPercent)
       return 0;
-  [[clang::fallthrough]]; case Move:
+  [[clang::fallthrough]];
+  case Move:
   case Scale:
   case ReplacePosition:
   case ReplaceScaling:
@@ -606,27 +661,94 @@ uint NodeEditor::transformPrefab(const QVector<PrefabItem*>& prefabs, const Tool
 
   uint count = 0;
   QVector3D incValues;
-  QQuaternion incRotation;
+  QQuaternion incRotation;    
 
   switch (toolType) {
   case Move:
     qDebug() << "=> Move";
-    foreach(PrefabItem* prefab, prefabs) {
-      prefab->setPosition(byPercent ?
-                            prefab->getPositionVector() * (transformValue / 100) :
-                            prefab->getPositionVector() + transformValue);
-      count++;
+
+    switch(target) {
+    case ToolTypeTargets::R:
+      foreach(PrefabItem* prefab, prefabs) {
+        prefab->setPositionR(byPercent ?
+                               int(std::round(prefab->getPositionR() * (transformValue.x() / 100))) :
+                               int(std::round(prefab->getPositionR() + transformValue.x())));
+        count++;
+      }
+      break;
+
+    case ToolTypeTargets::G:
+      foreach(PrefabItem* prefab, prefabs) {
+        prefab->setPositionG(byPercent ?
+                               int(std::round(prefab->getPositionG() * (transformValue.y() / 100))) :
+                               int(std::round(prefab->getPositionG() + transformValue.y())));
+        count++;
+      }
+      break;
+
+    case ToolTypeTargets::B:
+      foreach(PrefabItem* prefab, prefabs) {
+        prefab->setPositionB(byPercent ?
+                               int(std::round(prefab->getPositionB() * (transformValue.z() / 100))) :
+                               int(std::round(prefab->getPositionB() + transformValue.z())));
+        count++;
+      }
+      break;
+
+    default:
+      foreach(PrefabItem* prefab, prefabs) {
+        prefab->setPosition(byPercent ?
+                              prefab->getPositionVector() * (transformValue / 100) :
+                              prefab->getPositionVector() + transformValue);
+        count++;
+      }
+      break;
     }
     break;
 
   case Scale:
     qDebug() << "=> Scale";
-    foreach(PrefabItem* prefab, prefabs) {
-        prefab->applyScaling(byPercent ?
-                               transformValue / 100 :
-                               transformValue);
-      count++;
+
+    switch(target) {
+    case ToolTypeTargets::R:
+      foreach(PrefabItem* prefab, prefabs) {
+        prefab->setScalingR(byPercent ?
+                               int(std::round(prefab->getScalingR() * (transformValue.x() / 100))) :
+                               int(std::round(prefab->getScalingR() + transformValue.x())));
+        count++;
+      }
+      break;
+
+    case ToolTypeTargets::G:
+      foreach(PrefabItem* prefab, prefabs) {
+        prefab->setScalingG(byPercent ?
+                               int(std::round(prefab->getScalingG() * (transformValue.y() / 100))) :
+                               int(std::round(prefab->getScalingG() + transformValue.y())));
+        count++;
+      }
+      break;
+
+    case ToolTypeTargets::B:
+      foreach(PrefabItem* prefab, prefabs) {
+        prefab->setScalingB(byPercent ?
+                               int(std::round(prefab->getScalingB() * (transformValue.z() / 100))) :
+                               int(std::round(prefab->getScalingB() + transformValue.z())));
+        count++;
+      }
+      break;
+
+    default:
+      foreach(PrefabItem* prefab, prefabs) {
+        if (byPercent)
+          prefab->applyScaling(transformValue / 100);
+        else
+          prefab->setScaling(transformValue);
+
+        count++;
+      }
+      break;
     }
+
     break;
 
   case AddRotation:
@@ -647,21 +769,84 @@ uint NodeEditor::transformPrefab(const QVector<PrefabItem*>& prefabs, const Tool
 
   case ReplacePosition:
     qDebug() << "=> Replace Position";
-    foreach(PrefabItem* prefab, prefabs) {
-      prefab->setPosition(byPercent ?
-                            prefab->getPositionVector() * transformValue :
-                            transformValue);
-      count++;
+
+    switch(target) {
+    case ToolTypeTargets::R:
+      foreach(PrefabItem* prefab, prefabs) {
+        prefab->setPositionR(byPercent ?
+                               int(std::round(transformValue.x() / 100)) :
+                               int(std::round(transformValue.x())));
+        count++;
+      }
+      break;
+
+    case ToolTypeTargets::G:
+      foreach(PrefabItem* prefab, prefabs) {
+        prefab->setPositionG(byPercent ?
+                               int(std::round(transformValue.y() / 100)) :
+                               int(std::round(transformValue.y())));
+        count++;
+      }
+      break;
+
+    case ToolTypeTargets::B:
+      foreach(PrefabItem* prefab, prefabs) {
+        prefab->setPositionB(byPercent ?
+                               int(std::round(transformValue.z() / 100)) :
+                               int(std::round(transformValue.z())));
+        count++;
+      }
+      break;
+
+    default:
+      foreach(PrefabItem* prefab, prefabs) {
+        prefab->setPosition(byPercent ?
+                              (transformValue / 100) :
+                              transformValue);
+        count++;
+      }
+      break;
     }
     break;
 
   case ReplaceScaling:
     qDebug() << "=> Replace Scaling";
-    foreach(PrefabItem* prefab, prefabs) {
-      prefab->setScaling(byPercent ?
-                           prefab->getScalingVector() * transformValue :
-                           transformValue);
-      count++;
+    switch(target) {
+    case ToolTypeTargets::R:
+      foreach(PrefabItem* prefab, prefabs) {
+        prefab->setScalingR(byPercent ?
+                               int(std::round(transformValue.x() / 100)) :
+                               int(std::round(transformValue.x())));
+        count++;
+      }
+      break;
+
+    case ToolTypeTargets::G:
+      foreach(PrefabItem* prefab, prefabs) {
+        prefab->setScalingG(byPercent ?
+                               int(std::round(transformValue.y() / 100)) :
+                               int(std::round(transformValue.y())));
+        count++;
+      }
+      break;
+
+    case ToolTypeTargets::B:
+      foreach(PrefabItem* prefab, prefabs) {
+        prefab->setScalingB(byPercent ?
+                               int(std::round(transformValue.z() / 100)) :
+                               int(std::round(transformValue.z())));
+        count++;
+      }
+      break;
+
+    default:
+      foreach(PrefabItem* prefab, prefabs) {
+          prefab->setScaling(byPercent ?
+                               transformValue / 100 :
+                               transformValue);
+        count++;
+      }
+      break;
     }
     break;
 
