@@ -15,7 +15,7 @@ void SearchFilterLayout::addFilter(const FilterTypes filterType, const FilterMet
 {
   FilterMethods method = filterMethod;
   // Objects is always filtered with "is"
-  if (filterType == FilterTypes::Object)
+  if (filterType == FilterTypes::Object || filterType== FilterTypes::CustomIndex)
     method = FilterMethods::Is;
 
   // If a filter with a given method is already set, we update it and jump out

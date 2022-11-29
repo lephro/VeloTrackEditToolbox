@@ -8,7 +8,7 @@
 class VeloToolkitException
 {
 public:
-  VeloToolkitException(QString description = "") : description(description) {}
+  VeloToolkitException(const QString description = "") : description(description) {}
   ~VeloToolkitException() = default;
 
   virtual void Message() const
@@ -78,12 +78,11 @@ public:
     VeloToolkitException("The track does not belong to the database") { }
 };
 
-
-class TrackWithoutNodesException : public VeloToolkitException
+class PrefabNotEditableException : public VeloToolkitException
 {
 public:
-  TrackWithoutNodesException() :
-    VeloToolkitException("The track does not contain any nodes!") {}
+  PrefabNotEditableException(const uint prefabId, const QString prefabName) :
+    VeloToolkitException(QString("The prefab %1 (Id: %1) is not editable").arg(prefabId).arg(prefabName)) {}
 };
 
 

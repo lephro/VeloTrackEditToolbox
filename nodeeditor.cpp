@@ -1,31 +1,39 @@
 #include "nodeeditor.h"
 
-NodeEditor::NodeEditor()
+NodeEditor::NodeEditor(Track& track)
+  : track(&track),
+    treeView(new QTreeView())
 {
+  track.setParent(this);
+
+  editorModel = new EditorModel(&track, this);
+
   filteredModel.setRecursiveFilteringEnabled(true);
-  filteredModel.setSourceModel(&model);
-
-  const QSettings settings("settings.ini", QSettings::IniFormat);
-  filterBackgroundColor = QColor(settings.value("general/filterColorR", 226).toInt(),
-                                 settings.value("general/filterColorG", 128).toInt(),
-                                 settings.value("general/filterColorB", 53).toInt());
-  filterFontColor = QColor(settings.value("general/filterFontColorR", 226).toInt(),
-                           settings.value("general/filterFontColorG", 128).toInt(),
-                           settings.value("general/filterFontColorB", 53).toInt());
-  filterContentBackgroundColor = QColor(settings.value("general/filterParentColorR", 226).toInt(),
-                                        settings.value("general/filterParentColorG", 128).toInt(),
-                                        settings.value("general/filterParentColorB", 53).toInt());
-  filterContentFontColor = QColor(settings.value("general/filterParentFontColorR", 226).toInt(),
-                                  settings.value("general/filterParentFontColorG", 128).toInt(),
-                                  settings.value("general/filterParentFontColorB", 53).toInt());
+  filteredModel.setSourceModel(editorModel);
 }
 
-NodeEditor::~NodeEditor()
+void NodeEditor::beginNodeEdit()
 {
+  qDebug() << "NodeEditor::beginNodeEdit() Started: " << editStarted;
+//  // Everytime we start to do a lot of changes to the tree, we memorize if the root node was expanded
+//  // and collapse it for performance reasons (so any redraw / update call is processed way faster)
+//  if (editStarted)
+//    return;
 
+//  editStarted = true;
+
+//  if (treeView->verticalScrollBar() != nullptr && treeView->verticalScrollBar()->maximum() > 0)
+//    lastScrollbarPos = float(treeView->verticalScrollBar()->value()) / float(treeView->verticalScrollBar()->maximum());
+
+//  QModelIndex index;
+//  for (int i = 0; i < editorModel->getRootItem()->childCount(); ++i) {
+//    index = filteredModel.mapFromSource(editorModel->getRootItem()->child(i)->getIndex());
+//    lastTreeExpansionStates.append(index.isValid() && treeView->isExpanded(index));
+//    treeView->collapse(index);
+//  }
 }
 
-void NodeEditor::applyFilterToList(QVector<PrefabItem*>& matchingItems, const QVector<NodeFilter*>& filter, const FilterTypes filterType, const QVector<PrefabItem*>* initalItems)
+void NodeEditor::applyFilterToList(QVector<EditorObject*>& matchingItems, const QVector<NodeFilter*>& filter, const FilterTypes filterType, const QVector<EditorObject*>* initalItems)
 {
   // Define our control variables outside of the loops to prevent excessive alloc and deallocs
   bool match = false;
@@ -33,7 +41,6 @@ void NodeEditor::applyFilterToList(QVector<PrefabItem*>& matchingItems, const QV
   QString filterValue = "";
   QString prefabValue = "";
   NodeFilter* nodeFilter = nullptr;
-  PrefabItem* prefab = nullptr;
 
   // Go through every filter in the list  and eventually remove all items that dont apply to it
   for (int i = 0; i < filter.count(); ++i) {
@@ -48,10 +55,7 @@ void NodeEditor::applyFilterToList(QVector<PrefabItem*>& matchingItems, const QV
     for (int item = 0; item < matchingItems.count(); ++item) {
       match = false;
 
-      prefab = matchingItems.at(item);
-
-      if (prefab == nullptr)
-        continue;
+      EditorObject* prefab = matchingItems.at(item);
 
       if (filterType == FilterTypes::GateNo && !prefab->isGate()) {
         matchingItems.removeOne(prefab);
@@ -126,13 +130,12 @@ void NodeEditor::applyFilterToList(QVector<PrefabItem*>& matchingItems, const QV
           continue;
         case FilterTypes::IsDublicate: {
           // Check if the prefab matches any other prefab
-          PrefabItem* item;
           for(int i = 0; i < initalItems->count(); ++i) {
-            item = initalItems->at(i);
+            const EditorObject* item = initalItems->at(i);
             if (item->isSpline() || item->isOnSpline() || item->isSplineControl())
               continue;
 
-            if (item->getIndex() != prefab->getIndex() && *item == *prefab)
+            if (item->getIndex() != prefab->getIndex() && item == prefab)
               match = true;
           }
           continue;
@@ -175,36 +178,47 @@ void NodeEditor::applyFilterToList(QVector<PrefabItem*>& matchingItems, const QV
 }
 
 void NodeEditor::changeGateOrder(const uint oldGateNo, const uint newGateNo)
-{
+{  
   bool shiftLeft = (int(oldGateNo) - int(newGateNo)) > 0;
-  const QList<QStandardItem*> gateKeys = model.findItems("gate", Qt::MatchRecursive, 0);
-  for (int i = 0; i < gateKeys.size(); ++i) {
-    const QModelIndex gateValueIndex = gateKeys.value(i)->index().siblingAtColumn(NodeTreeColumns::ValueColumn);
-    if (gateValueIndex.isValid()) {
-      uint gateNo = gateValueIndex.data().toUInt();
-      if (shiftLeft && (gateNo >= newGateNo) && (gateNo < oldGateNo))
-        model.setData(gateValueIndex, gateNo + 1, Qt::EditRole);
-      else if (!shiftLeft && (gateNo > oldGateNo) && (gateNo <= newGateNo))
-        model.setData(gateValueIndex, gateNo - 1, Qt::EditRole);
-    }
+
+  QVector<EditorObject*> gates = getTrack()->getGates();
+  foreach(EditorObject* gate, gates) {
+    const int gateNo = gate->getGateNo();
+    if (shiftLeft && (gateNo >= int(newGateNo)) && (gateNo < int(oldGateNo)))
+      gate->setGateNo(gateNo + 1, false);
+    else if (!shiftLeft && (gateNo > int(oldGateNo)) && (gateNo <= int(newGateNo)))
+      gate->setGateNo(gateNo - 1, false);
   }
 }
 
-bool NodeEditor::containsModifiedNode(const QStandardItem* item) const
+void NodeEditor::clearFilterMarks()
 {
-  for (int i = 0; i < item->rowCount(); ++i)
+//  QList<QStandardItem*> prefabNodes = model.findItems("prefab", Qt::MatchRecursive, NodeTreeColumns::KeyColumn);
+//  foreach(QStandardItem* item, prefabNodes) {
+//    PrefabItem prefab(this);
+//    if (prefab.parseIndex(item->index()))
+//      prefab.setFilterMark(false);
+//  }
+  for(int resultIdx = 0; resultIdx < searchResult.count(); ++resultIdx)
   {
-    QStandardItem* child = item->child(i, 0);
-    if (child->data(Qt::UserRole).toBool())
-      return true;
-
-    if (child->hasChildren()) {
-      if (containsModifiedNode(child))
-        return true;
-    }
+    searchResult[resultIdx]->setFilterMarked(false);
   }
+}
 
-  return false;
+void NodeEditor::clearModifiedFlag(EditorModelItem* modelItem)
+{
+  EditorModelItem* item = modelItem;
+  if (!item)
+    item = editorModel->getRootItem();
+
+  item->setModified(false);
+}
+
+void NodeEditor::clearSearch(const int cacheId)
+{  
+  searchCacheId = cacheId;
+  clearFilterMarks();
+  searchResult.clear();
 }
 
 void NodeEditor::deleteNode(const QModelIndex &index) const
@@ -212,84 +226,103 @@ void NodeEditor::deleteNode(const QModelIndex &index) const
   if (!index.isValid())
     return;
 
-  QStandardItem* parentItem = model.itemFromIndex(index.parent());
+  EditorModelItem* parentItem = editorModel->itemFromIndex(index.parent());
   if (parentItem == nullptr)
     return;
 
-  parentItem->removeRow(index.row());
+  parentItem->removeChild(index.row());
 }
 
-void NodeEditor::dublicateChildren(const QStandardItem *source, QStandardItem *target)
+QModelIndex NodeEditor::duplicateObject(EditorObject* sourceObject)
 {
-  // Check if we got a valid source and target
-  if (source == nullptr || target == nullptr)
-    return;
-
-  // Recursivly fill a new row with clones of the source columns (in the corresponding row)
-  QList<QStandardItem*> newRowList;
-  for(int row = 0; row < source->rowCount(); row++) {
-    newRowList.clear();
-    for(int column = 0; column < source->columnCount(); column++) {
-      const QStandardItem* child = source->child(row, column);
-      if (child == nullptr)
-        continue;
-      newRowList << child->clone();
-    }
-
-    if (newRowList.count() == 0)
-      continue;
-
-    dublicateChildren(source->child(row, NodeTreeColumns::KeyColumn), newRowList.first());
-    target->appendRow(newRowList);
-  }
-}
-
-QModelIndex NodeEditor::dublicatePrefab(PrefabItem* sourcePrefab)
-{
-  // Get the source columns
-  QStandardItem* sourceItemKey = model.itemFromIndex(sourcePrefab->getIndex().siblingAtColumn(NodeTreeColumns::KeyColumn));
-  QStandardItem* sourceItemValue = model.itemFromIndex(sourcePrefab->getIndex().siblingAtColumn(NodeTreeColumns::ValueColumn));
-  QStandardItem* sourceItemType = model.itemFromIndex(sourcePrefab->getIndex().siblingAtColumn(NodeTreeColumns::TypeColumn));
-  if (sourceItemKey == nullptr || sourceItemValue == nullptr || sourceItemType == nullptr)
+  EditorObject* newObject = new EditorObject(*sourceObject);
+  EditorModelItem* newItem = new EditorModelItem(newObject);
+  EditorModelItem* parent = sourceObject->getParentModelItem();
+  if (!parent)
     return QModelIndex();
 
-  // Clone the source columns and their children
-  QStandardItem* newItemKey = sourceItemKey->clone();
-  dublicateChildren(sourceItemKey, newItemKey);
-  QStandardItem* newItemValue = sourceItemValue->clone();
-  QStandardItem* newItemType = sourceItemType->clone();
-
-  // Create a new row and append it to the parent of the source
-  QList<QStandardItem*> row;
-  row << newItemKey << newItemValue << newItemType;
-
-  QStandardItem* parent = sourceItemKey->parent();
-  if (parent == nullptr)
-    return QModelIndex();
-
-  parent->appendRow(row);
+  parent->addChild(*newItem);
 
   // Prevent invalid gate data
-  PrefabItem prefab(this);
-  if (prefab.parseIndex(newItemKey->index())) {
-    if (prefab.isGate()) {
-      prefab.setGateNo(int(gateCount));
+  if (newObject->isValid()) {
+    if (newObject->isGate()) {
+      newObject->setGateNo(int(gateCount));
       gateCount++;
     }
-    prefab.setFinish(false);
-    prefab.setStart(false);
-    if (prefab.isSpline())
+    newObject->setFinish(false);
+    newObject->setStart(false);
+    if (newObject->isSpline())
       splineCount++;
   }
 
   prefabCount++;
 
-  return sourceItemKey->index();
+  return editorModel->index(newItem->childNumber(), 0, parent->getIndex());
+
+
+//  // Clone the source columns and their children
+//  QStandardItem* newItemKey = sourceItemKey->clone();
+//  duplicateChildren(sourceItemKey, newItemKey);
+//  QStandardItem* newItemValue = sourceItemValue->clone();
+//  QStandardItem* newItemType = sourceItemType->clone();
+
+//  // Create a new row and append it to the parent of the source
+//  QList<QStandardItem*> row;
+//  row << newItemKey << newItemValue << newItemType;
+
+//  QStandardItem* parent = sourceItemKey->parent();
+//  if (parent == nullptr)
+//    return QModelIndex();
+
+//  parent->appendRow(row);
+
+//  // Prevent invalid gate data
+//  EditorObject* object = getObjectByIndex(newItemKey->index());
+//  if (object->isValid()) {
+//    if (object->isGate()) {
+//      object->setGateNo(int(gateCount));
+//      gateCount++;
+//    }
+//    object->setFinish(false);
+//    object->setStart(false);
+//    if (object->isSpline())
+//      splineCount++;
+//  }
+
+//  prefabCount++;
+
+//  return sourceItemKey->index();
+}
+
+void NodeEditor::endNodeEdit()
+{
+//  qDebug() << "NodeEditor::endNodeEdit() Started: " << editStarted;
+
+//  // Once we have finished our changes we restore the original view and move the scrollbar to its previous location
+//  if (!editStarted)
+//    return;
+
+//  editStarted = false;
+
+//  QModelIndex index;
+//  for (int i = 0; i < editorModel->getRootItem()->childCount(); ++i) {
+//    if (i >= lastTreeExpansionStates.count())
+//      break;
+
+//    index = filteredModel.mapFromSource(editorModel->getRootItem()->child(i)->getIndex());
+//    if (lastTreeExpansionStates[i])
+//      treeView->expand(index);
+//  }
+
+//  if (treeView->verticalScrollBar() != nullptr && treeView->verticalScrollBar()->maximum() > 0)
+//    treeView->verticalScrollBar()->setValue(int(std::round(lastScrollbarPos * treeView->verticalScrollBar()->maximum())));
+
+//  lastTreeExpansionStates.clear();
 }
 
 QByteArray *NodeEditor::exportAsJsonData()
 {
-  VeloDataParser parser(nullptr, &prefabs, &model);
+  VeloDataParser parser(editorModel);
   QByteArray* veloByteData = parser.exportToJson();
 
   if (nodeCount > parser.getNodeCount())
@@ -307,78 +340,16 @@ QByteArray *NodeEditor::exportAsJsonData()
   return veloByteData;
 }
 
-QList<QStandardItem*> NodeEditor::findPrefabs(const QModelIndexList& keyItemIndexList) const
+
+void NodeEditor::mergeJsonData(const QByteArray& jsonData, const bool addBarriers, const bool addGates)
 {
-  // Go through all children of the given index and check if their key matches "prefab"
-  QList<QStandardItem*> foundPrefabs;
-  foreach(QModelIndex index, keyItemIndexList) {
-    foundPrefabs += findPrefabs(index);
-  }
+//  VeloDataParser parser;
 
-  return foundPrefabs;
-}
-
-QList<QStandardItem*> NodeEditor::findPrefabs(const QModelIndex& keyItemIndex) const
-{
-  // Go through all children of the given index and check if their key matches "prefab"
-  QList<QStandardItem*> foundPrefabs;
-  for (int i = 0; i < filteredModel.rowCount(keyItemIndex); ++i)
-  {
-    QModelIndex childIndex = filteredModel.index(i, NodeTreeColumns::KeyColumn, keyItemIndex);
-    if (childIndex.data(Qt::DisplayRole) == "prefab")
-      foundPrefabs.append(model.itemFromIndex(filteredModel.mapToSource(childIndex)));
-    if (filteredModel.hasChildren(childIndex)) {
-      foundPrefabs += findPrefabs(childIndex);
-    }
-  }
-
-  return foundPrefabs;
-}
-
-void NodeEditor::importJsonData(const QByteArray *jsonData)
-{
-  VeloDataParser parser(nullptr, &prefabs, &model);
-  parser.importJson(jsonData);
-
-  gateCount = parser.getGateCount();
-  nodeCount = parser.getNodeCount();
-  prefabCount = parser.getPrefabCount();
-  splineCount = parser.getSplineCount();
-}
-
-void NodeEditor::mergeJsonData(const QByteArray *jsonData, const bool addBarriers, const bool addGates)
-{
-  VeloDataParser parser(nullptr, &prefabs, &model);
-
-  parser.mergeJson(jsonData, addBarriers, addGates);
-  gateCount = parser.getGateCount();
-  nodeCount = parser.getNodeCount();
-  prefabCount = parser.getPrefabCount();
-  splineCount = parser.getSplineCount();
-}
-
-bool NodeEditor::isEditableNode(const QModelIndex& keyIndex)
-{
-  const QModelIndex valueIndex = keyIndex.siblingAtColumn(NodeTreeColumns::ValueColumn);
-  const PrefabData prefab = valueIndex.data(Qt::UserRole).value<PrefabData>();
-
-  if (!valueIndex.isValid())
-    return true;
-
-  if (isStartGrid(prefab))
-    return false;
-
-  if (prefab.id > 0) {
-    return ((prefab.name != "CtrlParent") &&
-            (prefab.name != "ControlCurve") &&
-            (prefab.name != "ControlPoint"));
-  } else if (keyIndex.data() == "finish") {
-    return valueIndex.data().toBool() == false;
-  } else if (keyIndex.data() == "start") {
-    return valueIndex.data().toBool() == false;
-  }
-
-  return true;
+//  //parser.mergeJson(jsonData, addBarriers, addGates);
+//  gateCount = parser.getGateCount();
+//  nodeCount = parser.getNodeCount();
+//  prefabCount = parser.getPrefabCount();
+//  splineCount = parser.getSplineCount();
 }
 
 bool NodeEditor::isStartGrid(const PrefabData& prefab)
@@ -393,44 +364,55 @@ bool NodeEditor::isStartGrid(const PrefabData& prefab)
   return false;
 }
 
-QBrush NodeEditor::getFilterFontColor() const
+Track* NodeEditor::getTrack() const
 {
-  return filterFontColor;
+  return track;
 }
 
-void NodeEditor::setFilterFontColor(const QBrush &value)
+void NodeEditor::setTrack(Track* newTrack)
 {
-  filterFontColor = value;
+  track = newTrack;
 }
 
-QBrush NodeEditor::getFilterBackgroundColor() const
+QTreeView& NodeEditor::getTreeView() const
 {
-  return filterBackgroundColor;
+  return *treeView;
 }
 
-void NodeEditor::setFilterBackgroundColor(const QBrush &value)
+TrackData& NodeEditor::getTrackData()
 {
-  filterBackgroundColor = value;
+  return track->getTrackData();
 }
 
-QBrush NodeEditor::getFilterContentBackgroundColor() const
+void NodeEditor::setTrackData(const TrackData &value)
 {
-  return filterContentBackgroundColor;
+  track->setTrackData(value);
 }
 
-void NodeEditor::setFilterContentBackgroundColor(const QBrush &value)
+QVector<EditorObject*> NodeEditor::getSearchResult() const
 {
-  filterContentBackgroundColor = value;
+  return searchResult;
 }
 
-QBrush NodeEditor::getFilterContentFontColor() const
+void NodeEditor::setSearchResult(const int cacheId, const QVector<EditorObject*> &value)
 {
-  return filterContentFontColor;
+  searchCacheId = cacheId;
+  searchResult = value;
 }
 
-void NodeEditor::setFilterContentFontColor(const QBrush &value)
+int NodeEditor::getSearchCacheId() const
 {
-  filterContentFontColor = value;
+    return searchCacheId;
+}
+
+void NodeEditor::setFilterMarks()
+{
+  if (searchResult.isEmpty())
+    return;
+
+  foreach(EditorObject* item, searchResult) {
+    item->setFilterMarked();
+  }
 }
 
 FilterProxyModel& NodeEditor::getFilteredModel()
@@ -438,39 +420,34 @@ FilterProxyModel& NodeEditor::getFilteredModel()
   return filteredModel;
 }
 
-uint NodeEditor::getNodeCount() const
+EditorObject* NodeEditor::getObjectByIndex(const QModelIndex index)
 {
-  return nodeCount;
+  const QModelIndex sourceIndex = filteredModel.mapToSource(index);
+  const EditorModelItem* item = editorModel->itemFromIndex(sourceIndex);
+  if (!item->hasObject())
+    return nullptr;
+
+  return item->getObject();
 }
 
-uint NodeEditor::getPrefabCount() const
+EditorModel& NodeEditor::getEditorModel()
 {
-  return prefabCount;
-}
-
-uint NodeEditor::getSplineCount() const
-{
-  return splineCount;
-}
-
-QStandardItemModel& NodeEditor::getStandardModel()
-{
-  return model;
+  return *editorModel;
 }
 
 bool NodeEditor::isModified()
 {
-  return containsModifiedNode(model.invisibleRootItem());
+  foreach(EditorObject* object, track->getObjects()) {
+    if (object->isModified())
+      return true;
+  }
+
+  return false;
 }
 
-uint NodeEditor::getGateCount() const
+const PrefabData NodeEditor::getPrefabData(const uint id) const
 {
-  return uint(model.findItems("gate", Qt::MatchRecursive, 0).size());
-}
-
-const PrefabData NodeEditor::getPrefab(const uint id) const
-{
-  for (QVector<PrefabData>::const_iterator i = prefabs.begin(); i != prefabs.end(); ++i)
+  for (QVector<PrefabData>::const_iterator i = track->getAvailablePrefabs().begin(); i != track->getAvailablePrefabs().end(); ++i)
     if (i->id == id)
       return *i;
 
@@ -479,27 +456,40 @@ const PrefabData NodeEditor::getPrefab(const uint id) const
 
 QString NodeEditor::getPrefabDesc(const uint id) const
 {
-  for (QVector<PrefabData>::const_iterator i = prefabs.begin(); i != prefabs.end(); ++i)
+  for (QVector<PrefabData>::const_iterator i = track->getAvailablePrefabs().begin(); i != track->getAvailablePrefabs().end(); ++i)
     if (i->id == id)
       return i->name + " (" + i->type + ")";
 
   return "";
 }
 
-const QVector<PrefabData> *NodeEditor::getPrefabData() const
+QVector<PrefabData> NodeEditor::getAllPrefabData() const
 {
-  return &prefabs;
+  return track->getAvailablePrefabs();
 }
 
 QVector<PrefabData> NodeEditor::getPrefabsInUse(bool includeNonEditable) const
 {
   QMap<uint, PrefabData> prefabMap;
-  const QList<QStandardItem*> prefabs = model.findItems("prefab", Qt::MatchRecursive, NodeTreeColumns::KeyColumn);
-  foreach (QStandardItem* child, prefabs) {
-    PrefabData prefab = child->index().siblingAtColumn(NodeTreeColumns::ValueColumn).data(Qt::UserRole).value<PrefabData>();
-    if ((!prefabMap.contains(prefab.id)) && (prefab.id > 0))
-      if (isEditableNode(child->index()) || includeNonEditable)
+  foreach (EditorObject* object, track->getObjects().toList()) {
+    if (includeNonEditable) {
+      if (object->getSplineParents().count() > 0) {
+        const PrefabData& prefab = object->getSplineParents().first()->getData();
         prefabMap.insert(prefab.id, prefab);
+      }
+      if (object->getSplineControls().count() > 0) {
+        const PrefabData& prefab = object->getSplineControls().first()->getData();
+        prefabMap.insert(prefab.id, prefab);
+      }
+    }
+    foreach(EditorObject* splineObject, object->getSplineObjects())
+    {
+      if (includeNonEditable || splineObject->isEditable())
+        prefabMap.insert(splineObject->getData().id, splineObject->getData());
+    }
+
+    if (includeNonEditable || object->isEditable())
+      prefabMap.insert(object->getData().id, object->getData());
   }
 
   QVector<PrefabData> prefabsInUse;
@@ -513,7 +503,7 @@ QVector<PrefabData> NodeEditor::getPrefabsInUse(bool includeNonEditable) const
 
 QModelIndex NodeEditor::getRootIndex() const
 {
-  return model.invisibleRootItem()->index();
+  return editorModel->getRootItem()->getIndex();
 }
 
 uint NodeEditor::getSceneId() const
@@ -529,7 +519,7 @@ uint NodeEditor::replacePrefabs(const QModelIndex &searchIndex, const uint fromP
   replaceFilterList.append(&replaceIdFilter);
 
   // Return the amount of prefabs we replaced
-  return replacePrefabs(search(findPrefabs(searchIndex), replaceFilterList), fromPrefabId, toPrefabId, scaling);
+  return replacePrefabs(search(editorModel->itemsFromIndex(searchIndex), replaceFilterList), fromPrefabId, toPrefabId, scaling);
 }
 
 // Same Code but different variable-type
@@ -541,30 +531,29 @@ uint NodeEditor::replacePrefabs(const QModelIndexList &searchIndexList, const ui
   replaceFilterList.append(&replaceIdFilter);
 
   // Return the amount of prefabs we replaced
-  return replacePrefabs(search(findPrefabs(searchIndexList), replaceFilterList), fromPrefabId, toPrefabId, scaling);
+  return replacePrefabs(search(editorModel->itemsFromIndexList(searchIndexList), replaceFilterList), fromPrefabId, toPrefabId, scaling);
 }
 
-uint NodeEditor::replacePrefabs(const QVector<PrefabItem*>& prefabs, const uint fromPrefabId, const uint toPrefabId, const QVector3D scaling)
+uint NodeEditor::replacePrefabs(const QVector<EditorObject*>& prefabs, const uint fromPrefabId, const uint toPrefabId, const QVector3D scaling)
 {
   uint prefabCount = 0;
 
+  const bool doScaling = scaling != QVector3D(1, 1, 1);
+
   // Get and check the target prefab
-  const PrefabData toPrefab = getPrefab(toPrefabId);
+  const PrefabData toPrefab = getPrefabData(toPrefabId);
   if (toPrefab.id == 0)
     return 0;
 
   // Replace the data if the id matches
-  foreach(PrefabItem* prefab, prefabs) {
+  foreach(EditorObject* prefab, prefabs) {
     if (prefab->getId() != fromPrefabId)
       continue;
 
-    // Set item description
-    prefab->setData(toPrefab);
-
-    // Apply Scaling
-    prefab->applyScaling(scaling);
-
-    prefabCount++;
+    // Increase the counter if the changing was successfull.
+    if (prefab->setData(toPrefab) &&
+        (!doScaling || prefab->applyScaling(scaling)))
+      prefabCount++;
   }
 
   return prefabCount;
@@ -573,41 +562,41 @@ uint NodeEditor::replacePrefabs(const QVector<PrefabItem*>& prefabs, const uint 
 uint NodeEditor::transformPrefab(const QModelIndex& searchIndex, const ToolTypes toolType, const QVariant& value, const ToolTypeTargets target, const bool byPercent)
 {
   qDebug() << "=== Transform called with Index";
+
   // Build a prefab vector from the searchIndex
-  QVector<PrefabItem*> prefabs;
-  foreach(QStandardItem* prefabItem, findPrefabs(searchIndex)) {
-    PrefabItem* prefab = new PrefabItem(this);
-    if (prefab->parseIndex(prefabItem->index()))
-      prefabs.append(prefab);
-  }
+  QVector<EditorObject*> objects;
+  EditorObject* object = getObjectByIndex(searchIndex);
+  if (object->isValid())
+    objects.append(object);
 
   // Return the amount of prefabs we've modified
-  return transformPrefab(prefabs, toolType, value, target, byPercent);
+  return transformPrefab(objects, toolType, value, target, byPercent);
 }
 
 uint NodeEditor::transformPrefab(const QModelIndexList& searchIndexList, const ToolTypes toolType, const QVariant& value, const ToolTypeTargets target, const bool byPercent)
 {
-  qDebug() << "=== Transform called with IndexList";
+  //qDebug() << "=== Transform called with IndexList";
   // Build a prefab vector from the searchIndex-List
-  QVector<PrefabItem*> prefabs;
-  foreach(QStandardItem* prefabItem, findPrefabs(searchIndexList)) {
-    PrefabItem* prefab = new PrefabItem(this);
-    if (prefab->parseIndex(prefabItem->index()))
-      prefabs.append(prefab);
+  QVector<EditorObject*> objects;
+  EditorObject* object;
+  foreach(QModelIndex index, searchIndexList) {
+    object = getObjectByIndex(index);
+    if (object->isValid())
+      objects.append(object);
   }
 
   // Return the amount of prefabs we've modified
-  return transformPrefab(prefabs, toolType, value, target, byPercent);
+  return transformPrefab(objects, toolType, value, target, byPercent);
 }
 
-uint NodeEditor::transformPrefab(const QVector<PrefabItem*>& prefabs, const ToolTypes toolType, const QVariant& value, const ToolTypeTargets target, const bool byPercent)
+uint NodeEditor::transformPrefab(const QVector<EditorObject*>& objects, const ToolTypes toolType, const QVariant& value, const ToolTypeTargets target, const bool byPercent)
 {
-  qDebug() << "=== Transform called with Prefabs";
-  qDebug() << "Method:" << toolType << "Value:" << value << "Target:" << target << "ByPercent:" << byPercent;
-  qDebug() << ">> Prefabs:" << prefabs;
+  //qDebug() << "=== Transform called with objects";
+  //qDebug() << "Method:" << toolType << "Value:" << value << "Target:" << target << "ByPercent:" << byPercent;
+  //qDebug() << ">> objects:" << objects;
 
   // Check and cast the parameter
-  if (prefabs.count() == 0)
+  if (objects.count() == 0)
     return 0;
 
   QVector3D transformValue;
@@ -624,6 +613,8 @@ uint NodeEditor::transformPrefab(const QVector<PrefabItem*>& prefabs, const Tool
   case Scale:
   case ReplacePosition:
   case ReplaceScaling:
+  case MultiplyPosition:
+  case MultiplyScaling:
   case Mirror:
     if (!value.canConvert<QVector3D>())
       return 0;
@@ -669,37 +660,37 @@ uint NodeEditor::transformPrefab(const QVector<PrefabItem*>& prefabs, const Tool
 
     switch(target) {
     case ToolTypeTargets::R:
-      foreach(PrefabItem* prefab, prefabs) {
-        prefab->setPositionR(byPercent ?
-                               int(std::round(prefab->getPositionR() * (transformValue.x() / 100))) :
-                               int(std::round(prefab->getPositionR() + transformValue.x())));
+      foreach(EditorObject* object, objects) {
+        object->setPositionR(byPercent ?
+                               object->getPositionR() + int(std::round(object->getPositionR() * (transformValue.x() / 100))) :
+                               object->getPositionR() + int(std::round(transformValue.x())));
         count++;
       }
       break;
 
     case ToolTypeTargets::G:
-      foreach(PrefabItem* prefab, prefabs) {
-        prefab->setPositionG(byPercent ?
-                               int(std::round(prefab->getPositionG() * (transformValue.y() / 100))) :
-                               int(std::round(prefab->getPositionG() + transformValue.y())));
+      foreach(EditorObject* object, objects) {
+        object->setPositionG(byPercent ?
+                               object->getPositionG() + int(std::round(object->getPositionG() * (transformValue.y() / 100))) :
+                               object->getPositionG() + int(std::round(transformValue.y())));
         count++;
       }
       break;
 
     case ToolTypeTargets::B:
-      foreach(PrefabItem* prefab, prefabs) {
-        prefab->setPositionB(byPercent ?
-                               int(std::round(prefab->getPositionB() * (transformValue.z() / 100))) :
-                               int(std::round(prefab->getPositionB() + transformValue.z())));
+      foreach(EditorObject* object, objects) {
+        object->setPositionB(byPercent ?
+                               object->getPositionB() + int(std::round(object->getPositionB() * (transformValue.z() / 100))) :
+                               object->getPositionB() + int(std::round(transformValue.z())));
         count++;
       }
       break;
 
     default:
-      foreach(PrefabItem* prefab, prefabs) {
-        prefab->setPosition(byPercent ?
-                              prefab->getPositionVector() * (transformValue / 100) :
-                              prefab->getPositionVector() + transformValue);
+      foreach(EditorObject* object, objects) {
+        object->setPosition(byPercent ?
+                              object->getPositionVector() + (object->getPositionVector() * (transformValue / 100)) :
+                              object->getPositionVector() + transformValue);
         count++;
       }
       break;
@@ -711,38 +702,39 @@ uint NodeEditor::transformPrefab(const QVector<PrefabItem*>& prefabs, const Tool
 
     switch(target) {
     case ToolTypeTargets::R:
-      foreach(PrefabItem* prefab, prefabs) {
-        prefab->setScalingR(byPercent ?
-                               int(std::round(prefab->getScalingR() * (transformValue.x() / 100))) :
-                               int(std::round(prefab->getScalingR() + transformValue.x())));
+      foreach(EditorObject* object, objects) {
+        object->setScalingR(byPercent ?
+                               object->getScalingR() + int(std::round(object->getScalingR() * (transformValue.x() / 100))) :
+                               object->getScalingR() + int(std::round(transformValue.x())));
         count++;
       }
       break;
 
     case ToolTypeTargets::G:
-      foreach(PrefabItem* prefab, prefabs) {
-        prefab->setScalingG(byPercent ?
-                               int(std::round(prefab->getScalingG() * (transformValue.y() / 100))) :
-                               int(std::round(prefab->getScalingG() + transformValue.y())));
+      foreach(EditorObject* object, objects) {
+        object->setScalingG(byPercent ?
+                               object->getScalingG() + int(std::round(object->getScalingG() * (transformValue.y() / 100))) :
+                               object->getScalingG() + int(std::round(transformValue.y())));
         count++;
       }
       break;
 
     case ToolTypeTargets::B:
-      foreach(PrefabItem* prefab, prefabs) {
-        prefab->setScalingB(byPercent ?
-                               int(std::round(prefab->getScalingB() * (transformValue.z() / 100))) :
-                               int(std::round(prefab->getScalingB() + transformValue.z())));
+      foreach(EditorObject* object, objects) {
+        object->setScalingB(byPercent ?
+                               object->getScalingB() + int(std::round(object->getScalingB() * (transformValue.z() / 100))) :
+                               object->getScalingB() + int(std::round(transformValue.z())));
         count++;
       }
       break;
 
     default:
-      foreach(PrefabItem* prefab, prefabs) {
-        if (byPercent)
-          prefab->applyScaling(transformValue / 100);
+      foreach(EditorObject* object, objects) {
+        if (byPercent) {
+          object->applyScaling(transformValue / 100);
+        }
         else
-          prefab->setScaling(transformValue);
+          object->setScaling(transformValue);
 
         count++;
       }
@@ -753,13 +745,13 @@ uint NodeEditor::transformPrefab(const QVector<PrefabItem*>& prefabs, const Tool
 
   case AddRotation:
     qDebug() << "=> Add Rotation";
-    foreach(PrefabItem* prefab, prefabs) {
-      const QQuaternion newRotation = QQuaternion(float(prefab->getRotationW()) / 1000,
-                                                  float(prefab->getRotationX()) / 1000,
-                                                  float(prefab->getRotationY()) / 1000,
-                                                  float(prefab->getRotationZ()) / 1000) *
+    foreach(EditorObject* object, objects) {
+      const QQuaternion newRotation = QQuaternion(float(object->getRotationW()) / 1000,
+                                                  float(object->getRotationX()) / 1000,
+                                                  float(object->getRotationY()) / 1000,
+                                                  float(object->getRotationZ()) / 1000) *
                                       rotationValue;
-      prefab->setRotation(int(std::round(newRotation.scalar() * 1000)),
+      object->setRotation(int(std::round(newRotation.scalar() * 1000)),
                           int(std::round(newRotation.x() * 1000)),
                           int(std::round(newRotation.y() * 1000)),
                           int(std::round(newRotation.z() * 1000)));
@@ -772,36 +764,36 @@ uint NodeEditor::transformPrefab(const QVector<PrefabItem*>& prefabs, const Tool
 
     switch(target) {
     case ToolTypeTargets::R:
-      foreach(PrefabItem* prefab, prefabs) {
-        prefab->setPositionR(byPercent ?
-                               int(std::round(transformValue.x() / 100)) :
+      foreach(EditorObject* object, objects) {
+        object->setPositionR(byPercent ?
+                               int(std::round(object->getPositionR() * transformValue.x() / 100)) :
                                int(std::round(transformValue.x())));
         count++;
       }
       break;
 
     case ToolTypeTargets::G:
-      foreach(PrefabItem* prefab, prefabs) {
-        prefab->setPositionG(byPercent ?
-                               int(std::round(transformValue.y() / 100)) :
+      foreach(EditorObject* object, objects) {
+        object->setPositionG(byPercent ?
+                               int(std::round(object->getPositionG() * transformValue.y() / 100)) :
                                int(std::round(transformValue.y())));
         count++;
       }
       break;
 
     case ToolTypeTargets::B:
-      foreach(PrefabItem* prefab, prefabs) {
-        prefab->setPositionB(byPercent ?
-                               int(std::round(transformValue.z() / 100)) :
+      foreach(EditorObject* object, objects) {
+        object->setPositionB(byPercent ?
+                               int(std::round(object->getPositionB() * transformValue.z() / 100)) :
                                int(std::round(transformValue.z())));
         count++;
       }
       break;
 
     default:
-      foreach(PrefabItem* prefab, prefabs) {
-        prefab->setPosition(byPercent ?
-                              (transformValue / 100) :
+      foreach(EditorObject* object, objects) {
+        object->setPosition(byPercent ?
+                              object->getPositionVector() * (transformValue / 100) :
                               transformValue);
         count++;
       }
@@ -813,36 +805,36 @@ uint NodeEditor::transformPrefab(const QVector<PrefabItem*>& prefabs, const Tool
     qDebug() << "=> Replace Scaling";
     switch(target) {
     case ToolTypeTargets::R:
-      foreach(PrefabItem* prefab, prefabs) {
-        prefab->setScalingR(byPercent ?
-                               int(std::round(transformValue.x() / 100)) :
+      foreach(EditorObject* object, objects) {
+        object->setScalingR(byPercent ?
+                               int(std::round(object->getScalingR() * transformValue.x() / 100)) :
                                int(std::round(transformValue.x())));
         count++;
       }
       break;
 
     case ToolTypeTargets::G:
-      foreach(PrefabItem* prefab, prefabs) {
-        prefab->setScalingG(byPercent ?
-                               int(std::round(transformValue.y() / 100)) :
+      foreach(EditorObject* object, objects) {
+        object->setScalingG(byPercent ?
+                               int(std::round(object->getScalingG() * transformValue.y() / 100)) :
                                int(std::round(transformValue.y())));
         count++;
       }
       break;
 
     case ToolTypeTargets::B:
-      foreach(PrefabItem* prefab, prefabs) {
-        prefab->setScalingB(byPercent ?
-                               int(std::round(transformValue.z() / 100)) :
+      foreach(EditorObject* object, objects) {
+        object->setScalingB(byPercent ?
+                               int(std::round(object->getScalingB() * transformValue.z() / 100)) :
                                int(std::round(transformValue.z())));
         count++;
       }
       break;
 
     default:
-      foreach(PrefabItem* prefab, prefabs) {
-          prefab->setScaling(byPercent ?
-                               transformValue / 100 :
+      foreach(EditorObject* object, objects) {
+          object->setScaling(byPercent ?
+                               object->getScalingVector() * transformValue / 100 :
                                transformValue);
         count++;
       }
@@ -852,46 +844,129 @@ uint NodeEditor::transformPrefab(const QVector<PrefabItem*>& prefabs, const Tool
 
   case ReplaceRotation:
     qDebug() << "=> Replace Rotation";
-    foreach(PrefabItem* prefab, prefabs) {
-      prefab->setRotation(rotationValue4D);
+    foreach(EditorObject* object, objects) {
+      object->setRotation(rotationValue4D);
       count++;
     }
     break;
 
   case IncreasingPosition:
     qDebug() << "=> Increasing Position";
-    foreach(PrefabItem* prefab, prefabs) {
+    foreach(EditorObject* object, objects) {
       incValues += transformValue;
 
-      prefab->setPosition(prefab->getPositionVector() + incValues);
+      object->setPosition(object->getPositionVector() + incValues);
       count++;
     }
     break;
 
   case IncreasingScale:
     qDebug() << "=> Increasing Scale";
-    foreach(PrefabItem* prefab, prefabs) {
+    foreach(EditorObject* object, objects) {
       incValues += transformValue;
 
-      prefab->setScaling(prefab->getScalingVector() + incValues);
+      object->setScaling(object->getScalingVector() + incValues);
       count++;
     }
     break;
 
   case IncreasingRotation:
     qDebug() << "=> Increasing Rotation";
-    foreach(PrefabItem* prefab, prefabs) {
+    foreach(EditorObject* object, objects) {
       incRotation *= rotationValue;
-      prefab->setRotation(prefab->getRotationQuaterion() * incRotation);
+      object->setRotation(object->getRotationQuaterion() * incRotation);
       count++;
     }
     break;
 
+  case MultiplyPosition:
+    qDebug() << "=> Multiply Position";
+
+    switch(target) {
+    case ToolTypeTargets::R:
+      foreach(EditorObject* object, objects) {
+        object->setPositionR(byPercent ?
+                               int(std::round(object->getPositionR() * transformValue.x() / 100)) :
+                               int(std::round(object->getPositionR() * transformValue.x())));
+        count++;
+      }
+      break;
+
+    case ToolTypeTargets::G:
+      foreach(EditorObject* object, objects) {
+        object->setPositionG(byPercent ?
+                               int(std::round(object->getPositionG() * transformValue.y() / 100)) :
+                               int(std::round(object->getPositionG() * transformValue.y())));
+        count++;
+      }
+      break;
+
+    case ToolTypeTargets::B:
+      foreach(EditorObject* object, objects) {
+        object->setPositionB(byPercent ?
+                               int(std::round(object->getPositionB() * transformValue.z() / 100)) :
+                               int(std::round(object->getPositionB() * transformValue.z())));
+        count++;
+      }
+      break;
+
+    default:
+      foreach(EditorObject* object, objects) {
+        object->setPosition(byPercent ?
+                              object->getPositionVector() * (transformValue / 100) :
+                              object->getPositionVector() * transformValue);
+        count++;
+      }
+      break;
+    }
+    break;
+
+  case MultiplyScaling:
+    qDebug() << "=> Replace Scaling";
+    switch(target) {
+    case ToolTypeTargets::R:
+      foreach(EditorObject* object, objects) {
+        object->setScalingR(byPercent ?
+                               int(std::round(object->getScalingR() * transformValue.x() / 100)) :
+                               int(std::round(object->getScalingR() * transformValue.x())));
+        count++;
+      }
+      break;
+
+    case ToolTypeTargets::G:
+      foreach(EditorObject* object, objects) {
+        object->setScalingG(byPercent ?
+                               int(std::round(object->getScalingG() * transformValue.y() / 100)) :
+                               int(std::round(object->getScalingG() * transformValue.y())));
+        count++;
+      }
+      break;
+
+    case ToolTypeTargets::B:
+      foreach(EditorObject* object, objects) {
+        object->setScalingB(byPercent ?
+                               int(std::round(object->getScalingB() * transformValue.z() / 100)) :
+                               int(std::round(object->getScalingB() * transformValue.z())));
+        count++;
+      }
+      break;
+
+    default:
+      foreach(EditorObject* object, objects) {
+          object->setScaling(byPercent ?
+                               object->getScalingVector() * transformValue / 100 :
+                               object->getScalingVector() * transformValue);
+        count++;
+      }
+      break;
+    }
+    break;
+
   case Mirror: {
-    foreach(PrefabItem* prefab, prefabs) {
-      PrefabItem dublicate(this, dublicatePrefab(prefab));
-      dublicate.setPosition(dublicate.getPositionVector() * QVector3D(-1, 1, -1));
-      //prefab->setRotation(prefab->getRotationQuaterion() * QQuaternion::fromEulerAngles(0, 180, 0));
+    foreach(EditorObject* object, objects) {
+      EditorObject* duplicate = getObjectByIndex(duplicateObject(object));
+      duplicate->setPosition(duplicate->getPositionVector() * QVector3D(-1, 1, -1));
+      //object->setRotation(object->getRotationQuaterion() * QQuaternion::fromEulerAngles(0, 180, 0));
       count++;
     }
     break;
@@ -905,55 +980,22 @@ uint NodeEditor::transformPrefab(const QVector<PrefabItem*>& prefabs, const Tool
 
 void NodeEditor::resetFinishGates()
 {
-  QList<QStandardItem*> finishKeys = model.findItems("finish", Qt::MatchRecursive, NodeTreeColumns::KeyColumn);
-  for (int i = 0; i < finishKeys.size(); ++i) {
-    QModelIndex finishValueIndex = finishKeys.value(i)->index().siblingAtColumn(NodeTreeColumns::ValueColumn);
-    if (finishValueIndex.isValid()) {
-      model.setData(finishValueIndex, QVariant(false), Qt::EditRole);
-    }
-  }
-}
-
-void NodeEditor::resetModifiedFlags()
-{
-  resetModifiedFlag(model.invisibleRootItem());
-}
-
-void NodeEditor::resetModifiedFlag(const QStandardItem* item)
-{
-  for (int i = 0; i < item->rowCount(); ++i)
-  {
-    model.setData(item->child(i, 0)->index(), true, Qt::UserRole);
-    QStandardItem* child = item->child(i, 0);
-    if (child->hasChildren())
-      resetModifiedFlag(child);
-  }
-}
-
-void NodeEditor::resetFilterMarks()
-{
-  QList<QStandardItem*> prefabNodes = model.findItems("prefab", Qt::MatchRecursive, NodeTreeColumns::KeyColumn);
-  foreach(QStandardItem* item, prefabNodes) {
-    PrefabItem prefab(this);
-    if (prefab.parseIndex(item->index()))
-      prefab.setFilterMark(false);
+  foreach(EditorObject* gate, track->getGates()) {
+    gate->setFinish(false);
   }
 }
 
 void NodeEditor::resetStartGates()
 {
-  QList<QStandardItem*> startKeys = model.findItems("start", Qt::MatchRecursive, NodeTreeColumns::KeyColumn);
-  for (int i = 0; i < startKeys.size(); ++i) {
-    QModelIndex finishValueIndex = startKeys.value(i)->index().siblingAtColumn(NodeTreeColumns::ValueColumn);
-    if (finishValueIndex.isValid()) {
-      model.setData(finishValueIndex, QVariant(false), Qt::EditRole);
-    }
+  foreach(EditorObject* gate, track->getGates()) {
+    gate->setStart(false);
   }
 }
 
-QVector<PrefabItem*> NodeEditor::search(const QVector<PrefabItem*>& searchItems, const QVector<NodeFilter*>& filterList) {
-  QVector<PrefabItem*> initialMatchList = searchItems;
-  QVector<PrefabItem*> matchList = searchItems;
+QVector<EditorObject*> NodeEditor::search(const QVector<EditorObject*>& searchItems, const QVector<NodeFilter*>& filterList) {
+  qDebug() << "NodeEditor::search called.";
+  QVector<EditorObject*> initialMatchList = searchItems;
+  QVector<EditorObject*> matchList = searchItems;
 
   if (matchList.count() == 0 || filterList.count() == 0)
     return matchList;
@@ -1042,10 +1084,13 @@ QVector<PrefabItem*> NodeEditor::search(const QVector<PrefabItem*>& searchItems,
       continue;
 
     foreach(QModelIndex index, filter->getCustomIndexList()) {
-      // Check if an prefab with the custom index is already present
+      // Check if an object with the custom index is already present
       matched = false;
-      foreach(PrefabItem* matchedItem, matchList) {
+      foreach(EditorObject* matchedItem, matchList) {
         if (matchedItem->getIndex() != index)
+          continue;
+
+        if (index.model() != editorModel)
           continue;
 
         matched = true;
@@ -1057,36 +1102,31 @@ QVector<PrefabItem*> NodeEditor::search(const QVector<PrefabItem*>& searchItems,
         continue;
 
       // This index has not been matched yet.
-      // Add a new prefab-item to the matches bases on the custom index
-      PrefabItem* newMatch = new PrefabItem(this);
-      if (!newMatch->parseIndex(index))
+      // Add a new prefab-item to the matches based on the custom index
+      EditorObject* object = getObjectByIndex(index);
+      if (!object->isValid())
         continue;
 
-      matchList.append(newMatch);
+      matchList.append(object);
     }
   }
 
   return matchList;
 }
 
-QVector<PrefabItem*> NodeEditor::search(QModelIndex& index, QVector<NodeFilter*> filterList) {
-  return search(findPrefabs(index), filterList);
-}
+//QVector<EditorObject*> NodeEditor::search(QModelIndex& index, QVector<NodeFilter*> filterList) {
+//  return search(findPrefabs(index), filterList);
+//}
 
-QVector<PrefabItem*> NodeEditor::search(QList<QStandardItem*> prefabs, QVector<NodeFilter*> filterList) {
-  QVector<PrefabItem*> matchList;
-  foreach(QStandardItem* prefabItem, prefabs) {
-    PrefabItem* prefab = new PrefabItem(this);
-    if (prefab->parseIndex(prefabItem->index()))
-      matchList.append(prefab);
+QVector<EditorObject*> NodeEditor::search(QList<EditorModelItem*> objects, QVector<NodeFilter*> filterList) {
+  QVector<EditorObject*> matchList;
+  foreach(EditorModelItem* objectItem, objects) {
+    EditorObject* object = objectItem->getObject();
+    if (object && object->isValid())
+      matchList.append(object);
   }
 
   return search(matchList, filterList);
-}
-
-void NodeEditor::setPrefabs(const QVector<PrefabData> value)
-{
-  prefabs = value;
 }
 
 void NodeEditor::setSceneId(const uint &value)

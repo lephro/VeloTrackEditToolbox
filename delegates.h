@@ -9,15 +9,16 @@
 #include <QSpinBox>
 #include <QStyledItemDelegate>
 
-#include "velodb.h"
+#include "editormodel.h"
 #include "nodeeditor.h"
+#include "velodb.h"
 
 class JsonTreeViewItemDelegate  : public QStyledItemDelegate
 {
   Q_OBJECT
 
 public:
-  JsonTreeViewItemDelegate(QObject* parent = nullptr, NodeEditor* dataParser = nullptr);
+  JsonTreeViewItemDelegate(QObject* parent = nullptr, NodeEditor* nodeEditor = nullptr);
 
   QWidget* createEditor(QWidget* parent, const QStyleOptionViewItem &option, const QModelIndex &index) const override;
 
@@ -28,7 +29,7 @@ public:
   void updateEditorGeometry(QWidget* editor, const QStyleOptionViewItem &option, const QModelIndex &valueIndex) const override;
 
 private:
-  NodeEditor* dataParser;
+  NodeEditor* nodeEditor;
 };
 
 class NoEditDelegate: public QStyledItemDelegate {

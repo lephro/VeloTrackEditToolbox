@@ -6,27 +6,18 @@ MainWindow::MainWindow(QWidget *parent)
   , ui(new Ui::MainWindow)
 {
   ui->setupUi(this);
+
   // Set the default window title
   defaultWindowTitle = QString(windowTitle());
 
-  // Create and connect the context menu of the node edito
-  nodeEditorContextMenu.addAction(QIcon(":/icons/filter"), tr("Add to filter"), this, SLOT(onNodeEditorContextMenuAddToFilterAction()));
-  QMenu* addFilterSubMenu = nodeEditorContextMenu.addMenu(QIcon(":/icons/filter-add"), tr("Add property as filter"));
-  addFilterSubMenu->addAction(QIcon(":/icons/object"), tr("Object"), this, SLOT(onNodeEditorContextMenuAddObjectAsFilterAction()));
-  addFilterSubMenu->addAction(QIcon(":/icons/coordinate-system"), tr("Position"), this, SLOT(onNodeEditorContextMenuAddPositionAsFilterAction()));
-  addFilterSubMenu->addAction(QIcon(":/icons/rotation"), tr("Rotation"), this, SLOT(onNodeEditorContextMenuAddRotationAsFilterAction()));
-  addFilterSubMenu->addAction(QIcon(":/icons/resize"), tr("Scaling"), this, SLOT(onNodeEditorContextMenuAddScaleAsFilterAction()));
-  nodeEditorContextMenu.addAction(QIcon(":/icons/copy"), tr("D&ublicate"), this, SLOT(onNodeEditorContextMenuDublicateAction()));
-  nodeEditorContextMenu.addAction(QIcon(":/icons/copy-add"), tr("&Mass dublicate"), this, SLOT(onNodeEditorContextMenuMassDublicateAction()));
-  nodeEditorContextMenu.addAction(QIcon(":/icons/delete"), tr("&Delete"), this, SLOT(onNodeEditorContextMenuDeleteAction()));
-  connect(ui->nodeTreeView, SIGNAL(customContextMenuRequested(const QPoint&)), this, SLOT(onNodeEditorContextMenu(const QPoint&)));
+  nodeEditorManager = new EditorManager(*this, *ui->nodeEditorTabWidget);
 
   // Create the labels for the status bar and add them to it
-  updateStatusBar();
+  //updateStatusBar();
   statusBar()->addPermanentWidget(&filterCountLabel);
   statusBar()->addPermanentWidget(&splineCountLabel);
   statusBar()->addPermanentWidget(&gateCountLabel);
-  statusBar()->addPermanentWidget(&prefabCountLabel);
+  statusBar()->addPermanentWidget(&objectCountLabel);
   statusBar()->addPermanentWidget(&nodeCountLabel);
 
   // Create the flow layout for the search filter
@@ -65,10 +56,12 @@ MainWindow::MainWindow(QWidget *parent)
     readSettings();
   } catch (VeloToolkitException& e) {
     e.Message();
-  }    
+  }
+
+  openTrackDialog = new OpenTrackDialog(this, productionDb, betaDb, customDb);
 
   // Hook up our delegation for the node value control
-  ui->nodeTreeView->setItemDelegateForColumn(NodeTreeColumns::ValueColumn, new JsonTreeViewItemDelegate(nullptr, &nodeEditor));
+  //ui->nodeTreeView->setItemDelegateForColumn(NodeTreeColumns::ValueColumn, new JsonTreeViewItemDelegate(nullptr, &nodeEditor));
 
   // Update our database status indicator in the setup page
   updateDatabaseOptionsDatabaseStatus();
@@ -91,7 +84,7 @@ MainWindow::MainWindow(QWidget *parent)
     QMessageBox::information(this, tr("No databases found!"), tr("The VeloTrackToolkit could not find any databases.\nPlease go to the options page and select the nescessary database files."));
 
   // Set the node editor as the default page
-  ui->navListWidget->setCurrentRow(NavRows::NodeEditorRow);  
+  ui->navListWidget->setCurrentRow(NavRows::NodeEditorRow);
 }
 
 void MainWindow::closeEvent(QCloseEvent *e)
@@ -106,10 +99,15 @@ void MainWindow::closeEvent(QCloseEvent *e)
 VeloDb* MainWindow::getDatabase()
 {
   // return the database of the loaded track
-  return getDatabase(loadedTrack.assignedDatabase);
+  NodeEditor* editor = nodeEditorManager->getEditor();
+  if (editor != nullptr)
+    return getDatabase(editor->getTrackData().assignedDatabase);
+
+  // No track loaded. Get the first initialized
+  return getDatabase(DatabaseType::Production);
 }
 
-VeloDb* MainWindow::getDatabase(DatabaseType databaseType)
+VeloDb* MainWindow::getDatabase(const DatabaseType databaseType)
 {
   // return the database according to the type given
   if (databaseType == DatabaseType::Production)
@@ -133,15 +131,19 @@ QString MainWindow::getDefaultPath()
 
 bool MainWindow::maybeSave()
 {
+  NodeEditor* nodeEditor = nodeEditorManager->getEditor();
+  if (nodeEditor == nullptr)
+    return true;
+
   // if the track wasn't modified and the scene didn't change there is nothing to do here
-  if (!nodeEditor.isModified() && (loadedTrack.sceneId == ui->sceneComboBox->currentData().toUInt()))
+  if (!nodeEditor->isModified() && (nodeEditor->getTrackData().sceneId == ui->sceneComboBox->currentData().toUInt()))
     return true;
 
   // Ask the user if he wants to save his changes or cancel the process
   const QMessageBox::StandardButton ret
     = QMessageBox::warning(this,
                            defaultWindowTitle,
-                           tr("Do you want to save your changes on \"") + loadedTrack.name + tr("\"?"),
+                           tr("Do you want to save your changes on \"") + nodeEditor->getTrackData().name + tr("\"?"),
                            QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
   switch (ret) {
   case QMessageBox::Save:
@@ -172,40 +174,38 @@ void MainWindow::readSettings()
   // Read the settings from the config file to its according variables
   settings.beginGroup("general");
   ui->saveAsNewCheckbox->setChecked(settings.value("saveTrackAsNew", true).toString().toLower() == "true");
-  ui->viewNodeTypeColumn->setChecked(settings.value("viewTypeColumn").toString().toLower() == "true");
-  if (!ui->viewNodeTypeColumn->isChecked())
-    ui->nodeTreeView->hideColumn(NodeTreeColumns::TypeColumn);
+  ui->viewNodeTypeColumn->setChecked(settings.value("viewTypeColumn", false).toString().toLower() == "true");
 
-  const QColor filterColor = QColor(settings.value("general/filterColorR", 254).toInt(),
-                                    settings.value("general/filterColorG", 203).toInt(),
-                                    settings.value("general/filterColorB", 137).toInt());
+  const QColor filterColor = QColor(settings.value("filterColorR", 254).toInt(),
+                                    settings.value("filterColorG", 203).toInt(),
+                                    settings.value("filterColorB", 137).toInt());
   if (filterColor.isValid()) {
     ui->filterColorPushButton->setStyleSheet("background-color: " + filterColor.name());
-    nodeEditor.setFilterBackgroundColor(filterColor);
+    nodeEditorManager->setFilterColor(filterColor);
   }
 
-  const QColor filterFontColor = QColor(settings.value("general/filterFontColorR", 0).toInt(),
-                                        settings.value("general/filterFontColorG", 0).toInt(),
-                                        settings.value("general/filterFontColorB", 0).toInt());
+  const QColor filterFontColor = QColor(settings.value("filterFontColorR", 0).toInt(),
+                                        settings.value("filterFontColorG", 0).toInt(),
+                                        settings.value("filterFontColorB", 0).toInt());
   if (filterFontColor.isValid()) {
     ui->filterColorFontPushButton->setStyleSheet("background-color: " + filterFontColor.name());
-    nodeEditor.setFilterFontColor(filterFontColor);
+    nodeEditorManager->setFilterFontColor(filterFontColor);
   }
 
-  const QColor filterParentColor = QColor(settings.value("general/filterParentColorR", 192).toInt(),
-                                          settings.value("general/filterParentColorG", 192).toInt(),
-                                          settings.value("general/filterParentColorB", 192).toInt());
+  const QColor filterParentColor = QColor(settings.value("filterParentColorR", 192).toInt(),
+                                          settings.value("filterParentColorG", 192).toInt(),
+                                          settings.value("filterParentColorB", 192).toInt());
   if (filterParentColor.isValid()) {
     ui->filterColorParentPushButton->setStyleSheet("background-color: " + filterParentColor.name());
-    nodeEditor.setFilterContentBackgroundColor(filterParentColor);
+    nodeEditorManager->setFilterParentColor(filterParentColor);
   }
 
-  const QColor filterParentFontColor = QColor(settings.value("general/filterParentFontColorR", 0).toInt(),
-                                              settings.value("general/filterParentFontColorG", 0).toInt(),
-                                              settings.value("general/filterParentFontColorB", 0).toInt());
+  const QColor filterParentFontColor = QColor(settings.value("filterParentFontColorR", 0).toInt(),
+                                              settings.value("filterParentFontColorG", 0).toInt(),
+                                              settings.value("filterParentFontColorB", 0).toInt());
   if (filterParentFontColor.isValid()) {
     ui->filterColorParentFontPushButton->setStyleSheet("background-color: " + filterParentFontColor.name());
-    nodeEditor.setFilterContentFontColor(filterParentFontColor);
+    nodeEditorManager->setFilterParentFontColor(filterParentFontColor);
   }
 
   settings.endGroup();
@@ -230,21 +230,26 @@ void MainWindow::readSettings()
 
 void MainWindow::updateStatusBar()
 { 
+  NodeEditor* nodeEditor = nodeEditorManager->getEditor();
+
   // Parse the count values into their templates and update the labels with it
-  nodeCountLabel.setText(nodeCountLabelText.arg(nodeEditor.getNodeCount()));
-  prefabCountLabel.setText(prefabCountLabelText.arg(nodeEditor.getPrefabCount()));
-  gateCountLabel.setText(gateCountLabelText.arg(nodeEditor.getGateCount()));
-  splineCountLabel.setText(splineCountLabelText.arg(nodeEditor.getSplineCount()));
-  filterCountLabel.setText(lastSearchResult.count() == 0 ? "" : filterCountLabelText.arg(lastSearchResult.count()));
+  objectCountLabel.setText(prefabCountLabelText.arg(nodeEditor == nullptr ? 0 : nodeEditor->getTrack()->getObjectCount()));
+  gateCountLabel.setText(gateCountLabelText.arg(nodeEditor == nullptr ? 0 : nodeEditor->getTrack()->getGateCount()));
+  splineCountLabel.setText(splineCountLabelText.arg(nodeEditor == nullptr ? 0 : nodeEditor->getTrack()->getSplineCount()));
+  const int searchResultCount = nodeEditor == nullptr ? 0 : nodeEditor->getSearchResult().count();
+  filterCountLabel.setText(searchResultCount == 0 ? "" : filterCountLabelText.arg(searchResultCount));
 }
 
 void MainWindow::updateWindowTitle()
 {
-  // Determinate the database and set the window title
-  QString databaseStr = (loadedTrack.assignedDatabase == DatabaseType::Production ? "Production" : ((loadedTrack.assignedDatabase == DatabaseType::Beta) ? "Beta" : "Custom"));
-  setWindowTitle(loadedTrack.name + " @ " + databaseStr + " - " + defaultWindowTitle);
-}
+  NodeEditor* editor = nodeEditorManager->getEditor();
+  if (editor == nullptr)
+    setWindowTitle(defaultWindowTitle);
 
+  // Determinate the database and set the window title
+  QString databaseStr = (editor->getTrackData().assignedDatabase == DatabaseType::Production ? "Production" : ((editor->getTrackData().assignedDatabase == DatabaseType::Beta) ? "Beta" : "Custom"));
+  setWindowTitle(editor->getTrackData().name + " @ " + databaseStr + " - " + defaultWindowTitle);
+}
 
 void MainWindow::on_navListWidget_currentRowChanged(int currentRow)
 {
@@ -264,3 +269,5 @@ void MainWindow::on_navListWidget_currentRowChanged(int currentRow)
     break;
   }
 }
+
+

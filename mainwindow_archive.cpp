@@ -5,6 +5,8 @@ void MainWindow::loadArchive()
 {
   // Get an available database to pull scenes from
   VeloDb* database = getDatabase();
+  if (database == nullptr)
+    return;
 
   // Clear the archive tree view
   ui->archiveTreeWidget->clear();

@@ -5,14 +5,12 @@
 #include <QComboBox>
 #include <QColorDialog>
 #include <QFileDialog>
-#include <QInputDialog>
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QJsonValue>
 #include <QListView>
 #include <QMainWindow>
 #include <QMessageBox>
-#include <QMenu>
 #include <QRegularExpressionValidator>
 #include <QScrollBar>
 #include <QSettings>
@@ -21,15 +19,15 @@
 #include <QTreeView>
 #include <QTreeWidgetItem>
 
-#include "delegates.h"
+//#include "geodesicdome.h"
+#include "nodeeditor.h"
+#include "editormanager.h"
 #include "nodefilter.h"
-#include "geodesicdome.h"
 #include "opentrackdialog.h"
-#include "prefabitem.h"
+#include "editorobject.h"
 #include "searchfilterlayout.h"
 #include "trackarchive.h"
 #include "velodb.h"
-#include "nodeeditor.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -49,12 +47,19 @@ enum AboutStackedWidgetPages {
   LicensePage = 2,
 };
 
+class EditorManager;
+
 class MainWindow : public QMainWindow
 {
   Q_OBJECT
 
 public:
   MainWindow(QWidget* parent = nullptr);
+  void addFilter(const QModelIndex& index);
+  void addFilter(const FilterTypes filterType, const FilterMethods filterMethod, int value, const QString displayValue = "", const QModelIndex &customIndex = QModelIndex());
+  void updateStatusBar();
+  void updateSearch();
+  void updateSearchFilterControls();
 
 private slots:
   void on_aboutPatchLogPushButton_released();
@@ -78,10 +83,12 @@ private slots:
   void on_mergeTrack1SelectPushButton_released();
   void on_mergeTrack2SelectPushButton_released();
   void on_navListWidget_currentRowChanged(int currentRow);
+  void on_nodeEditorTabWidget_currentChanged(int index);
+  void on_nodeEditorTabWidget_tabCloseRequested(int index);
   void on_openTrackPushButton_released();
   void on_refreshTrackPushButton_released();
   void on_replacePrefabComboBox_currentIndexChanged(int index);
-  void on_saveAsNewCheckbox_stateChanged(int saveAsNewState);
+  void on_saveAsNewCheckbox_clicked(bool checked);
   void on_savePushButton_released();
   void on_searchAddFilterPushButton_released();
   void on_searchClearFilterPushButton_released();
@@ -99,6 +106,7 @@ private slots:
   void on_settingsDbLineEdit_textChanged(const QString &settingsDbFilename);
   void on_toolsApplyPushButton_released();
   void on_toolsSubtypeComboBox_currentIndexChanged(int index);
+  void on_toolsSubtypeTargetComboBox_currentIndexChanged(int index);
   void on_toolsTypeComboBox_currentIndexChanged(int index);
   void on_transformBDoubleResetPushButton_released();
   void on_transformByComboBox_currentTextChanged(const QString &transformBy);
@@ -112,24 +120,12 @@ private slots:
   void on_transformRotationYValueSpinBox_valueChanged(int value);
   void on_transformRotationZValueSpinBox_valueChanged(int value);
   void on_userDbLineEdit_textChanged(const QString &userDbFilename);
-  void on_viewNodeTypeColumn_stateChanged(int viewNodeTypeColumnState);
 
   void on_geoGenTestPushButton_released();
-
-  void onNodeEditorContextMenu(const QPoint &point);
-  void onNodeEditorContextMenuAddObjectAsFilterAction();
-  void onNodeEditorContextMenuAddPositionAsFilterAction();
-  void onNodeEditorContextMenuAddRotationAsFilterAction();
-  void onNodeEditorContextMenuAddScaleAsFilterAction();
-  void onNodeEditorContextMenuAddToFilterAction();
-  void onNodeEditorContextMenuDeleteAction();
-  void onNodeEditorContextMenuDublicateAction();
-  void onNodeEditorContextMenuMassDublicateAction();
 
   void onSearchFilterChanged();
   void updateDynamicTabControlSize(int index);    
 
-  void on_toolsSubtypeTargetComboBox_currentIndexChanged(int index);
 
 protected:
   void closeEvent(QCloseEvent* e) override;
@@ -148,34 +144,30 @@ private:
   QString defaultBetaSettingsDbFilename = "C:/Users/<USER>/AppData/LocalLow/VelociDrone/VelociDroneBeta/settings.db";
 
   QLabel nodeCountLabel;
-  QLabel prefabCountLabel;  
+  QLabel objectCountLabel;  
   QLabel gateCountLabel;
   QLabel splineCountLabel;
   QLabel filterCountLabel;
 
   DatabaseType databaseOptionsSelectedDbType = DatabaseType::Production;
 
-  TrackData loadedTrack;
-
   Ui::MainWindow* ui;
+  OpenTrackDialog* openTrackDialog;
   SearchFilterLayout* searchFilterLayout;
-  QVector<PrefabItem*> lastSearchResult;
-  QMenu nodeEditorContextMenu;
 
   VeloDb* selectedDb;
   VeloDb* productionDb;
   VeloDb* betaDb;
   VeloDb* customDb;
-  NodeEditor nodeEditor;
+
+  EditorManager* nodeEditorManager;
 
   TrackArchive* archive;
 
   TrackData mergeTrack1;
   TrackData mergeTrack2;
 
-  bool nodeEditStarted = false;
-  QVector<bool> nodeEditTreeExpansionStates;
-  float nodeEditLastScrollbarPos;
+  int currentCacheId = INT_MIN;
 
   void readSettings();
 
@@ -183,16 +175,16 @@ private:
 
   QString browseDatabaseFile() const;
   VeloDb* getDatabase();
-  VeloDb* getDatabase(DatabaseType databaseType);
+  VeloDb* getDatabase(const DatabaseType databaseType);
   QColor pickColor(const QString settingsPath, QColor defaultColor);
   void setDatabaseOptionsDatabaseFilenames(const DatabaseType index);
   void setDatabaseOptionsUserDb(const QString& value);
   void setDatabaseOptionsSettingsDb(const QString& value);
-  void updateDatabaseOptionsDatabaseStatus();
-  void updateStatusBar();
+  void updateDatabaseOptionsDatabaseStatus();  
   void updateWindowTitle();
 
   void closeTrack();
+  void closeTrack(const int index);
   void loadTrack(const TrackData& track);
   bool maybeSave();
   void saveTrackToDb();
@@ -205,17 +197,13 @@ private:
 
   bool maybeDontBecauseItsBeta();
 
-  void updateSearchFilter();
-  void updateSearchFilter(bool filterEnabled);
-  void updateSearchFilterMarks();
-  void resetFilterMarks(bool setNodeEdit = true);
-  void updateSearchFromAngleValues();
-  void updateSearchFromQuaternionValues();
   void addFilter(const FilterTypes filterType);
   void toolsReplaceObject();
+
+  void updateSearch(bool filterEnabled);
+  void updateSearchFromAngleValues();
+  void updateSearchFromQuaternionValues();
   void updateTransformFromQuaternionValues();
   void updateTransformFromAngleValues();
-  void beginNodeEdit();
-  void endNodeEdit();
 };
 #endif // MAINWINDOW_H

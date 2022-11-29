@@ -100,8 +100,13 @@ void MainWindow::setDatabaseOptionsSettingsDb(const QString& settingsDbFilename)
     return;
   }
 
+  // ToDo: Needs code review
   if (settingsDbFilename != currentDbFilename) {
-    if ((loadedTrack.assignedDatabase == databaseOptionsSelectedDbType) && (!maybeSave())) {
+    NodeEditor* editor = nodeEditorManager->getEditor();
+    if (editor == nullptr)
+      return;
+
+    if ((editor->getTrackData().assignedDatabase == databaseOptionsSelectedDbType) && (!maybeSave())) {
       setDatabaseOptionsDatabaseFilenames(databaseOptionsSelectedDbType);
     } else {
       settings.setValue("database/productionSettingsDbFilename", settingsDbFilename);
@@ -134,8 +139,13 @@ void MainWindow::setDatabaseOptionsUserDb(const QString& userDbFilename)
     return;
   }
 
+  // ToDo: Needs code review
   if (userDbFilename != currentDbFilename) {
-    if ((loadedTrack.assignedDatabase == databaseOptionsSelectedDbType) && (!maybeSave())) {
+    NodeEditor* editor = nodeEditorManager->getEditor();
+    if (editor == nullptr)
+      return;
+
+    if ((editor->getTrackData().assignedDatabase == databaseOptionsSelectedDbType) && (!maybeSave())) {
       setDatabaseOptionsDatabaseFilenames(databaseOptionsSelectedDbType);
     } else {
       currentDbFilename = userDbFilename;
@@ -152,7 +162,7 @@ void MainWindow::updateDatabaseOptionsDatabaseStatus()
 {
   QPalette palette = ui->databaseStatusValueLabel->palette();
   VeloDb* veloDb = getDatabase();
-  if (veloDb->isValid())
+  if (veloDb != nullptr && veloDb->isValid())
   {
     palette.setColor(QPalette::WindowText, Qt::darkGreen);
     ui->databaseStatusValueLabel->setText(tr("Found"));
@@ -264,8 +274,8 @@ void MainWindow::on_filterColorPushButton_released()
     return;
 
   ui->filterColorPushButton->setStyleSheet("background: " + pick.name());
-  nodeEditor.setFilterBackgroundColor(pick);
-  updateSearchFilter();
+  nodeEditorManager->setFilterColor(pick);
+  updateSearch();
 }
 
 void MainWindow::on_filterColorFontPushButton_released()
@@ -275,8 +285,8 @@ void MainWindow::on_filterColorFontPushButton_released()
     return;
 
   ui->filterColorFontPushButton->setStyleSheet("background: " + pick.name());
-  nodeEditor.setFilterFontColor(pick);
-  updateSearchFilter();
+  nodeEditorManager->setFilterFontColor(pick);
+  updateSearch();
 }
 
 void MainWindow::on_filterColorParentPushButton_released()
@@ -286,8 +296,8 @@ void MainWindow::on_filterColorParentPushButton_released()
     return;
 
   ui->filterColorParentPushButton->setStyleSheet("background: " + pick.name());
-  nodeEditor.setFilterContentBackgroundColor(pick);
-  updateSearchFilter();
+  nodeEditorManager->setFilterParentColor(pick);
+  updateSearch();
 }
 
 void MainWindow::on_filterColorParentFontPushButton_released()
@@ -297,18 +307,18 @@ void MainWindow::on_filterColorParentFontPushButton_released()
     return;
 
   ui->filterColorParentFontPushButton->setStyleSheet("background: " + pick.name());
-  nodeEditor.setFilterContentFontColor(pick);
-  updateSearchFilter();
+  nodeEditorManager->setFilterParentFontColor(pick);
+  updateSearch();
 }
 
-void MainWindow::on_saveAsNewCheckbox_stateChanged(int saveAsNewState)
+void MainWindow::on_saveAsNewCheckbox_clicked(bool checked)
 {
-  qDebug() << "SaveAsNew: " << saveAsNewState;
-  if (saveAsNewState == 0 && !maybeDontBecauseItsBeta())
+  qDebug() << "SaveAsNew: " << checked;
+  if (checked == 0 && !maybeDontBecauseItsBeta())
     return;
 
   QSettings settings("settings.ini", QSettings::IniFormat);
-  settings.setValue("general/saveTrackAsNew", bool(saveAsNewState));
+  settings.setValue("general/saveTrackAsNew", bool(checked));
 }
 
 void MainWindow::on_settingsDbLineEdit_textChanged(const QString &settingsDbFilename)
@@ -321,16 +331,4 @@ void MainWindow::on_userDbLineEdit_textChanged(const QString &userDbFilename)
   setDatabaseOptionsUserDb(userDbFilename);
 }
 
-void MainWindow::on_viewNodeTypeColumn_stateChanged(int viewNodeTypeColumnState)
-{
-  const bool viewNodeTypeColumn = bool(viewNodeTypeColumnState);
-  // Show or hide the type column, depending on the selected item
-  if (viewNodeTypeColumn) {
-    ui->nodeTreeView->showColumn(NodeTreeColumns::TypeColumn);
-  } else {
-    ui->nodeTreeView->hideColumn(NodeTreeColumns::TypeColumn);
-  }
 
-  QSettings settings("settings.ini", QSettings::IniFormat);
-  settings.setValue("general/viewTypeColumn", viewNodeTypeColumn);
-}

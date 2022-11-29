@@ -6,37 +6,38 @@
 #include <QList>
 #include <QMap>
 #include <QMessageBox>
+#include <QScrollBar>
 #include <QSettings>
 #include <QStandardItem>
 #include <QString>
+#include <QTreeView>
 #include <QTreeWidgetItem>
 #include <QQuaternion>
 #include <QVector3D>
 
+#include "track.h"
+
+#include "editormodel.h"
+#include "editorobject.h"
 #include "exceptions.h"
 #include "filterproxymodel.h"
 #include "nodefilter.h"
-#include "prefabitem.h"
-#include "velodb.h"
 #include "velodataparser.h"
-
-enum NodeTreeColumns {
-  KeyColumn = 0,
-  ValueColumn = 1,
-  TypeColumn = 2
-};
+#include "velodb.h"
 
 enum ToolTypes {
   Replace             = 0,
   Move                = 1,
-  ReplacePosition     = 2,
-  IncreasingPosition  = 3,
-  AddRotation         = 4,
-  ReplaceRotation     = 5,
+  IncreasingPosition  = 2,
+  ReplacePosition     = 3,
+  MultiplyPosition    = 4,
+  AddRotation         = 5,
   IncreasingRotation  = 6,
-  Scale               = 7,
-  ReplaceScaling      = 8,
+  ReplaceRotation     = 7,
+  Scale               = 8,
   IncreasingScale     = 9,
+  ReplaceScaling      = 10,
+  MultiplyScaling     = 11,
   Mirror              = 20
 };
 
@@ -47,85 +48,86 @@ enum ToolTypeTargets {
   B   = 3
 };
 
-class PrefabItem;
+class EditorModel;
+class EditorModelItem;
+class EditorObject;
 
-class NodeEditor : QObject
+class NodeEditor : public QObject
 {
   Q_OBJECT
 
 public:  
-  NodeEditor();
-  ~NodeEditor();
+  explicit NodeEditor(Track &track);
 
+//  NodeEditor& operator =(const NodeEditor& b);
+
+  void                        beginNodeEdit();
   void                        changeGateOrder(const uint oldGateNo, const uint newGateNo);
+  void                        clearFilterMarks();
+  void                        clearModifiedFlag(EditorModelItem* modelItem = nullptr);
+  void                        clearSearch(const int cacheId);
   void                        deleteNode(const QModelIndex &index) const;
-  QModelIndex                 dublicatePrefab(PrefabItem *sourcePrefab);
+  QModelIndex                 duplicateObject(EditorObject* sourceObject);
+  void                        endNodeEdit();
   QByteArray*                 exportAsJsonData();
-  uint                        getGateCount() const;
-  QBrush                      getFilterContentBackgroundColor() const;
-  QBrush                      getFilterContentFontColor() const;
-  QBrush                      getFilterBackgroundColor() const;
-  QBrush                      getFilterFontColor() const;
+  QVector<PrefabData>         getAllPrefabData() const;
   FilterProxyModel&           getFilteredModel();
-  uint                        getNodeCount() const;
-  const PrefabData            getPrefab(const uint id) const;
-  uint                        getPrefabCount() const;
+  EditorObject*               getObjectByIndex(const QModelIndex index);
+  const PrefabData            getPrefabData(const uint id) const;
   QString                     getPrefabDesc(const uint id) const;
-  const QVector<PrefabData>*  getPrefabData() const;
   QVector<PrefabData>         getPrefabsInUse(bool includeNonEditable = false) const;
   QModelIndex                 getRootIndex() const;
   uint                        getSceneId() const;
-  uint                        getSplineCount() const;
-  QStandardItemModel&         getStandardModel();
-  void                        importJsonData(const QByteArray *jsonData);
+  int                         getSearchCacheId() const;
+  QVector<EditorObject*>      getSearchResult() const;
+  EditorModel&                getEditorModel();
+  TrackData&                  getTrackData();
+  QTreeView&                  getTreeView() const;
   bool                        isModified();
-  void                        mergeJsonData(const QByteArray *jsonData, const bool addBarriers, const bool addGates);
+  void                        mergeJsonData(const QByteArray& jsonData, const bool addBarriers, const bool addGates);
   uint                        replacePrefabs(const QModelIndex& searchIndex, const uint fromPrefabId, const uint toPrefabId, const QVector3D scaling = QVector3D(1, 1, 1));
-  uint                        replacePrefabs(const QModelIndexList &searchIndexList, const uint fromPrefabId, const uint toPrefabId, const QVector3D scaling = QVector3D(1, 1, 1));
-  uint                        replacePrefabs(const QVector<PrefabItem *> &prefabs, const uint fromPrefabId, const uint toPrefabId, const QVector3D scaling = QVector3D(1, 1, 1));
-  void                        resetModifiedFlag(const QStandardItem* item);
-  uint                        transformPrefab(const QModelIndex& searchIndex, const ToolTypes toolType, const QVariant &value, const ToolTypeTargets target = ToolTypeTargets::RGB, const bool byPercent = false);
+  uint                        replacePrefabs(const QModelIndexList& searchIndexList, const uint fromPrefabId, const uint toPrefabId, const QVector3D scaling = QVector3D(1, 1, 1));
+  uint                        replacePrefabs(const QVector<EditorObject*>& prefabs, const uint fromPrefabId, const uint toPrefabId, const QVector3D scaling = QVector3D(1, 1, 1));
+  uint                        transformPrefab(const QModelIndex& searchIndex, const ToolTypes toolType, const QVariant& value, const ToolTypeTargets target = ToolTypeTargets::RGB, const bool byPercent = false);
   uint                        transformPrefab(const QModelIndexList& searchIndexList, const ToolTypes toolType, const QVariant &value, const ToolTypeTargets target = ToolTypeTargets::RGB, const bool byPercent = false);
-  uint                        transformPrefab(const QVector<PrefabItem*>& prefabs, const ToolTypes toolType, const QVariant &value, const ToolTypeTargets target = ToolTypeTargets::RGB, const bool byPercent = false);
-  void                        resetFinishGates();
-  void                        resetModifiedFlags();
-  void                        resetFilterMarks();
+  uint                        transformPrefab(const QVector<EditorObject*>& prefabs, const ToolTypes toolType, const QVariant &value, const ToolTypeTargets target = ToolTypeTargets::RGB, const bool byPercent = false);
+  void                        resetFinishGates();  
   void                        resetStartGates();
-  QVector<PrefabItem*>        search(const QVector<PrefabItem*>& index, const QVector<NodeFilter *> &filterList);
-  QVector<PrefabItem*>        search(QModelIndex& index, QVector<NodeFilter*> filterList);
-  QVector<PrefabItem*>        search(QList<QStandardItem*> items, QVector<NodeFilter*> filterList);
-  void                        setFilterBackgroundColor(const QBrush &value);
-  void                        setFilterFontColor(const QBrush &value);
-  void                        setFilterContentBackgroundColor(const QBrush &value);
-  void                        setFilterContentFontColor(const QBrush &value);
+  QVector<EditorObject*>      search(const QVector<EditorObject*>&  index, const QVector<NodeFilter*>& filterList);
+  //QVector<EditorObject*>      search(QModelIndex& index, QVector<NodeFilter*> filterList);
+  QVector<EditorObject*>      search(QList<EditorModelItem*> items, QVector<NodeFilter*> filterList);
+  void                        setFilterMarks();
+  void                        setSearchFilter(const bool enable);
+  void                        setSearchResult(const int cacheId, const QVector<EditorObject*>& value);
   void                        setSceneId(const uint& value);
-  void                        setPrefabs(const QVector<PrefabData> value);
+  void                        setTrackData(const TrackData& value);
 
-  static bool isEditableNode(const QModelIndex& keyIndex);
   static bool isStartGrid(const PrefabData& prefab);  
 
-private:
-  QBrush filterFontColor = QBrush(QColor(Qt::black));
-  QBrush filterBackgroundColor = QBrush(QColor(254, 203, 137));
-  QBrush filterContentBackgroundColor = QBrush(QColor(192, 192, 192));
-  QBrush filterContentFontColor = QBrush(Qt::black);
+  Track *getTrack() const;
+  void setTrack(Track *newTrack);
 
+private:
   uint sceneId;
-  QJsonDocument* doc = nullptr;
-  QVector<PrefabData> prefabs;
-  QStandardItemModel model;
-  FilterProxyModel filteredModel;
+  int searchCacheId = INT_MIN;
+  bool editStarted = false;
+
+  Track* track;
+  QTreeView* treeView;
+  EditorModel* editorModel;
+  FilterProxyModel filteredModel;  
+  QVector<EditorObject*> searchResult;
+
+  float lastScrollbarPos;
+  QVector<bool> lastTreeExpansionStates;
 
   uint nodeCount = 0;
   uint prefabCount = 0;
   uint splineCount = 0;
-  uint gateCount = 0;
+  uint gateCount = 0;  
 
-  bool                  containsModifiedNode(const QStandardItem* item) const;
-  void                  dublicateChildren(const QStandardItem* source, QStandardItem* target);
-  QList<QStandardItem*> findPrefabs(const QModelIndex &keyItemIndex) const;
-  QList<QStandardItem*> findPrefabs(const QModelIndexList &keyItemIndexList) const;
-  void                  applyFilterToList(QVector<PrefabItem *> &items, const QVector<NodeFilter *> &filter, const FilterTypes filterType, const QVector<PrefabItem *> *initalItems = nullptr);
+  void applyFilterToList(QVector<EditorObject*>& items, const QVector<NodeFilter*>& filter, const FilterTypes filterType, const QVector<EditorObject*>* initalItems = nullptr);
+  bool containsModifiedNode() const;
 };
 
 #endif // TRACKPARSER_H

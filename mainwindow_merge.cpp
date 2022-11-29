@@ -46,59 +46,59 @@ void MainWindow::on_mergeTrack2SelectPushButton_released()
 
 void MainWindow::on_mergeTrackPushButton_released()
 {
-  // Check if two tracks are selected
-  if ((mergeTrack1.id == 0) || (mergeTrack2.id == 0)) {
-    QMessageBox::critical(this, tr("Merge error"), tr("Not enough tracks selected\nPlease select two tracks, that you want to merged."));
-    return;
-  }
+//  // Check if two tracks are selected
+//  if ((mergeTrack1.id == 0) || (mergeTrack2.id == 0)) {
+//    QMessageBox::critical(this, tr("Merge error"), tr("Not enough tracks selected\nPlease select two tracks, that you want to merged."));
+//    return;
+//  }
 
-  // Check if both are different :)
-  if ((mergeTrack1.assignedDatabase == mergeTrack2.assignedDatabase) && (mergeTrack1.id == mergeTrack2.id)) {
-    QMessageBox::critical(this, tr("Merge error"), tr("You are trying to merge a track into itself. Thats a nope!"));
-    return;
-  }
+//  // Check if both are different :)
+//  if ((mergeTrack1.assignedDatabase == mergeTrack2.assignedDatabase) && (mergeTrack1.id == mergeTrack2.id)) {
+//    QMessageBox::critical(this, tr("Merge error"), tr("You are trying to merge a track into itself. Thats a nope!"));
+//    return;
+//  }
 
-  // Create a new velo track manager
-  NodeEditor newVeloTrack;
-  try {
-    // Set the prefabs
-    newVeloTrack.setPrefabs(getDatabase(mergeTrack1.assignedDatabase)->getPrefabs());
+//  // Create a new velo track manager
+//  NodeEditor newEditor;
+//  try {
+//    // Set the prefabs
+//    newEditor.setPrefabs(getDatabase(mergeTrack1.assignedDatabase)->getPrefabs());
 
-    // Merge the json data
-    newVeloTrack.mergeJsonData(&mergeTrack1.value, ui->mergeTrack1BarriersCheckBox->isChecked(), ui->mergeTrack1GatesCheckBox->isChecked());
-    newVeloTrack.mergeJsonData(&mergeTrack2.value, ui->mergeTrack2BarriersCheckBox->isChecked(), ui->mergeTrack2GatesCheckBox->isChecked());
-  } catch (VeloToolkitException& e) {
-    e.Message();
-    return;
-  }
+//    // Merge the json data
+//    newEditor.mergeJsonData(mergeTrack1.value, ui->mergeTrack1BarriersCheckBox->isChecked(), ui->mergeTrack1GatesCheckBox->isChecked());
+//    newEditor.mergeJsonData(mergeTrack2.value, ui->mergeTrack2BarriersCheckBox->isChecked(), ui->mergeTrack2GatesCheckBox->isChecked());
+//  } catch (VeloToolkitException& e) {
+//    e.Message();
+//    return;
+//  }
 
-  // Create a new track
-  TrackData newTrack;
-  newTrack.id = 0;
-  newTrack.name = ui->mergeTrackNewTrackNameLineEdit->text();
-  newTrack.sceneId = mergeTrack1.sceneId;
-  newTrack.assignedDatabase = mergeTrack1.assignedDatabase;
-  newTrack.protectedTrack = 0;
-  newTrack.value = *newVeloTrack.exportAsJsonData();
+//  // Create a new track
+//  TrackData newTrack;
+//  newTrack.id = 0;
+//  newTrack.name = ui->mergeTrackNewTrackNameLineEdit->text();
+//  newTrack.sceneId = mergeTrack1.sceneId;
+//  newTrack.assignedDatabase = mergeTrack1.assignedDatabase;
+//  newTrack.protectedTrack = 0;
+//  newTrack.value = *newEditor.exportAsJsonData();
 
-  // Save the track into the database
-  try {
-    getDatabase(newTrack.assignedDatabase)->saveTrack(newTrack);
-  } catch (VeloToolkitException& e) {
-    e.Message();
-    return;
-  }
+//  // Save the track into the database
+//  try {
+//    getDatabase(newTrack.assignedDatabase)->saveTrack(newTrack);
+//  } catch (VeloToolkitException& e) {
+//    e.Message();
+//    return;
+//  }
 
-  // Reset the selection
-  mergeTrack1 = TrackData();
-  mergeTrack2 = TrackData();
-  ui->mergeTrack1Name->setText(tr("None"));
-  ui->mergeTrack2Name->setText(tr("None"));
-  ui->mergeTrackNewTrackNameLineEdit->setText("");
+//  // Reset the selection
+//  mergeTrack1 = TrackData();
+//  mergeTrack2 = TrackData();
+//  ui->mergeTrack1Name->setText(tr("None"));
+//  ui->mergeTrack2Name->setText(tr("None"));
+//  ui->mergeTrackNewTrackNameLineEdit->setText("");
 
-  // Message the user
-  QMessageBox::information(this, "Merge succeeded!", "The tracks got successfully merged.\nThe new track \"" + newTrack.name + "\" has been written to the database.");
+//  // Message the user
+//  QMessageBox::information(this, "Merge succeeded!", "The tracks got successfully merged.\nThe new track \"" + newTrack.name + "\" has been written to the database.");
 
-  // Show a status bar message
-  statusBar()->showMessage(tr("Track deleted."), 2000);
+//  // Show a status bar message
+//  statusBar()->showMessage(tr("Track merged."), 2000);
 }

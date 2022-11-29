@@ -50,6 +50,9 @@ void OpenTrackDialog::on_databaseComboBox_currentIndexChanged(const QString &arg
     selectedDb = customDb;
   }
 
+  if (selectedDb == nullptr)
+    return;
+
   QSettings settings("settings.ini", QSettings::IniFormat);
   settings.setValue("general/lastDatabaseIndex", ui->databaseComboBox->currentIndex());
 

@@ -12,14 +12,33 @@
 #include <QTreeWidgetItem>
 
 #include "exceptions.h"
-#include "velodb.h"
 #include "nodeeditor.h"
+#include "track.h"
+#include "velodb.h"
+
+class EditorObject;
+class Track;
+
+class InvalidDataException : public VeloToolkitException
+{
+public:
+  InvalidDataException(const QString errormessage = "") :
+    VeloToolkitException(QObject::tr("Invalid Track data. ") + errormessage) {}
+};
+
+class TrackWithoutNodesException : public VeloToolkitException
+{
+public:
+  TrackWithoutNodesException() :
+    VeloToolkitException("The track does not contain any nodes!") {}
+};
 
 class VeloDataParser : public QObject
 {
   Q_OBJECT
+
 public:
-  explicit VeloDataParser(QObject* parent = nullptr, QVector<PrefabData> *prefabs = new QVector<PrefabData>(), QStandardItemModel* model = new QStandardItemModel());
+  explicit VeloDataParser(QObject* parent = nullptr);
 
   QByteArray* exportToJson();
 
@@ -28,27 +47,18 @@ public:
   uint getPrefabCount() const;
   uint getSplineCount() const;
 
-  void importJson(const QByteArray* jsonData);
+  void mergeJson(const QByteArray& jsonData, const bool addBarriers, const bool addGates);
 
-  void mergeJson(const QByteArray* jsonData, const bool addBarriers, const bool addGates);
+  Track& parseTrack(const QVector<PrefabData>& prefabs, const TrackData& trackData);
 
 private:
-  QJsonDocument* doc = nullptr;
-  QVector<PrefabData>* prefabs;
-
-  uint gateCount = 0;
   uint nodeCount = 0;
-  uint prefabCount = 0;
-  uint splineCount = 0;
-
-  QStandardItemModel* model;
+  uint readGateCount = 0;
+  uint readPrefabCount = 0;
+  uint readSplineCount = 0;
 
   QJsonArray* exportToDataArray(const QStandardItem *treeItem);
   QJsonObject* exportToObject(const QStandardItem *treeItem);
-
-  uint getGatesInModelCount() const;
-
-  PrefabData getPrefabData(const uint id) const;
 
   void importJsonArray(QStandardItem *parentItem,
                        const QJsonArray &dataArray,
@@ -59,6 +69,9 @@ private:
                         const uint gateOffset = 0,
                         const bool skipStartgrid = false);
 
+  uint getGatesInModelCount() const;
+
   static QString getJsonValueTypeAsString(const QJsonValue::Type type);
+  EditorObject* parsePrefab(const QVector<PrefabData>& prefabs, const QJsonObject &dataObject);
 };
 #endif // VELOJSONPARSER_H

@@ -46,6 +46,8 @@ void MainWindow::on_searchAddFilterPushButton_released()
       break;
     }
 
+    currentCacheId++;
+
     // Create the filter widget and add it to the layout
     searchFilterLayout->addFilter(filterType, FilterMethods(ui->searchMethodComboBox->currentIndex()), value, displayValue);
 
@@ -53,17 +55,18 @@ void MainWindow::on_searchAddFilterPushButton_released()
     ui->toolsTargetComboBox->setCurrentIndex(2);
   }
 
-  // Update markins and status bar
-  updateSearchFilter();
+  // Update markings and status bar
+  updateSearch();
   updateStatusBar();
 }
 
 void MainWindow::on_searchClearFilterPushButton_released()
 {
+  currentCacheId++;
+
   // Clear the filter and update the markings
   searchFilterLayout->clear();
-  updateSearchFilter(false);
-  lastSearchResult.clear();
+  updateSearch(false);
   updateStatusBar();
 
   // Set the toolbox target to selected objects (if its on filtered)
@@ -73,12 +76,16 @@ void MainWindow::on_searchClearFilterPushButton_released()
 
 void MainWindow::on_searchFilterGroupBox_toggled(bool newState)
 {
+  NodeEditor* nodeEditor = nodeEditorManager->getEditor();
+  if (nodeEditor == nullptr)
+    return;
+
   // Update the markings with the given state
-  updateSearchFilter(newState);
+  updateSearch(newState);
   updateStatusBar();
 
   // Enable / Disable the filtered model
-  nodeEditor.getFilteredModel().setSearchFilter(newState ? ui->searchOptionsShowOnlyFilteredCheckBox->isChecked() : false);
+  nodeEditor->getFilteredModel().setSearchFilter(newState ? ui->searchOptionsShowOnlyFilteredCheckBox->isChecked() : false);
 
   // Set our toolbox target to filtered objects if filter is enabled, otherwise to selected
   ui->toolsTargetComboBox->setCurrentIndex(newState ? 2 : 1);
@@ -86,7 +93,11 @@ void MainWindow::on_searchFilterGroupBox_toggled(bool newState)
 
 void MainWindow::on_searchOptionsShowOnlyFilteredCheckBox_stateChanged(int checked)
 {
-  nodeEditor.getFilteredModel().setSearchFilter((checked > 0));
+  NodeEditor* nodeEditor = nodeEditorManager->getEditor();
+  if (nodeEditor == nullptr)
+    return;
+
+  nodeEditor->getFilteredModel().setSearchFilter(checked > 0);
 }
 
 void MainWindow::on_searchSubtypeComboBox_currentIndexChanged(const QString &subtypeDesc)
@@ -95,7 +106,7 @@ void MainWindow::on_searchSubtypeComboBox_currentIndexChanged(const QString &sub
 }
 
 void MainWindow::on_searchTypeComboBox_currentIndexChanged(const QString &filterDesc)
-{
+{  
   // Switch the visibilty of the filter-value controls according to the filter-type selected
   const FilterTypes type = NodeFilter::getFilterTypeByDescription(filterDesc);
   qDebug() << filterDesc << type;
@@ -137,7 +148,10 @@ void MainWindow::on_searchTypeComboBox_currentIndexChanged(const QString &filter
     ui->searchValueSpinBox->show();
     if (type == FilterTypes::GateNo) {
       minValue = 0;
-      maxValue = int(nodeEditor.getGateCount()) - 1;
+      maxValue = 0;
+      const NodeEditor* nodeEditor = nodeEditorManager->getEditor();
+      if (nodeEditor != nullptr)
+        maxValue = int(nodeEditor->getTrack()->getGateCount()) - 1;
     } else if (type == FilterTypes::AnyRotation) {
       minValue = -1000;
       maxValue = 1000;
@@ -207,41 +221,38 @@ void MainWindow::on_searchTypeRotationBValueSpinBox_valueChanged(int value)
 
 void MainWindow::onSearchFilterChanged()
 {
+  currentCacheId++;
+
   // Update our search filter if a filter gets added or removed
-  updateSearchFilter();
+  updateSearch();
   updateStatusBar();
 }
 
-void MainWindow::resetFilterMarks(bool setNodeEdit) {
-  // Since the last search result is empty, we assume that there is
-  // (hopefully) nothing left with a filter mark
-  if (lastSearchResult.count() == 0)
+void MainWindow::updateSearch()
+{
+  updateSearch(ui->searchFilterGroupBox->isChecked());
+}
+
+void MainWindow::updateSearchFilterControls()
+{
+  on_searchTypeComboBox_currentIndexChanged(ui->searchTypeComboBox->currentText());
+}
+
+void MainWindow::updateSearch(bool filterEnabled)
+{
+  NodeEditor* nodeEditor = nodeEditorManager->getEditor();
+  if (nodeEditor == nullptr)
     return;
 
-  if (setNodeEdit)
-    beginNodeEdit();
-
-  // Reset all the markings in the editor
-  nodeEditor.resetFilterMarks();
-
-  if (setNodeEdit)
-    endNodeEdit();
-}
-
-void MainWindow::updateSearchFilter()
-{
-  updateSearchFilter(ui->searchFilterGroupBox->isChecked());
-}
-
-void MainWindow::updateSearchFilter(bool filterEnabled)
-{
   // If we don't have any filter set, there is no need for the controls to be visible
   if (searchFilterLayout->getFilterList().count() == 0) {
     ui->searchFilterGroupBox->hide();
     ui->searchClearFilterPushButton->hide();
 
     // Just reset the markings and leave this place
-    resetFilterMarks();
+    nodeEditor->beginNodeEdit();
+    nodeEditor->clearSearch(currentCacheId);
+    nodeEditor->endNodeEdit();
     return;
   }
 
@@ -249,31 +260,23 @@ void MainWindow::updateSearchFilter(bool filterEnabled)
   ui->searchFilterGroupBox->show();
   ui->searchClearFilterPushButton->show();
 
-  // If marks are disabled we simply only reset all marks
+  // If marks are disabled we simply just reset all marks
   if (!filterEnabled) {
-    resetFilterMarks();
+    nodeEditor->beginNodeEdit();
+    nodeEditor->clearFilterMarks();
+    nodeEditor->endNodeEdit();
     return;
   }
 
-  // Search & update
-  lastSearchResult = nodeEditor.search(nodeEditor.getStandardModel().findItems("prefab", Qt::MatchRecursive, NodeTreeColumns::KeyColumn), searchFilterLayout->getFilterList());
-
-  updateSearchFilterMarks();
-}
-
-void MainWindow::updateSearchFilterMarks()
-{
-  beginNodeEdit();
-
-  // Reset all marks
-  resetFilterMarks(false);
-
-  // Set the found marks
-  foreach(PrefabItem* item, lastSearchResult) {
-    item->setFilterMark();
+  // Update the search cache if nescessary
+  if (nodeEditor->getSearchCacheId() != currentCacheId) {
+    nodeEditor->setSearchResult(currentCacheId, nodeEditor->search(nodeEditor->getTrack()->getObjects(), searchFilterLayout->getFilterList()));
   }
 
-  endNodeEdit();
+  // Mark all found items
+  nodeEditor->beginNodeEdit();
+  nodeEditor->setFilterMarks();
+  nodeEditor->endNodeEdit();
 }
 
 void MainWindow::updateSearchFromAngleValues()
@@ -281,6 +284,7 @@ void MainWindow::updateSearchFromAngleValues()
   const int r = ui->searchTypeRotationRValueSpinBox->value();
   const int g = ui->searchTypeRotationGValueSpinBox->value();
   const int b = ui->searchTypeRotationBValueSpinBox->value();
+
   QQuaternion quaternion = QQuaternion::fromEulerAngles(r, g, b);
   //qDebug() << "From Euler:" << quaternion << r << g << b;
   ui->searchTypeRotationWValueSpinBox->blockSignals(true);
@@ -302,11 +306,11 @@ void MainWindow::updateSearchFromAngleValues()
 
 void MainWindow::updateSearchFromQuaternionValues()
 {
-  const float l = float(ui->searchTypeRotationWValueSpinBox->value()) / 1000;
-  const float i = float(ui->searchTypeRotationXValueSpinBox->value()) / 1000;
-  const float j = float(ui->searchTypeRotationYValueSpinBox->value()) / 1000;
-  const float k = float(ui->searchTypeRotationZValueSpinBox->value()) / 1000;
-  QQuaternion quaternion = QQuaternion(l, i , j, k);
+  QQuaternion quaternion = QQuaternion(float(ui->searchTypeRotationWValueSpinBox->value()) / 1000,
+                                       float(ui->searchTypeRotationXValueSpinBox->value()) / 1000,
+                                       float(ui->searchTypeRotationYValueSpinBox->value()) / 1000,
+                                       float(ui->searchTypeRotationZValueSpinBox->value()) / 1000);
+
   const QVector3D eulerAngles = quaternion.toEulerAngles();
   //qDebug() << "From Quat:" << quaternion << eulerAngles;
   ui->searchTypeRotationRValueSpinBox->blockSignals(true);
